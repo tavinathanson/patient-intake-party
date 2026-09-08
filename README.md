@@ -27,26 +27,26 @@ Anything goes here, e.g. UI, API, agent, workflow, voice, visualization
 
 ## The patients
 
-Five synthetic patients live in `patients/`. Each folder has a short README (profile, history, medications), a `messages.md`, and where it makes sense a CSV or an image. Nothing here needs clinical expertise. Pick one, or several.
+Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.md`, one CSV, one image. Don't care which? Start with [strained back](patients/strained-back).
 
-| Folder | What's in it |
-|---|---|
-| `patients/eczema` | Rash photo, OTC and prescribed creams, unanswered portal messages |
-| `patients/strained-back` | Prior injury, watch step and sleep data, a nurse question the patient skipped |
-| `patients/glp1` | Weight over time, labs before and after, dose confusion, a drug shortage |
-| `patients/persistent-pain` | 9 visits, 5 prescribers, a wife as proxy, no clear story |
-| `patients/glaucoma` | Real eye exam images, pressure readings, a daughter managing his drops |
+| Patient | Photo | Time series | Proxy | The catch |
+|---|---|---|---|---|
+| [Eczema](patients/eczema) | rash | itch log | | Nobody looked at the photo |
+| [Strained back](patients/strained-back) | old x-ray | watch steps and sleep | | Skipped the nurse's red flag question |
+| [GLP-1 / weight loss](patients/glp1) | mystery pen | weight | | Chart dose and real dose disagree |
+| [Persistent pain](patients/persistent-pain) | pill bottle | 9 visits, 5 prescribers | wife | Stopped a med, nobody knows |
+| [Glaucoma](patients/glaucoma) | 2023 eye scan | eye pressure | daughter | Everything is stale and secondhand |
 
-`reference/` has the current paper intake form (the thing to rethink) and one example of the note a clinician might want at the end.
+Today's intake form, for reference: name, date of birth, insurance, reason for visit, medications, allergies, a checkbox list of past conditions, signature.
 
-### What's synthetic and what's real
+## Real vs. generated
 
-**Every name, date, message, and number is LLM-generated (Claude, September 2026).** The patients are not real people. Do not read any clinical meaning into the values.
+All names, dates, messages, and numbers were LLM-generated (Claude, September 2026). No real patients. The images are real, from unrelated anonymous people:
 
-The three images are real, from Wikimedia Commons, and belong to real anonymous people unrelated to the synthetic patients they sit next to:
-
-| File | Source | Author | License |
-|---|---|---|---|
-| `patients/eczema/hand-photo.jpg` | [Atopic dermatitis ab.jpeg](https://commons.wikimedia.org/wiki/File:Atopic_dermatitis_ab.jpeg) | Assianir | CC BY-SA 3.0 |
-| `patients/glaucoma/visual-field-right-eye.jpg` | [In glaucoma right eye visual fild by campimeter.jpg](https://commons.wikimedia.org/wiki/File:In_glaucoma_right_eye_visual_fild_by_campimeter.jpg) | Pignol23 | CC BY 3.0 |
-| `patients/glaucoma/optic-disc-right-eye.png` | [Optic disc topography, case 1, R, glaucoma.png](https://commons.wikimedia.org/wiki/File:Optic_disc_topography,_case_1,_R,_glaucoma.png) | Jmarchn | CC BY-SA 3.0 |
+| File | Source | License |
+|---|---|---|
+| `eczema/elbow-photo.png` | [SCIN dataset](https://github.com/google-research-datasets/scin) (Google), case -3059654233454543811 | CC BY 4.0 |
+| `strained-back/xray-2021.jpg` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Lateral_lumbar_x_ray.jpg), FitBro | CC BY-SA 4.0 |
+| `glp1/pen-photo.jpg` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ozempic%C2%AE_3ml.jpg), HualinXMN | CC BY-SA 4.0 |
+| `persistent-pain/pill-bottle.jpg` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pill_Bottle_of_Assorted_Pills.JPG), ParentingPatch | CC BY-SA 3.0 |
+| `glaucoma/optic-disc-2023.png` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Optic_disc_topography,_case_1,_R,_glaucoma.png), Jmarchn | CC BY-SA 3.0 |
