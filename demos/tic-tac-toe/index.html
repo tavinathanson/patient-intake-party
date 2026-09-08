@@ -57,21 +57,27 @@ button.btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .legend{display:flex;gap:16px;font-size:.9rem;color:var(--muted);margin-top:6px}
 .legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
 .legend .lo::before{background:var(--o)}.legend .lx::before{background:var(--x)}
+
+.staff{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);opacity:.72;font-size:.92rem}
+.staff h2{margin-top:0}
+.staff .tricks{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.staff .grid.small{max-width:150px}
 footer{margin-top:60px;color:var(--muted);font-size:.85rem}
 </style>
 <main>
 <h1>Tic-Tac-Toe Intake</h1>
-<p class="lede">Constraint: <b>the patient can only answer with tic-tac-toe grids.</b> Five grid types cover most intake questions. Every question below is one grid.</p>
+<p class="lede">Constraint: <b>the patient can only answer with tic-tac-toe grids.</b> Every question is one grid. How staff read them is at the bottom.</p>
 
-<h2>Staff instructions: how to read the grids</h2>
-<div class="tricks" id="tricks"></div>
-<div class="legend"><span class="lo">O</span><span class="lx">X</span><span>blank = nothing / none</span></div>
-
-<h2>Intake</h2>
 <div class="app">
   <section class="qcard" id="q"></section>
   <aside class="note" id="note"></aside>
 </div>
+
+<section class="staff">
+<h2>Staff instructions: how to read the grids</h2>
+<div class="tricks" id="tricks"></div>
+<div class="legend"><span class="lo">O</span><span class="lx">X</span><span>blank = nothing / none</span></div>
+</section>
 <footer>Part of <a href="https://github.com/tavinathanson/patient-intake-party">patient-intake-party</a>.</footer>
 </main>
 <script>
