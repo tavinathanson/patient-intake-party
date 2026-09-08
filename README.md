@@ -37,11 +37,11 @@ Five made-up patients in [`patients/`](patients), or all on one page in [patient
 
 | Patient | When | Photo | Time series | Proxy |
 |---|---|---|---|---|
-| [Eczema](patients/eczema) | before visit | rash | itch log | |
-| [Strained back](patients/strained-back) | before visit | old x-ray | watch steps and sleep | |
-| [GLP-1 / weight loss](patients/glp1) | before visit | mystery pen | weight | |
-| [Persistent pain](patients/persistent-pain) | at the clinic | pill bottle | 9 visits, 5 doctors | wife |
-| [Glaucoma](patients/glaucoma) | at the clinic | 2023 eye scan | eye pressure | daughter |
+| [Mango](patients/eczema) (eczema) | before visit | rash | itch log | |
+| [Kiwi](patients/strained-back) (strained back) | before visit | old x-ray | watch steps and sleep | |
+| [Papaya](patients/glp1) (GLP-1 / weight loss) | before visit | mystery pen | weight | |
+| [Fig](patients/persistent-pain) (persistent pain) | at the clinic | pill bottle | 9 visits, 5 doctors | wife |
+| [Plum](patients/glaucoma) (glaucoma) | at the clinic | 2023 eye scan | eye pressure | daughter |
 
 Typical intake form today, the thing to rethink:
 
