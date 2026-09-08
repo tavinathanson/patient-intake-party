@@ -30,6 +30,8 @@ You don't need to know medicine. Make up whatever you need about the condition o
 
 Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, viz
 
+[Live demo of a sample project](https://tavinathanson.github.io/patient-intake-party/demos/tic-tac-toe/): the patient can only answer with tic-tac-toe grids. Source in [demos/tic-tac-toe](demos/tic-tac-toe).
+
 ## Example patients (not required to use)
 
 Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Each folder has two files: **what the clinic knows** and **what's actually going on**. Pick a silly constraint and get from one to the other. Or skip the asking: summarize, diff, or draw what's already there.
