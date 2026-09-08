@@ -26,7 +26,7 @@ And maybe the patient has some constraints, like:
 > * the patient can only communicate using... photos? emoji? yes/no answers? 1 word at a time?
 > * the patient has an extremely relevant comorbidity that he/she will not notice in a list of checkboxes because he/she doesn't remember what it's called
 
-Anything goes here, e.g. UI, API, agent, workflow, voice, visualization
+Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, viz
 
 ## The patients
 
