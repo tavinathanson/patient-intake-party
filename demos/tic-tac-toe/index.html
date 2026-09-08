@@ -33,8 +33,6 @@ p{max-width:64ch;margin:0 0 10px}
 .cell.fresh svg path,.cell.fresh svg circle{animation:draw .3s ease-out}
 @keyframes draw{from{stroke-dashoffset:300}}
 @media (prefers-reduced-motion:reduce){.cell.fresh svg *{animation:none}}
-.cell input{position:absolute;left:6px;right:6px;bottom:6px;width:auto;font:inherit;font-size:.8rem;border:0;border-bottom:1px dashed var(--line);background:transparent;color:var(--ink);text-align:center}
-.cell input:focus{outline:none;border-bottom-color:var(--focus)}
 .app{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:32px;align-items:start}
 @media (max-width:860px){.app{grid-template-columns:1fr}}
 .qcard{display:flex;flex-direction:column;gap:14px}
@@ -82,7 +80,7 @@ footer{margin-top:60px;color:var(--muted);font-size:.85rem}
 </main>
 <script>
 const MONTHS=(()=>{const n=new Date(),m=[];for(let i=7;i>=0;i--)m.push(new Date(n.getFullYear(),n.getMonth()-i,1).toLocaleString('en',{month:'short'}));return ['Earlier',...m]})();
-const CHANGES=['Work','Pets','Soap or cleaning','Relationship','Home','Food','Creams or meds','Sleep','Other'];
+const CHANGES=['Work','Pets','Soap or cleaning','Relationship','Home','Food','Creams or meds','Sleep','Travel'];
 const CLOCK=['9pm','12am','3am','6pm','all day','6am','3pm','12pm','9am'];
 const BODY=['','head','','left arm','torso','right arm','left leg','','right leg'];
 const bodyCells=marks=>BODY.map((l,i)=>l?{mark:marks[i]}:{off:true});
@@ -96,7 +94,7 @@ const Q=[
  {id:'sleep',type:'yn',text:'Is it keeping you up at night?'},
  {id:'visit',type:'yn',text:'Do you want to come in?'},
 ];
-const fresh=()=>{const st={changes:Array(9).fill(''),other:'',when:{},clock:Array(9).fill(''),body:['','X','','X','X','X','X','','X']};Q.filter(q=>q.type==='yn').forEach(q=>st[q.id]='');return st};
+const fresh=()=>{const st={changes:Array(9).fill(''),when:{},clock:Array(9).fill(''),body:['','X','','X','X','X','X','','X']};Q.filter(q=>q.type==='yn').forEach(q=>st[q.id]='');return st};
 let S=fresh(),cur=0;
 const cycle={'':'O',O:'X',X:''};
 
@@ -107,7 +105,6 @@ function grid(cells,{small=false,onTap=null,fresh=-1}={}){
     const b=document.createElement('button');b.type='button';
     b.className='cell'+(c.mark?' '+c.mark.toLowerCase():'')+(c.off?' off':'')+(i===fresh?' fresh':'');
     b.innerHTML=(c.label?`<span class="lab">${c.label}</span>`:'')+MARK[c.mark||''];
-    if(c.input!==undefined){const inp=document.createElement('input');inp.placeholder='other…';inp.value=c.input;inp.onclick=e=>e.stopPropagation();inp.oninput=e=>{S.other=e.target.value;renderNote()};b.appendChild(inp)}
     if(onTap&&!c.off)b.onclick=()=>onTap(i);else b.disabled=!!c.off||!onTap;
     g.appendChild(b)});
   return g;
@@ -117,7 +114,7 @@ const lab=(labels,marks)=>labels.map((l,i)=>({label:l,mark:marks[i]}));
 
 const TRICKS=[
  ['Yes/no','Only the middle square counts. O is yes, X is no.',()=>grid(ynCells('O'),{small:true})],
- ['Life changes','Each square is a part of life. O: changed for the better. X: for the worse. One square is a blank.',()=>grid(lab(CHANGES,['O','','X','','','','','','']),{small:true})],
+ ['Life changes','Each square is a part of life. O: changed for the better. X: for the worse.',()=>grid(lab(CHANGES,['O','','X','','','','','','']),{small:true})],
  ['Dates','The grid is a calendar counting back from today. Bottom right is this month, top left is everything earlier. Mark as many as you need.',()=>grid(lab(MONTHS,['','','','','','','O','','']),{small:true})],
  ['Time of day','The grid is a clock. Around the edge, 12am to 9pm. Middle is all day. X worst, O mild, blank fine.',()=>grid(lab(CLOCK,['O','X','X','','','','','','']),{small:true})],
  ['Body location','The X\'s are a body: head, arms, legs. Flip a square to O where it is.',()=>grid(bodyCells(['','X','','O','X','O','X','','X']),{small:true})],
@@ -132,9 +129,9 @@ function renderQ(freshIdx=-1){
   const tap=(arr,i)=>{S[arr][i]=cycle[S[arr][i]];renderQ(i)};
   if(q.type==='yn'){add(h('p','hint','Tap the middle. O = yes, X = no.'));add(grid(ynCells(S[q.id]),{onTap:()=>{S[q.id]=cycle[S[q.id]];renderQ(4)}}))}
   if(q.type==='changes'){add(h('p','hint','O = changed for the better, X = for the worse. Tap again to clear.'));
-    const cells=lab(CHANGES,S.changes);cells[8].input=S.other;add(grid(cells,{onTap:i=>tap('changes',i),fresh:freshIdx}));
+    add(grid(lab(CHANGES,S.changes),{onTap:i=>tap('changes',i),fresh:freshIdx}));
     const ws=document.createElement('div');ws.className='whens';
-    S.changes.forEach((m,i)=>{if(!m)return;const w=document.createElement('div');w.className='when';w.append(h('p','hint',`When did ${(i===8&&S.other)||CHANGES[i].toLowerCase()} change? Bottom right is this month.`));
+    S.changes.forEach((m,i)=>{if(!m)return;const w=document.createElement('div');w.className='when';w.append(h('p','hint',`When did ${CHANGES[i].toLowerCase()} change? Bottom right is this month.`));
       const sel=S.when[i]||[];w.append(grid(lab(MONTHS,MONTHS.map(mo=>sel.includes(mo)?'O':'')),{onTap:j=>{const mo=MONTHS[j];S.when[i]=sel.includes(mo)?sel.filter(x=>x!==mo):[...sel,mo];renderQ()}}));ws.append(w)});
     add(ws)}
   if(q.type==='clock'){add(h('p','hint','It\'s a clock. X = worst, O = mild, blank = fine. Middle = all day.'));add(grid(lab(CLOCK,S.clock),{onTap:i=>tap('clock',i),fresh:freshIdx}))}
@@ -152,7 +149,7 @@ function nav(){
 const yn=v=>v==='O'?'yes':v==='X'?'no':null;
 const list=(labels,marks,m)=>labels.filter((_,i)=>marks[i]===m).join(', ');
 function noteLines(){
-  const chg=S.changes.map((m,i)=>m&&`${(i===8&&S.other)||CHANGES[i].toLowerCase()} (${m==='O'?'better':'worse'}${S.when[i]?.length?', '+S.when[i].join('/'):''})`).filter(Boolean);
+  const chg=S.changes.map((m,i)=>m&&`${CHANGES[i].toLowerCase()} (${m==='O'?'better':'worse'}${S.when[i]?.length?', '+S.when[i].join('/'):''})`).filter(Boolean);
   const worst=list(CLOCK,S.clock,'X'),mild=list(CLOCK,S.clock,'O'),spots=list(BODY,S.body,'O');
   const seen=i=>cur>i;
   return Q.map((q,i)=>[q.text,
