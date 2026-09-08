@@ -39,7 +39,7 @@ Dr. Pepper has 90 seconds before walking into the room. Help the care team figur
 | [Eczema](patients/eczema) | before visit | rash | itch log | |
 | [Strained back](patients/strained-back) | before visit | old x-ray | watch steps and sleep | |
 | [GLP-1 / weight loss](patients/glp1) | before visit | mystery pen | weight | |
-| [Persistent pain](patients/persistent-pain) | at the clinic | pill bottle | 9 visits, 5 prescribers | wife |
+| [Persistent pain](patients/persistent-pain) | at the clinic | pill bottle | 9 visits, 5 doctors | wife |
 | [Glaucoma](patients/glaucoma) | at the clinic | 2023 eye scan | eye pressure | daughter |
 
 Typical intake form today, the thing to rethink:

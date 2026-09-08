@@ -9,7 +9,7 @@
 | Age / sex | 26 / M |
 | Here for | Itchy rash inside both elbows, 3 weeks |
 | Allergies | Penicillin |
-| History | Eczema as a kid, mild asthma as a kid |
+| History | Eczema as a kid, mild asthma as a kid, seasonal allergies |
 | Contact | Text |
 
 | Medication | Status |

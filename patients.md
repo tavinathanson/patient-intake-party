@@ -16,7 +16,7 @@ Names, dates, messages, and numbers are LLM-generated. Images are real.
 | Age / sex | 26 / M |
 | Here for | Itchy rash inside both elbows, 3 weeks |
 | Allergies | Penicillin |
-| History | Eczema as a kid, mild asthma as a kid |
+| History | Eczema as a kid, mild asthma as a kid, seasonal allergies |
 | Contact | Text |
 
 | Medication | Status |
@@ -177,6 +177,7 @@ Files: [messages.json](patients/glp1/messages.json) (same as below), [weight.csv
 | Here for | "Same pain, nothing is working" |
 | Allergies | Codeine (nausea) |
 | History | Knee replacement 2019, type 2 diabetes, depression |
+| Insurance | Employer plan, through his wife |
 | Contact | Phone. His wife Olive uses the portal for him. |
 
 | Medication | Prescriber | Status |
@@ -187,7 +188,33 @@ Files: [messages.json](patients/glp1/messages.json) (same as below), [weight.csv
 | Meloxicam 15 mg daily | Dr. Pepper (orthopedics) | Taking |
 | Cyclobenzaprine 10 mg at night | Dr. Pepper (urgent care) | Unknown |
 
-Files: [intake-form.json](patients/persistent-pain/intake-form.json) (paper form, filled out today), [messages.json](patients/persistent-pain/messages.json) (same as below), [visits.csv](patients/persistent-pain/visits.csv) (18 months of pain visits), [pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg) (sent by wife)
+Files: [intake-form.json](patients/persistent-pain/intake-form.json) (same as below), [messages.json](patients/persistent-pain/messages.json) (same as below), [visits.csv](patients/persistent-pain/visits.csv) (18 months of pain visits), [pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg) (sent by wife)
+
+## Paper form
+
+Filled out today at the front desk. Same as [intake-form.json](patients/persistent-pain/intake-form.json).
+
+| | |
+|---|---|
+| filled out by | Olive Turnip (wife) |
+| date | 2026-08-27 |
+| name | Fig Turnip |
+| date of birth | 1965-03-14 |
+| address | 12 Garden Row |
+| phone | 555-0143 |
+| insurance | BlueCross, through my work |
+| member id |  |
+| emergency contact | Olive Turnip, wife, 555-0143 |
+| reason for visit | pain |
+| current medications | metformin, the nerve pill, meloxicam, tylenol |
+| allergies | none |
+| past conditions | diabetes |
+| past surgeries | knee |
+| family history | father heart |
+| tobacco | quit |
+| alcohol | some |
+| drugs | no |
+| signature | O. Turnip (wife) |
 
 ## Messages
 
@@ -196,34 +223,6 @@ Files: [intake-form.json](patients/persistent-pain/intake-form.json) (paper form
 **2026-08-21, medical assistant:** Scheduled for 8/27 with Dr. Pepper. Please bring all his medication bottles.
 
 **2026-08-26, Olive Turnip (wife, proxy):** He won't bring the bottles. This is how he keeps his pills (photo). He's not sleeping and he stopped the antidepressant months ago, I don't think anyone knows that.
-
-**intake-form.json**
-
-```json
-{
-  "filled_out_by": "Olive Turnip (wife)",
-  "date": "2026-08-27",
-  "name": "Fig Turnip",
-  "date_of_birth": "1965-03-14",
-  "address": "12 Garden Row",
-  "phone": "555-0143",
-  "insurance": "Medicare Advantage",
-  "member_id": "",
-  "emergency_contact": "Olive Turnip, wife, 555-0143",
-  "reason_for_visit": "pain",
-  "current_medications": "metformin, the nerve pill, meloxicam, tylenol",
-  "allergies": "none",
-  "past_conditions": [
-    "diabetes"
-  ],
-  "past_surgeries": "knee",
-  "family_history": "father heart",
-  "tobacco": "quit",
-  "alcohol": "some",
-  "drugs": "no",
-  "signature": "O. Turnip (wife)"
-}
-```
 
 ![pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg)
 
@@ -251,7 +250,7 @@ Files: [intake-form.json](patients/persistent-pain/intake-form.json) (paper form
 
 | | |
 |---|---|
-| Age / sex | 82 / M |
+| Age / sex | 83 / M |
 | Here for | New patient, moved in with his daughter, transferring from an out-of-state eye clinic |
 | Allergies | Sulfa |
 | History | Glaucoma since 2019 (right worse), laser 2021, COPD, fall at home 2025 |
@@ -264,7 +263,33 @@ Files: [intake-form.json](patients/persistent-pain/intake-form.json) (paper form
 | Tiotropium inhaler daily | Taking |
 | Aspirin 81 mg daily | Taking |
 
-Files: [intake-form.json](patients/glaucoma/intake-form.json) (paper form, filled out today), [messages.json](patients/glaucoma/messages.json) (same as below), [eye-pressure.csv](patients/glaucoma/eye-pressure.csv) (prior clinic records), [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png) (scanned by daughter, prior clinic)
+Files: [intake-form.json](patients/glaucoma/intake-form.json) (same as below), [messages.json](patients/glaucoma/messages.json) (same as below), [eye-pressure.csv](patients/glaucoma/eye-pressure.csv) (prior clinic records), [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png) (scanned by daughter, prior clinic)
+
+## Paper form
+
+Filled out today at the front desk. Same as [intake-form.json](patients/glaucoma/intake-form.json).
+
+| | |
+|---|---|
+| filled out by | Cherry Kohlrabi (daughter) |
+| date | 2026-09-08 |
+| name | Plum Kohlrabi |
+| date of birth | 1943-06-02 |
+| address | 88 Orchard Lane (my house) |
+| phone | 555-0199 (mine) |
+| insurance | Medicare |
+| member id |  |
+| emergency contact | Cherry Kohlrabi, daughter, 555-0199 |
+| reason for visit | new patient, glaucoma |
+| current medications | eye drops (2 kinds?), inhaler, aspirin |
+| allergies | sulfa |
+| past conditions | (none checked) |
+| past surgeries | laser eye 2021? |
+| family history | don't know |
+| tobacco | smoked 40 years, quit 2015 |
+| alcohol | no |
+| drugs | no |
+| signature | Cherry Kohlrabi for Plum Kohlrabi. He can't read the form, I filled it out. |
 
 ## Messages
 
@@ -283,31 +308,5 @@ Files: [intake-form.json](patients/glaucoma/intake-form.json) (paper form, fille
 | 2021-05-20 | 18 | 17 | after laser |
 | 2022-08-11 | 19 | 17 |  |
 | 2023-09-06 | 22 | 18 | last visit |
-
-**intake-form.json**
-
-```json
-{
-  "filled_out_by": "Cherry Kohlrabi (daughter)",
-  "date": "2026-09-08",
-  "name": "Plum Kohlrabi",
-  "date_of_birth": "1944-06-02",
-  "address": "88 Orchard Lane (my house)",
-  "phone": "555-0199 (mine)",
-  "insurance": "Medicare",
-  "member_id": "",
-  "emergency_contact": "Cherry Kohlrabi, daughter, 555-0199",
-  "reason_for_visit": "new patient, glaucoma",
-  "current_medications": "eye drops (2 kinds?), inhaler, aspirin",
-  "allergies": "sulfa",
-  "past_conditions": [],
-  "past_surgeries": "laser eye 2021?",
-  "family_history": "don't know",
-  "tobacco": "smoked 40 years, quit 2015",
-  "alcohol": "no",
-  "drugs": "no",
-  "signature": "Cherry Kohlrabi for Plum Kohlrabi. He can't read the form, I filled it out."
-}
-```
 
 ![optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png)

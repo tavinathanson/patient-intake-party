@@ -27,8 +27,6 @@ def patient(folder):
             extras += f"\n![{f.name}]({rel}/{f.name})\n"
         elif f.suffix == ".csv":
             extras += csv_table(f)
-        elif f.name == "intake-form.json":
-            extras += f"\n**{f.name}**\n\n```json\n{f.read_text()}```\n"
     return md + extras
 
 
