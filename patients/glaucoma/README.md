@@ -15,6 +15,6 @@
 | Tiotropium inhaler daily | Taking |
 | Aspirin 81 mg daily | Taking |
 
-Files: `messages.md`, `eye-pressure.csv` (prior clinic records), `optic-disc-2023.png` (scanned by daughter, prior clinic)
+Files: [messages.md](messages.md), [eye-pressure.csv](eye-pressure.csv) (prior clinic records), [optic-disc-2023.png](optic-disc-2023.png) (scanned by daughter, prior clinic)
 
 LLM-generated file.

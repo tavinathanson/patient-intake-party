@@ -29,15 +29,15 @@ Anything goes here, e.g. UI, API, agent, workflow, voice, visualization
 
 ## The patients
 
-Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.md`, one CSV, one image.
+Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.md`, one CSV, one image. Use as much or as little of it as you want.
 
-| Patient | Photo | Time series | Proxy | What's wrong |
-|---|---|---|---|---|
-| [Eczema](patients/eczema) | rash | itch log | | Nobody looked at the photo |
-| [Strained back](patients/strained-back) | old x-ray | watch steps and sleep | | Skipped the nurse's red flag question |
-| [GLP-1 / weight loss](patients/glp1) | mystery pen | weight | | Chart dose and real dose disagree |
-| [Persistent pain](patients/persistent-pain) | pill bottle | 9 visits, 5 prescribers | wife | Stopped a med, nobody knows |
-| [Glaucoma](patients/glaucoma) | 2023 eye scan | eye pressure | daughter | Everything is stale and secondhand |
+| Patient | Photo | Time series | Proxy |
+|---|---|---|---|
+| [Eczema](patients/eczema) | rash | itch log | |
+| [Strained back](patients/strained-back) | old x-ray | watch steps and sleep | |
+| [GLP-1 / weight loss](patients/glp1) | mystery pen | weight | |
+| [Persistent pain](patients/persistent-pain) | pill bottle | 9 visits, 5 prescribers | wife |
+| [Glaucoma](patients/glaucoma) | 2023 eye scan | eye pressure | daughter |
 
 Typical intake form today, the thing to rethink:
 

@@ -14,6 +14,6 @@
 | Hydrocortisone 1% (OTC) | Taking, "doesn't do much" |
 | Triamcinolone 0.1% cream | Prescribed 2025-03, never refilled |
 
-Files: `messages.md`, `itch-log.csv` (from a symptom app), `elbow-photo.png` (sent by patient)
+Files: [messages.md](messages.md), [itch-log.csv](itch-log.csv) (from a symptom app), [elbow-photo.png](elbow-photo.png) (sent by patient)
 
 LLM-generated file.

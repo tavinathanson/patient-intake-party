@@ -13,6 +13,6 @@
 | Lisinopril 10 mg daily | Taking |
 | Ibuprofen 400 mg "a few times a day" | Since injury |
 
-Files: `messages.md`, `activity.csv` (watch data), `xray-2021.jpg` (uploaded by patient, from the 2021 urgent care visit)
+Files: [messages.md](messages.md), [activity.csv](activity.csv) (watch data), [xray-2021.jpg](xray-2021.jpg) (uploaded by patient, from the 2021 urgent care visit)
 
 LLM-generated file.

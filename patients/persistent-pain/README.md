@@ -16,6 +16,6 @@
 | Meloxicam 15 mg daily | Dr. Pepper (orthopedics) | Taking |
 | Cyclobenzaprine 10 mg at night | Dr. Pepper (urgent care) | Unknown |
 
-Files: `messages.md`, `visits.csv` (18 months of pain visits), `pill-bottle.jpg` (sent by wife)
+Files: [messages.md](messages.md), [visits.csv](visits.csv) (18 months of pain visits), [pill-bottle.jpg](pill-bottle.jpg) (sent by wife)
 
 LLM-generated file.

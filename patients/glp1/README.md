@@ -14,6 +14,6 @@
 | Metformin 500 mg twice daily | Taking |
 | Prenatal vitamin | "Trying to conceive next year" |
 
-Files: `messages.md`, `weight.csv` (connected scale), `pen-photo.jpg` (sent by patient)
+Files: [messages.md](messages.md), [weight.csv](weight.csv) (connected scale), [pen-photo.jpg](pen-photo.jpg) (sent by patient)
 
 LLM-generated file.
