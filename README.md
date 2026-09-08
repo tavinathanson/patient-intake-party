@@ -32,7 +32,8 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 
 Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Same shape each: a README, `messages.json`, one CSV, one image. Three are before the visit. Two are in the waiting room right now, and those also have the paper form that was just filled out. **These are just examples. Pick a part of one, or two, or none...whatever is fun to play with.**
 
-Dr. Pepper has 90 seconds before walking into the room. Help the care team figure out what matters.
+> [!IMPORTANT]
+> Dr. Pepper has 90 seconds before walking into the room. Help the care team figure out what matters.
 
 | Patient | When | Photo | Time series | Proxy |
 |---|---|---|---|---|
