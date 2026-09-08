@@ -1,3 +1,5 @@
+![Did I hear party?](did-i-hear-party.jpg)
+
 ## Patient Intake Party
 
 patient intake is usually a form, but the broader goal is helping the care team understand the patient's situation.
@@ -27,9 +29,9 @@ Anything goes here, e.g. UI, API, agent, workflow, voice, visualization
 
 ## The patients
 
-Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.md`, one CSV, one image. Don't care which? Start with [strained back](patients/strained-back).
+Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.md`, one CSV, one image.
 
-| Patient | Photo | Time series | Proxy | The catch |
+| Patient | Photo | Time series | Proxy | What's wrong |
 |---|---|---|---|---|
 | [Eczema](patients/eczema) | rash | itch log | | Nobody looked at the photo |
 | [Strained back](patients/strained-back) | old x-ray | watch steps and sleep | | Skipped the nurse's red flag question |
@@ -37,16 +39,26 @@ Five made-up patients in [`patients/`](patients). Same shape each: a README, `me
 | [Persistent pain](patients/persistent-pain) | pill bottle | 9 visits, 5 prescribers | wife | Stopped a med, nobody knows |
 | [Glaucoma](patients/glaucoma) | 2023 eye scan | eye pressure | daughter | Everything is stale and secondhand |
 
-Today's intake form, for reference: name, date of birth, insurance, reason for visit, medications, allergies, a checkbox list of past conditions, signature.
+Typical intake form today, the thing to rethink:
 
-## Real vs. generated
+* name, date of birth, address, phone
+* insurance and member ID
+* emergency contact
+* reason for visit
+* current medications
+* allergies
+* past conditions (checkbox list)
+* past surgeries
+* family history
+* tobacco, alcohol, drug use
+* signature
 
-All names, dates, messages, and numbers were LLM-generated (Claude, September 2026). No real patients. The images are real, from unrelated anonymous people:
+## Sources
 
-| File | Source | License |
-|---|---|---|
-| `eczema/elbow-photo.png` | [SCIN dataset](https://github.com/google-research-datasets/scin) (Google), case -3059654233454543811 | CC BY 4.0 |
-| `strained-back/xray-2021.jpg` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Lateral_lumbar_x_ray.jpg), FitBro | CC BY-SA 4.0 |
-| `glp1/pen-photo.jpg` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ozempic%C2%AE_3ml.jpg), HualinXMN | CC BY-SA 4.0 |
-| `persistent-pain/pill-bottle.jpg` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pill_Bottle_of_Assorted_Pills.JPG), ParentingPatch | CC BY-SA 3.0 |
-| `glaucoma/optic-disc-2023.png` | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Optic_disc_topography,_case_1,_R,_glaucoma.png), Jmarchn | CC BY-SA 3.0 |
+Patients are LLM-generated. Images are real:
+
+* [elbow-photo.png](patients/eczema/elbow-photo.png): [SCIN dataset](https://github.com/google-research-datasets/scin), CC BY 4.0
+* [xray-2021.jpg](patients/strained-back/xray-2021.jpg): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Lateral_lumbar_x_ray.jpg), CC BY-SA 4.0
+* [pen-photo.jpg](patients/glp1/pen-photo.jpg): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ozempic%C2%AE_3ml.jpg), CC BY-SA 4.0
+* [pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pill_Bottle_of_Assorted_Pills.JPG), CC BY-SA 3.0
+* [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Optic_disc_topography,_case_1,_R,_glaucoma.png), CC BY-SA 3.0
