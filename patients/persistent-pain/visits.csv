@@ -1,0 +1,10 @@
+date,setting,chief_complaint,pain_score_0_10,outcome
+2025-03-11,primary care,left knee pain,6,x-ray ordered
+2025-05-02,orthopedics,left knee pain,7,meloxicam started
+2025-08-19,urgent care,low back pain,8,cyclobenzaprine
+2025-10-07,primary care,"back and hip pain, poor sleep",7,referred to physical therapy
+2025-11-14,physical therapy,low back pain,6,attended 2 of 8 sessions
+2026-01-22,primary care,"pain all over, tired",8,labs ordered
+2026-03-05,neurology,"burning in both feet",7,gabapentin started
+2026-06-18,emergency dept,chest wall pain,9,"EKG normal, discharged"
+2026-08-27,primary care,"same pain, nothing is working",8,this visit
