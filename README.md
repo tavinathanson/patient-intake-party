@@ -2,7 +2,7 @@
 
 ## Patient Intake Party
 
-patient intake is usually a form, but the broader goal is helping the care team understand the patient's situation.
+patient intake is usually a form, but the broader goal is <ins>helping the care team understand the patient's situation</ins>.
 
 this repo has some synthetic, LLM-generated patient examples.
 
@@ -30,15 +30,17 @@ Anything goes here, e.g. UI, API, agent, workflow, voice, visualization
 
 ## The patients
 
-Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.md`, one CSV, one image. Use as much or as little of it as you want.
+Five made-up patients in [`patients/`](patients). Same shape each: a README, `messages.json`, one CSV, one image. Three are before the visit. Two are in the waiting room right now, and those also have the paper form that was just filled out. **These are just examples. Pick a part of one, or two, or none...whatever is fun to play with.**
 
-| Patient | Photo | Time series | Proxy |
-|---|---|---|---|
-| [Eczema](patients/eczema) | rash | itch log | |
-| [Strained back](patients/strained-back) | old x-ray | watch steps and sleep | |
-| [GLP-1 / weight loss](patients/glp1) | mystery pen | weight | |
-| [Persistent pain](patients/persistent-pain) | pill bottle | 9 visits, 5 prescribers | wife |
-| [Glaucoma](patients/glaucoma) | 2023 eye scan | eye pressure | daughter |
+Dr. Pepper has 90 seconds before walking into the room. Help the care team figure out what matters.
+
+| Patient | When | Photo | Time series | Proxy |
+|---|---|---|---|---|
+| [Eczema](patients/eczema) | before visit | rash | itch log | |
+| [Strained back](patients/strained-back) | before visit | old x-ray | watch steps and sleep | |
+| [GLP-1 / weight loss](patients/glp1) | before visit | mystery pen | weight | |
+| [Persistent pain](patients/persistent-pain) | at the clinic | pill bottle | 9 visits, 5 prescribers | wife |
+| [Glaucoma](patients/glaucoma) | at the clinic | 2023 eye scan | eye pressure | daughter |
 
 Typical intake form today, the thing to rethink:
 
