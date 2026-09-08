@@ -9,6 +9,8 @@ Names, dates, messages, and numbers are LLM-generated. Images are real.
 
 Eczema: dry, itchy, inflamed skin that flares and settles, often in the elbow and knee creases. Steroid creams and moisturizer are the usual treatment. The care team usually wants to know what set it off, how bad the itch is, and whether the creams are working.
 
+**Before the visit.**
+
 - [what-the-clinic-knows.md](patients/eczema/what-the-clinic-knows.md)
 - [whats-actually-going-on.md](patients/eczema/whats-actually-going-on.md)
 - Data: [elbow-photo.png](patients/eczema/elbow-photo.png), [itch-log.csv](patients/eczema/itch-log.csv)
@@ -70,6 +72,8 @@ What Mango would tell you if you asked.
 
 Strained back: a pulled muscle or ligament in the lower back, usually from lifting. Most get better in a few weeks with movement and over-the-counter painkillers. The care team usually wants to know whether he can move, and whether there's any numbness, weakness, or bladder trouble, which would mean something more serious.
 
+**Walk-in, blank chart.**
+
 - [what-the-clinic-knows.md](patients/strained-back/what-the-clinic-knows.md)
 - [whats-actually-going-on.md](patients/strained-back/whats-actually-going-on.md)
 - Data: [activity.csv](patients/strained-back/activity.csv), [xray-2021.jpg](patients/strained-back/xray-2021.jpg)
@@ -130,6 +134,8 @@ What Kiwi would tell you if you asked.
 # Papaya Radish (GLP-1 / weight loss)
 
 Semaglutide: a weekly injection for weight loss and diabetes. The dose goes up in steps, and nausea is the common side effect. The care team usually wants to know what dose she's really on, how she's tolerating it, and how the weight is trending.
+
+**Before the visit.**
 
 - [what-the-clinic-knows.md](patients/glp1/what-the-clinic-knows.md)
 - [whats-actually-going-on.md](patients/glp1/whats-actually-going-on.md)
@@ -197,6 +203,8 @@ What Papaya would tell you if you asked.
 # Fig Turnip (pain that hasn't gone away)
 
 Persistent pain: pain that has lasted months with no single clear cause, usually with several doctors and several medications along the way. The care team usually wants to know what he's actually taking, what's been tried, and what's changed.
+
+**At the clinic, in the waiting room.**
 
 - [what-the-clinic-knows.md](patients/persistent-pain/what-the-clinic-knows.md)
 - [whats-actually-going-on.md](patients/persistent-pain/whats-actually-going-on.md)
@@ -287,6 +295,8 @@ What Fig would tell you if you asked.
 # Plum Kohlrabi (glaucoma)
 
 Glaucoma: pressure inside the eye slowly damages the nerve. Daily eye drops keep the pressure down, and vision already lost does not come back. The care team usually wants to know whether he's using the drops, what the pressure has been doing, and whether he's safe getting around.
+
+**At the clinic, in the waiting room. New patient.**
 
 - [what-the-clinic-knows.md](patients/glaucoma/what-the-clinic-knows.md)
 - [whats-actually-going-on.md](patients/glaucoma/whats-actually-going-on.md)

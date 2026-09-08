@@ -10,14 +10,7 @@ your mission, if you like missions: **Build something that makes patient intake 
 
 You don't need to know medicine. Make up whatever you need about the condition or what the care team wants. Have fun.
 
-This could mean:
-* collect information differently
-* use/summarize/expand information we already have
-* figure out what’s missing
-* help get the patient to the right next step
-* etc.
-
-And maybe the patient has some constraints, like:
+**1. Invent at least one constraint.** Realistic ones:
 * what if they can only use audio
 * what if their parent is doing this for them
 * what if they have bad internet
@@ -27,6 +20,13 @@ And maybe the patient has some constraints, like:
 > * the patient has an incredibly short attention span: you can only ask the patient 3 questions
 > * the patient can only communicate using... photos? emoji? yes/no answers? 1 word at a time?
 > * the patient has an extremely relevant comorbidity that he/she will not notice in a list of checkboxes because he/she doesn't remember what it's called
+
+**2. Build something.** This could mean:
+* collect information differently
+* use/summarize/expand information we already have
+* figure out what’s missing
+* help get the patient to the right next step
+* etc.
 
 Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, viz
 
