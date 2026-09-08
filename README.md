@@ -20,6 +20,7 @@ You don't need to know medicine. Make up whatever you need about the condition o
 > * the patient has an incredibly short attention span: you can only ask the patient 3 questions
 > * the patient can only communicate using... photos? emoji? yes/no answers? 1 word at a time?
 > * the patient has an extremely relevant comorbidity that he/she will not notice in a list of checkboxes because he/she doesn't remember what it's called
+> * the doctor has 3 seconds to read the intake before walking in
 
 **2. Build something.** This could mean:
 * collect information differently
