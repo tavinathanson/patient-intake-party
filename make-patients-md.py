@@ -19,7 +19,9 @@ def csv_table(path):
 def patient(folder):
     d = ROOT / "patients" / folder
     rel = f"patients/{folder}"
-    md = (d / "README.md").read_text().replace("\nLLM-generated file.\n", "")
+    md = ""
+    for name in ("README.md", "what-the-clinic-knows.md", "whats-actually-going-on.md"):
+        md += (d / name).read_text().replace("\nLLM-generated file.\n", "") + "\n"
     md = re.sub(r"\]\(([\w.-]+)\)", rf"]({rel}/\1)", md)
     extras = ""
     for f in sorted(d.iterdir()):

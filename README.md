@@ -8,6 +8,8 @@ this repo has some synthetic, LLM-generated patient examples.
 
 your mission, if you like missions: **Build something that makes patient intake better.**
 
+You don't need to know medicine. Make up whatever you need about the condition or what the care team wants. Have fun.
+
 This could mean:
 * collect information differently
 * use/summarize/expand information we already have
@@ -30,32 +32,19 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 
 ## Example patients (not required to use)
 
-Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Same shape each: a README, `messages.json`, one CSV, one image. Three are before the visit. Two are in the waiting room right now, and those also have the paper form that was just filled out. **These are just examples. Pick a part of one, or two, or none...whatever is fun to play with.**
+Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Each folder has two files: **what the clinic knows** and **what's actually going on**. Pick a silly constraint and get from one to the other. Or skip the asking: summarize, diff, or draw what's already there.
 
-> [!IMPORTANT]
-> Dr. Pepper has 90 seconds before walking into the room. Help the care team figure out what matters.
+**These are just examples. Pick a part of one, or two, or none...whatever is fun to play with.**
 
 | Patient | When | Photo | Time series | Proxy |
 |---|---|---|---|---|
 | [Mango](patients/eczema) (eczema) | before visit | rash | itch log | |
-| [Kiwi](patients/strained-back) (strained back) | before visit | old x-ray | watch steps and sleep | |
+| [Kiwi](patients/strained-back) (strained back) | walk-in, blank chart | old x-ray | watch steps and sleep | |
 | [Papaya](patients/glp1) (GLP-1 / weight loss) | before visit | mystery pen | weight | |
 | [Fig](patients/persistent-pain) (persistent pain) | at the clinic | pill bottle | 9 visits, 5 doctors | wife |
 | [Plum](patients/glaucoma) (glaucoma) | at the clinic | 2023 eye scan | eye pressure | daughter |
 
-Typical intake form today, the thing to rethink:
-
-* name, date of birth, address, phone
-* insurance and member ID
-* emergency contact
-* reason for visit
-* current medications
-* allergies
-* past conditions (checkbox list)
-* past surgeries
-* family history
-* tobacco, alcohol, drug use
-* signature
+The paper form the clinic uses today is in Fig's and Plum's folders.
 
 ## Sources
 

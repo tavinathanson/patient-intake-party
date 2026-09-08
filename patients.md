@@ -7,35 +7,46 @@ Names, dates, messages, and numbers are LLM-generated. Images are real.
 
 # Mango Broccoli (eczema)
 
-**Before the visit.** What the clinic has on Mango right now: the chart, plus what he sent through the portal.
+Eczema: dry, itchy, inflamed skin that flares and settles, often in the elbow and knee creases. Steroid creams and moisturizer are the usual treatment. The care team usually wants to know what set it off, how bad the itch is, and whether the creams are working.
 
-## From the chart
+- [what-the-clinic-knows.md](patients/eczema/what-the-clinic-knows.md)
+- [whats-actually-going-on.md](patients/eczema/whats-actually-going-on.md)
+- Data: [elbow-photo.png](patients/eczema/elbow-photo.png), [itch-log.csv](patients/eczema/itch-log.csv)
+
+# What the clinic knows
+
+**Before the visit.** The chart, plus one text and a photo.
 
 | | |
 |---|---|
 | Age / sex | 26 / M |
-| Here for | Itchy rash inside both elbows, 3 weeks |
+| Here for | Texted 8/18: "rash is back inside my elbows, way worse than last time. Do I need to come in?" |
 | Allergies | Penicillin |
 | History | Eczema as a kid, mild asthma as a kid, seasonal allergies |
+| Photo | Sent 8/19 ([elbow-photo.png](patients/eczema/elbow-photo.png)). Nobody has replied. |
 | Contact | Text |
 
 | Medication | Status |
 |---|---|
-| Cetirizine 10 mg daily | Taking |
-| Hydrocortisone 1% (OTC) | Taking, "doesn't do much" |
+| Cetirizine 10 mg daily | Active |
+| Hydrocortisone 1% (OTC) | Patient mentioned using it |
 | Triamcinolone 0.1% cream | Prescribed 2025-03, never refilled |
 
-Files: [messages.json](patients/eczema/messages.json) (same as below), [itch-log.csv](patients/eczema/itch-log.csv) (from a symptom app), [elbow-photo.png](patients/eczema/elbow-photo.png) (sent by patient)
+# What's actually going on
 
-## Messages
+What Mango would tell you if you asked.
 
-**2026-08-18, patient:** Rash is back inside my elbows, way worse than last time. Itchy at night. Using the CVS hydrocortisone. Do I need to come in?
+- Got a puppy in July.
+- Switched dish soap about a month ago.
+- Started a new job in August. Likes it.
+- The drugstore hydrocortisone isn't doing anything.
+- Never refilled the prescription cream. It was $60.
+- The puppy is named Biscuit.
+- Itches worst at night. Scratches in his sleep. Skin is cracking and bleeding now.
+- Sent a photo three weeks ago and nobody replied.
+- Would rather not come in. Wants a cream that works.
+- Logs the itch in an app ([itch-log.csv](patients/eczema/itch-log.csv)).
 
-**2026-08-19, nurse:** Can you send a photo? Any new soaps, detergents, pets?
-
-**2026-08-19, patient:** Photo attached. New dish soap about a month ago. We got a puppy in July.
-
-**2026-09-05, patient:** It's cracking and bleeding a little. Never heard back about the photo.
 
 ![elbow-photo.png](patients/eczema/elbow-photo.png)
 
@@ -57,32 +68,39 @@ Files: [messages.json](patients/eczema/messages.json) (same as below), [itch-log
 
 # Kiwi Parsnip (strained back)
 
-**Before the visit.** What the clinic has on Kiwi right now: the chart, plus what he sent through the portal.
+Strained back: a pulled muscle or ligament in the lower back, usually from lifting. Most get better in a few weeks with movement and over-the-counter painkillers. The care team usually wants to know whether he can move, and whether there's any numbness, weakness, or bladder trouble, which would mean something more serious.
 
-## From the chart
+- [what-the-clinic-knows.md](patients/strained-back/what-the-clinic-knows.md)
+- [whats-actually-going-on.md](patients/strained-back/whats-actually-going-on.md)
+- Data: [activity.csv](patients/strained-back/activity.csv), [xray-2021.jpg](patients/strained-back/xray-2021.jpg)
+
+# What the clinic knows
+
+**Walk-in.** Kiwi booked online last night. This is everything.
 
 | | |
 |---|---|
 | Age / sex | 44 / M |
-| Here for | Low back pain after moving a couch, 10 days ago |
-| Allergies | None |
-| History | Lumbar strain 2021 (PT fixed it), high blood pressure |
+| Here for | "back pain, want a PT referral" |
+| History | Nothing on file |
+| Medications | Nothing on file |
+| Allergies | Nothing on file |
 | Contact | Phone, evenings |
 
-| Medication | Status |
-|---|---|
-| Lisinopril 10 mg daily | Taking |
-| Ibuprofen 400 mg "a few times a day" | Since injury |
+# What's actually going on
 
-Files: [messages.json](patients/strained-back/messages.json) (same as below), [activity.csv](patients/strained-back/activity.csv) (watch data), [xray-2021.jpg](patients/strained-back/xray-2021.jpg) (uploaded by patient, from the 2021 urgent care visit)
+What Kiwi would tell you if you asked.
 
-## Messages
+- Hurt his back Saturday 8/29 moving a couch. Lower right side.
+- Same thing in 2021. PT fixed it. Has the urgent care x-ray on his phone ([xray-2021.jpg](patients/strained-back/xray-2021.jpg)).
+- The couch was his sister's. She still owes him lunch.
+- Takes lisinopril for blood pressure, from a different doctor.
+- Ibuprofen a few times a day since it happened.
+- Right foot has felt a little tingly since Tuesday. Hasn't thought it worth mentioning.
+- Worse in the morning. Hasn't run all week.
+- Wears a watch and would share the data ([activity.csv](patients/strained-back/activity.csv)).
+- Wants the PT referral without a visit if possible.
 
-**2026-09-01, patient:** Hurt my back moving a couch Saturday. Lower right side. Ibuprofen helps some. Can I get a PT referral like last time? Attached the x-ray from 2021 in case it helps.
-
-**2026-09-02, nurse:** Any numbness, tingling, or weakness in your legs? Any trouble with bladder or bowels?
-
-**2026-09-06, patient:** Still hurts, worse in the morning. Haven't run all week. Do I need an MRI?
 
 **activity.csv**
 
@@ -111,9 +129,15 @@ Files: [messages.json](patients/strained-back/messages.json) (same as below), [a
 
 # Papaya Radish (GLP-1 / weight loss)
 
-**Before the visit.** What the clinic has on Papaya right now: the chart, plus what she sent through the portal.
+Semaglutide: a weekly injection for weight loss and diabetes. The dose goes up in steps, and nausea is the common side effect. The care team usually wants to know what dose she's really on, how she's tolerating it, and how the weight is trending.
 
-## From the chart
+- [what-the-clinic-knows.md](patients/glp1/what-the-clinic-knows.md)
+- [whats-actually-going-on.md](patients/glp1/whats-actually-going-on.md)
+- Data: [pen-photo.jpg](patients/glp1/pen-photo.jpg), [weight.csv](patients/glp1/weight.csv)
+
+# What the clinic knows
+
+**Before the visit.** The chart, plus scale readings.
 
 | | |
 |---|---|
@@ -121,25 +145,30 @@ Files: [messages.json](patients/strained-back/messages.json) (same as below), [a
 | Here for | 6-month follow-up on semaglutide |
 | Allergies | None |
 | History | Prediabetes 2022, PCOS 2024, started semaglutide 2026-02 |
+| Notes | 6/16: portal message forwarded to Dr. Pepper. No follow-up. |
+| Weight | Connected scale, see [weight.csv](patients/glp1/weight.csv) |
 | Contact | Portal |
 
 | Medication | Status |
 |---|---|
-| Semaglutide weekly, 1.0 mg | Per chart. See messages. |
-| Metformin 500 mg twice daily | Taking |
-| Prenatal vitamin | "Trying to conceive next year" |
+| Semaglutide weekly, 1.0 mg | Active, increased 2026-06 |
+| Metformin 500 mg twice daily | Active |
+| Prenatal vitamin | Active |
 
-Files: [messages.json](patients/glp1/messages.json) (same as below), [weight.csv](patients/glp1/weight.csv) (connected scale), [pen-photo.jpg](patients/glp1/pen-photo.jpg) (sent by patient)
+# What's actually going on
 
-## Messages
+What Papaya would tell you if you asked.
 
-**2026-06-14, patient:** The 1 mg dose made me throw up twice. I went back to the 0.5 mg pens I had left. Is that ok?
+- Went back to 0.5 mg in June after vomiting on 1 mg. Sent one portal message about it, which got forwarded and never answered.
+- Nausea is fine on 0.5.
+- Training for a 5k in October.
+- Missed two weeks in August. Pharmacy backorder.
+- Her cousin mailed a pen from overseas ([pen-photo.jpg](patients/glp1/pen-photo.jpg)). She's using it. Not sure it's the same dose.
+- Switched to oat milk.
+- Weight is up about 3 lb since July ([weight.csv](patients/glp1/weight.csv)).
+- Planning to try for a baby in the spring. Doesn't know if she should stop.
+- Still on metformin and a prenatal vitamin.
 
-**2026-06-16, medical assistant:** Forwarded to Dr. Pepper.
-
-**2026-07-28, patient:** Pharmacy says 0.5 mg is on backorder. One pen left.
-
-**2026-08-30, patient:** Missed two weeks. My cousin mailed me a pen from overseas, photo attached, is it the same thing? Weight went up a bit. Also should I be on this if we start trying for a baby in the spring?
 
 ![pen-photo.jpg](patients/glp1/pen-photo.jpg)
 
@@ -167,9 +196,15 @@ Files: [messages.json](patients/glp1/messages.json) (same as below), [weight.csv
 
 # Fig Turnip (pain that hasn't gone away)
 
-**At the clinic.** Fig is in the waiting room. His wife just filled out the paper form at the front desk: [intake-form.json](patients/persistent-pain/intake-form.json). Everything else is the chart and the portal.
+Persistent pain: pain that has lasted months with no single clear cause, usually with several doctors and several medications along the way. The care team usually wants to know what he's actually taking, what's been tried, and what's changed.
 
-## From the chart
+- [what-the-clinic-knows.md](patients/persistent-pain/what-the-clinic-knows.md)
+- [whats-actually-going-on.md](patients/persistent-pain/whats-actually-going-on.md)
+- Data: [intake-form.json](patients/persistent-pain/intake-form.json), [pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg), [visits.csv](patients/persistent-pain/visits.csv)
+
+# What the clinic knows
+
+**At the clinic.** Fig is in the waiting room. The chart, plus the paper form his wife just filled out.
 
 | | |
 |---|---|
@@ -177,18 +212,17 @@ Files: [messages.json](patients/glp1/messages.json) (same as below), [weight.csv
 | Here for | "Same pain, nothing is working" |
 | Allergies | Codeine (nausea) |
 | History | Knee replacement 2019, type 2 diabetes, depression |
+| Visits | 9 pain visits in 18 months, see [visits.csv](patients/persistent-pain/visits.csv) |
 | Insurance | Employer plan, through his wife |
 | Contact | Phone. His wife Olive uses the portal for him. |
 
 | Medication | Prescriber | Status |
 |---|---|---|
-| Metformin 1000 mg twice daily | Dr. Pepper (primary care) | Taking |
-| Sertraline 50 mg daily | Dr. Pepper (primary care) | "Stopped a while ago" per wife |
-| Gabapentin 300 mg three times daily | Dr. Pepper (neurology) | "Makes me foggy" |
-| Meloxicam 15 mg daily | Dr. Pepper (orthopedics) | Taking |
-| Cyclobenzaprine 10 mg at night | Dr. Pepper (urgent care) | Unknown |
-
-Files: [intake-form.json](patients/persistent-pain/intake-form.json) (same as below), [messages.json](patients/persistent-pain/messages.json) (same as below), [visits.csv](patients/persistent-pain/visits.csv) (18 months of pain visits), [pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg) (sent by wife)
+| Metformin 1000 mg twice daily | Dr. Pepper (primary care) | Active |
+| Sertraline 50 mg daily | Dr. Pepper (primary care) | Active |
+| Gabapentin 300 mg three times daily | Dr. Pepper (neurology) | Active |
+| Meloxicam 15 mg daily | Dr. Pepper (orthopedics) | Active |
+| Cyclobenzaprine 10 mg at night | Dr. Pepper (urgent care) | Active, 2025 |
 
 ## Paper form
 
@@ -216,13 +250,21 @@ Filled out today at the front desk. Same as [intake-form.json](patients/persiste
 | drugs | no |
 | signature | O. Turnip (wife) |
 
-## Messages
 
-**2026-08-20, Olive Turnip (wife, proxy):** Fig is in pain all the time and nobody gives us a straight answer. He's seen 5 different doctors. Can someone look at everything together?
+# What's actually going on
 
-**2026-08-21, medical assistant:** Scheduled for 8/27 with Dr. Pepper. Please bring all his medication bottles.
+What Fig would tell you if you asked.
 
-**2026-08-26, Olive Turnip (wife, proxy):** He won't bring the bottles. This is how he keeps his pills (photo). He's not sleeping and he stopped the antidepressant months ago, I don't think anyone knows that.
+- Stopped sertraline months ago. Nobody at the clinic knows.
+- Keeps all his pills in one bottle ([pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg)). Doesn't know which is which.
+- Wants to talk about his neighbor's fence.
+- Skips gabapentin some days because it makes him foggy.
+- Meloxicam every day. Tylenol "whenever."
+- Finished the cyclobenzaprine in 2025.
+- Not sleeping.
+- Has stopped answering questions himself. His wife does the talking.
+- 9 visits, 5 doctors in 18 months ([visits.csv](patients/persistent-pain/visits.csv)).
+
 
 ![pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg)
 
@@ -244,26 +286,28 @@ Filled out today at the front desk. Same as [intake-form.json](patients/persiste
 
 # Plum Kohlrabi (glaucoma)
 
-**At the clinic.** Plum is in the waiting room. His daughter just filled out the paper form for him: [intake-form.json](patients/glaucoma/intake-form.json). Everything else is the chart and what she sent in.
+Glaucoma: pressure inside the eye slowly damages the nerve. Daily eye drops keep the pressure down, and vision already lost does not come back. The care team usually wants to know whether he's using the drops, what the pressure has been doing, and whether he's safe getting around.
 
-## From the chart
+- [what-the-clinic-knows.md](patients/glaucoma/what-the-clinic-knows.md)
+- [whats-actually-going-on.md](patients/glaucoma/whats-actually-going-on.md)
+- Data: [eye-pressure.csv](patients/glaucoma/eye-pressure.csv), [intake-form.json](patients/glaucoma/intake-form.json), [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png)
+
+# What the clinic knows
+
+**At the clinic.** Plum is in the waiting room, new patient. The paper form his daughter just filled out, plus the old eye clinic printouts she brought.
 
 | | |
 |---|---|
 | Age / sex | 83 / M |
-| Here for | New patient, moved in with his daughter, transferring from an out-of-state eye clinic |
-| Allergies | Sulfa |
-| History | Glaucoma since 2019 (right worse), laser 2021, COPD, fall at home 2025 |
-| Contact | Daughter Cherry (healthcare proxy), by phone. Low vision, no portal. |
+| Here for | New patient, transferring from an out-of-state eye clinic |
+| Allergies | Sulfa (from the form) |
+| Old records | Glaucoma since 2019, right worse. Laser 2021. Last exam 2023-09: [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png), [eye-pressure.csv](patients/glaucoma/eye-pressure.csv) |
+| Contact | Daughter Cherry, by phone. He doesn't use a phone or portal. |
 
-| Medication | Status |
+| Medication (per 2023 records) | Status |
 |---|---|
-| Latanoprost drops, both eyes at bedtime | "Most nights" per daughter |
-| Timolol drops, both eyes twice daily | Daughter unsure |
-| Tiotropium inhaler daily | Taking |
-| Aspirin 81 mg daily | Taking |
-
-Files: [intake-form.json](patients/glaucoma/intake-form.json) (same as below), [messages.json](patients/glaucoma/messages.json) (same as below), [eye-pressure.csv](patients/glaucoma/eye-pressure.csv) (prior clinic records), [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png) (scanned by daughter, prior clinic)
+| Latanoprost drops, both eyes at bedtime | Active |
+| Timolol drops, both eyes twice daily | Active |
 
 ## Paper form
 
@@ -291,11 +335,22 @@ Filled out today at the front desk. Same as [intake-form.json](patients/glaucoma
 | drugs | no |
 | signature | Cherry Kohlrabi for Plum Kohlrabi. He can't read the form, I filled it out. |
 
-## Messages
 
-**2026-08-12, Cherry Kohlrabi (daughter, proxy), phone call:** New patient visit for her father. Moved in with her in July. Has "a folder of printouts" from his old clinic. He bumped into a doorframe twice last month.
+# What's actually going on
 
-**2026-08-25, Cherry Kohlrabi (daughter, proxy):** Scanned a page from his old eye doctor, attached. Nothing more recent than 2023. He says his eyes are "fine." He has 3 different eye drop bottles on the sink and I'm not sure which he's supposed to use.
+What Plum would tell you if you asked.
+
+- Uses latanoprost most nights. Forgets sometimes.
+- Stopped timolol on his own a year ago because it made him wheeze. Never told the eye clinic.
+- Watches the same baseball game twice if his daughter records it.
+- The third bottle on the sink is an old brimonidine from 2021.
+- Has COPD and uses an inhaler. His daughter didn't check it on the form.
+- Wants to know if the clinic validates parking.
+- Bumped into doorframes twice last month. Fell once in 2025.
+- Last eye exam was September 2023 ([optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png), [eye-pressure.csv](patients/glaucoma/eye-pressure.csv)).
+- Says his eyes are fine.
+- Can't read the form. His daughter fills everything out.
+
 
 **eye-pressure.csv**
 
