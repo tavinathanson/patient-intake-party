@@ -81,7 +81,7 @@ footer{margin-top:60px;color:var(--muted);font-size:.85rem}
 <footer>Part of <a href="https://github.com/tavinathanson/patient-intake-party">patient-intake-party</a>.</footer>
 </main>
 <script>
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'];
+const MONTHS=(()=>{const n=new Date(),m=[];for(let i=7;i>=0;i--)m.push(new Date(n.getFullYear(),n.getMonth()-i,1).toLocaleString('en',{month:'short'}));return ['Earlier',...m]})();
 const CHANGES=['Work','Pets','Soap or cleaning','Relationship','Home','Food','Creams or meds','Sleep','Other'];
 const CLOCK=['9pm','12am','3am','6pm','all day','6am','3pm','12pm','9am'];
 const BODY=['','head','','left arm','torso','right arm','left leg','','right leg'];
@@ -118,7 +118,7 @@ const lab=(labels,marks)=>labels.map((l,i)=>({label:l,mark:marks[i]}));
 const TRICKS=[
  ['Yes/no','Only the middle square counts. O is yes, X is no.',()=>grid(ynCells('O'),{small:true})],
  ['Life changes','Each square is a part of life. O: changed for the better. X: for the worse. One square is a blank.',()=>grid(lab(CHANGES,['O','','X','','','','','','']),{small:true})],
- ['Dates','The grid is a calendar: nine months, Jan to Sep. Mark as many as you need.',()=>grid(lab(MONTHS,['','','','','','','O','','']),{small:true})],
+ ['Dates','The grid is a calendar counting back from today. Bottom right is this month, top left is everything earlier. Mark as many as you need.',()=>grid(lab(MONTHS,['','','','','','','O','','']),{small:true})],
  ['Time of day','The grid is a clock. Around the edge, 12am to 9pm. Middle is all day. X worst, O mild, blank fine.',()=>grid(lab(CLOCK,['O','X','X','','','','','','']),{small:true})],
  ['Body location','The X\'s are a body: head, arms, legs. Flip a square to O where it is.',()=>grid(bodyCells(['','X','','O','X','O','X','','X']),{small:true})],
 ];
@@ -134,7 +134,7 @@ function renderQ(freshIdx=-1){
   if(q.type==='changes'){add(h('p','hint','O = changed for the better, X = for the worse. Tap again to clear.'));
     const cells=lab(CHANGES,S.changes);cells[8].input=S.other;add(grid(cells,{onTap:i=>tap('changes',i),fresh:freshIdx}));
     const ws=document.createElement('div');ws.className='whens';
-    S.changes.forEach((m,i)=>{if(!m)return;const w=document.createElement('div');w.className='when';w.append(h('p','hint',`When did ${(i===8&&S.other)||CHANGES[i].toLowerCase()} change?`));
+    S.changes.forEach((m,i)=>{if(!m)return;const w=document.createElement('div');w.className='when';w.append(h('p','hint',`When did ${(i===8&&S.other)||CHANGES[i].toLowerCase()} change? Bottom right is this month.`));
       const sel=S.when[i]||[];w.append(grid(lab(MONTHS,MONTHS.map(mo=>sel.includes(mo)?'O':'')),{onTap:j=>{const mo=MONTHS[j];S.when[i]=sel.includes(mo)?sel.filter(x=>x!==mo):[...sel,mo];renderQ()}}));ws.append(w)});
     add(ws)}
   if(q.type==='clock'){add(h('p','hint','It\'s a clock. X = worst, O = mild, blank = fine. Middle = all day.'));add(grid(lab(CLOCK,S.clock),{onTap:i=>tap('clock',i),fresh:freshIdx}))}
