@@ -3,168 +3,461 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tic-Tac-Toe Intake</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@500;700&display=swap">
+
 <style>
-:root{--paper:#FAF8F2;--card:#FFFFFF;--ink:#26282C;--muted:#6C7079;--line:#BFC2C9;--o:#1E5BB8;--x:#C43A2E;--note:#FFF7D6;--focus:#F0B429}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1A1B1E;--card:#232428;--ink:#E9E7E1;--muted:#9A9DA6;--line:#4E525B;--o:#7FB0FF;--x:#FF8A7A;--note:#2E2A1C;--focus:#F0B429}}
-:root[data-theme="dark"]{--paper:#1A1B1E;--card:#232428;--ink:#E9E7E1;--muted:#9A9DA6;--line:#4E525B;--o:#7FB0FF;--x:#FF8A7A;--note:#2E2A1C;--focus:#F0B429}
-*{box-sizing:border-box}
-body{background:var(--paper);color:var(--ink);font:17px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif;margin:0}
-main{max-width:1040px;margin:0 auto;padding:32px 20px 80px}
-h1{font-size:2rem;margin:0 0 4px;text-wrap:balance}
-h2{font-size:1.1rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:40px 0 12px}
-p{max-width:64ch;margin:0 0 10px}
-.lede{font-size:1.15rem}
-.tricks{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:22px 18px}
-.trick{display:flex;flex-direction:column;gap:8px;font-size:.92rem;line-height:1.35}
-.trick b{display:block}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:330px;aspect-ratio:1;background:var(--line);gap:3px;padding:0}
-.grid.small{max-width:200px;gap:2px}
-.cell{position:relative;background:var(--card);border:0;padding:0;display:flex;flex-direction:column;align-items:center;font:inherit;color:var(--ink);cursor:pointer;aspect-ratio:1}
-.cell:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
-.cell.off,.cell:disabled{cursor:default;color:var(--muted)}
-.cell.off{background:repeating-linear-gradient(135deg,var(--card) 0 6px,var(--paper) 6px 9px)}
-.cell:not(:disabled):hover{box-shadow:inset 0 0 0 3px var(--focus)}
-.cell .lab{flex:none;width:100%;padding:5px 3px 0;text-align:center;font-size:.82rem;font-weight:700;line-height:1.1;color:var(--ink)}
-.small .cell .lab{font-size:.6rem;padding-top:3px}
-.cell svg{flex:1;width:56%;min-height:0;fill:none;stroke-width:9;stroke-linecap:round}
-.cell.x .lab,.cell.o .lab{color:var(--ink)}
-.cell.o svg{stroke:var(--o)}.cell.x svg{stroke:var(--x)}
-.cell svg path,.cell svg circle{stroke-dasharray:300;stroke-dashoffset:0}
-.cell.fresh svg path,.cell.fresh svg circle{animation:draw .3s ease-out}
-@keyframes draw{from{stroke-dashoffset:300}}
-@media (prefers-reduced-motion:reduce){.cell.fresh svg *{animation:none}}
-.app{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:32px;align-items:start}
-@media (max-width:860px){.app{grid-template-columns:1fr}}
-.qcard{display:flex;flex-direction:column;gap:14px}
-.qnum{font-size:.85rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-.qtext{font-size:1.5rem;font-weight:700;margin:0;text-wrap:balance}
-.hint{color:var(--muted);font-size:.95rem;margin:0}
-.when{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-.when .grid{max-width:190px}
-.whens{display:flex;flex-wrap:wrap;gap:18px}
-.nav{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-button.btn{font:inherit;font-weight:700;padding:9px 16px;border:2px solid var(--ink);border-radius:999px;background:transparent;color:var(--ink);cursor:pointer}
-button.btn.primary{background:var(--ink);color:var(--paper)}
-button.btn.quiet{border-color:var(--line);color:var(--muted);font-weight:400}
-button.btn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.note{background:var(--note);padding:18px 22px;font-family:Caveat,"Segoe Print",cursive;font-size:1.45rem;line-height:1.3;transform:rotate(-.6deg);box-shadow:0 2px 0 var(--line);position:sticky;top:16px}
-.note h3{margin:0 0 6px;font-size:1.1rem;font-family:"Atkinson Hyperlegible",system-ui,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
-.note ul{list-style:none;margin:0;padding:0}
-.note li{margin:0 0 2px}
-.note li.todo{color:var(--muted);opacity:.7}
-.legend{display:flex;gap:16px;font-size:.9rem;color:var(--muted);margin-top:6px}
-.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-.legend .lo::before{background:var(--o)}.legend .lx::before{background:var(--x)}
+  /* Colors. Light by default, dark if the viewer prefers it. */
+  :root {
+    --paper: #FAF8F2;
+    --card: #FFFFFF;
+    --ink: #26282C;
+    --muted: #6C7079;
+    --line: #BFC2C9;
+    --o: #1E5BB8;
+    --x: #C43A2E;
+    --note: #FFF7D6;
+    --focus: #F0B429;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1A1B1E;
+      --card: #232428;
+      --ink: #E9E7E1;
+      --muted: #9A9DA6;
+      --line: #4E525B;
+      --o: #7FB0FF;
+      --x: #FF8A7A;
+      --note: #2E2A1C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #1A1B1E;
+    --card: #232428;
+    --ink: #E9E7E1;
+    --muted: #9A9DA6;
+    --line: #4E525B;
+    --o: #7FB0FF;
+    --x: #FF8A7A;
+    --note: #2E2A1C;
+  }
 
-.staff{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);opacity:.72;font-size:.92rem}
-.staff h2{margin-top:0}
-.staff .tricks{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
-.staff .grid.small{max-width:150px}
-footer{margin-top:60px;color:var(--muted);font-size:.85rem}
+  /* Page */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.5 "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; text-wrap: balance; }
+  h2 {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin: 40px 0 12px;
+  }
+  p { max-width: 64ch; margin: 0 0 10px; }
+  .lede { font-size: 1.15rem; }
+  footer { margin-top: 60px; color: var(--muted); font-size: .85rem; }
+
+  /* A tic-tac-toe grid: 3x3 buttons on a line-colored background */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    width: 100%;
+    max-width: 330px;
+    aspect-ratio: 1;
+    background: var(--line);
+  }
+  .grid.small { max-width: 200px; gap: 2px; }
+
+  .cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
+  }
+  .cell:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+  .cell:not(:disabled):hover { box-shadow: inset 0 0 0 3px var(--focus); }
+  .cell.off, .cell:disabled { cursor: default; color: var(--muted); }
+  .cell.off { background: repeating-linear-gradient(135deg, var(--card) 0 6px, var(--paper) 6px 9px); }
+
+  /* Label along the top edge of a square, mark drawn below it */
+  .cell .lab {
+    flex: none;
+    width: 100%;
+    padding: 5px 3px 0;
+    text-align: center;
+    font-size: .82rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .small .cell .lab { font-size: .6rem; padding-top: 3px; }
+  .cell svg {
+    flex: 1;
+    width: 56%;
+    min-height: 0;
+    fill: none;
+    stroke-width: 9;
+    stroke-linecap: round;
+  }
+  .cell.o svg { stroke: var(--o); }
+  .cell.x svg { stroke: var(--x); }
+
+  /* Draw-on animation for the square just tapped */
+  .cell svg path, .cell svg circle { stroke-dasharray: 300; stroke-dashoffset: 0; }
+  .cell.fresh svg path, .cell.fresh svg circle { animation: draw .3s ease-out; }
+  @keyframes draw { from { stroke-dashoffset: 300; } }
+  @media (prefers-reduced-motion: reduce) { .cell.fresh svg * { animation: none; } }
+
+  /* Intake: question on the left, note on the right */
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
+
+  .qcard { display: flex; flex-direction: column; gap: 14px; }
+  .qnum { font-size: .85rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+  .qtext { font-size: 1.5rem; font-weight: 700; margin: 0; text-wrap: balance; }
+  .hint { color: var(--muted); font-size: .95rem; margin: 0; }
+
+  /* Follow-up calendar grids under the life-changes question */
+  .whens { display: flex; flex-wrap: wrap; gap: 18px; }
+  .when { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .when .grid { max-width: 190px; }
+
+  .nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px; }
+  .btn {
+    font: inherit;
+    font-weight: 700;
+    padding: 9px 16px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--ink); color: var(--paper); }
+  .btn.quiet { border-color: var(--line); color: var(--muted); font-weight: 400; }
+  .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* The handwritten note */
+  .note {
+    position: sticky;
+    top: 16px;
+    padding: 18px 22px;
+    background: var(--note);
+    box-shadow: 0 2px 0 var(--line);
+    transform: rotate(-.6deg);
+    font-family: Caveat, "Segoe Print", cursive;
+    font-size: 1.45rem;
+    line-height: 1.3;
+  }
+  .note h3 {
+    margin: 0 0 6px;
+    font: 700 1.1rem "Atkinson Hyperlegible", system-ui, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .note ul { list-style: none; margin: 0; padding: 0; }
+  .note li { margin: 0 0 2px; }
+  .note li.todo { color: var(--muted); opacity: .7; }
+
+  /* Staff instructions, dimmed, at the bottom */
+  .staff {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    opacity: .72;
+    font-size: .92rem;
+  }
+  .staff h2 { margin-top: 0; }
+  .tricks { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 22px 18px; }
+  .trick { display: flex; flex-direction: column; gap: 8px; line-height: 1.35; }
+  .trick b { display: block; }
+  .staff .grid.small { max-width: 150px; }
+
+  .legend { display: flex; gap: 16px; margin-top: 6px; font-size: .9rem; color: var(--muted); }
+  .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    border-radius: 50%;
+    vertical-align: -1px;
+  }
+  .legend .lo::before { background: var(--o); }
+  .legend .lx::before { background: var(--x); }
 </style>
+
 <main>
-<h1>Tic-Tac-Toe Intake</h1>
-<p class="lede">Constraint: <b>the patient can only answer with tic-tac-toe grids.</b> Every question is one grid. How staff read them is at the bottom.</p>
+  <h1>Tic-Tac-Toe Intake</h1>
+  <p class="lede">
+    Constraint: <b>the patient can only answer with tic-tac-toe grids.</b>
+    Every question is one grid. How staff read them is at the bottom.
+  </p>
 
-<div class="app">
-  <section class="qcard" id="q"></section>
-  <aside class="note" id="note"></aside>
-</div>
+  <div class="app">
+    <section class="qcard" id="question"></section>
+    <aside class="note" id="note"></aside>
+  </div>
 
-<section class="staff">
-<h2>Staff instructions: how to read the grids</h2>
-<div class="tricks" id="tricks"></div>
-<div class="legend"><span class="lo">O</span><span class="lx">X</span><span>blank = nothing / none</span></div>
-</section>
-<footer>Part of <a href="https://github.com/tavinathanson/patient-intake-party">patient-intake-party</a>.</footer>
+  <section class="staff">
+    <h2>Staff instructions: how to read the grids</h2>
+    <div class="tricks" id="tricks"></div>
+    <div class="legend">
+      <span class="lo">O</span>
+      <span class="lx">X</span>
+      <span>blank = nothing / none</span>
+    </div>
+  </section>
+
+  <footer>Part of <a href="https://github.com/tavinathanson/patient-intake-party">patient-intake-party</a>.</footer>
 </main>
+
 <script>
-const MONTHS=(()=>{const n=new Date(),m=[];for(let i=7;i>=0;i--)m.push(new Date(n.getFullYear(),n.getMonth()-i,1).toLocaleString('en',{month:'short'}));return ['Earlier',...m]})();
-const CHANGES=['Work','Pets','Soap or cleaning','Relationship','Home','Food','Creams or meds','Sleep','Travel'];
-const CLOCK=['9pm','12am','3am','6pm','all day','6am','3pm','12pm','9am'];
-const BODY=['','head','','left arm','torso','right arm','left leg','','right leg'];
-const bodyCells=marks=>BODY.map((l,i)=>l?{mark:marks[i]}:{off:true});
-// Edit this list to change the intake. Types: yn, changes, clock, body.
-const Q=[
- {id:'worse',type:'yn',text:'Is it worse than last time?'},
- {id:'changes',type:'changes',text:'Anything new lately?'},
- {id:'clock',type:'clock',text:'When is it worst?'},
- {id:'body',type:'body',text:'Where is it?'},
- {id:'helping',type:'yn',text:'Is what you\'re using for it helping?'},
- {id:'sleep',type:'yn',text:'Is it keeping you up at night?'},
- {id:'visit',type:'yn',text:'Do you want to come in?'},
+// ---------- The intake. Edit this. ----------
+// Types: yn (yes/no), changes (life changes + when), clock (time of day), body (where).
+
+const QUESTIONS = [
+  { id: 'worse',   type: 'yn',      text: 'Is it worse than last time?' },
+  { id: 'changes', type: 'changes', text: 'Anything new lately?' },
+  { id: 'clock',   type: 'clock',   text: 'When is it worst?' },
+  { id: 'body',    type: 'body',    text: 'Where is it?' },
+  { id: 'helping', type: 'yn',      text: "Is what you're using for it helping?" },
+  { id: 'sleep',   type: 'yn',      text: 'Is it keeping you up at night?' },
+  { id: 'visit',   type: 'yn',      text: 'Do you want to come in?' },
 ];
-const fresh=()=>{const st={changes:Array(9).fill(''),when:{},clock:Array(9).fill(''),body:['','X','','X','X','X','X','','X']};Q.filter(q=>q.type==='yn').forEach(q=>st[q.id]='');return st};
-let S=fresh(),cur=0;
-const cycle={'':'O',O:'X',X:''};
 
-const MARK={O:'<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="36"/></svg>',X:'<svg viewBox="0 0 100 100"><path d="M20 20 L80 80"/><path d="M80 20 L20 80"/></svg>',"":''};
-function grid(cells,{small=false,onTap=null,fresh=-1}={}){
-  const g=document.createElement('div');g.className='grid'+(small?' small':'');
-  cells.forEach((c,i)=>{
-    const b=document.createElement('button');b.type='button';
-    b.className='cell'+(c.mark?' '+c.mark.toLowerCase():'')+(c.off?' off':'')+(i===fresh?' fresh':'');
-    b.innerHTML=(c.label?`<span class="lab">${c.label}</span>`:'')+MARK[c.mark||''];
-    if(onTap&&!c.off)b.onclick=()=>onTap(i);else b.disabled=!!c.off||!onTap;
-    g.appendChild(b)});
-  return g;
+// What each square means, reading left to right, top to bottom.
+const CHANGES = ['Work', 'Pets', 'Soap or cleaning', 'Relationship', 'Home', 'Food', 'Creams or meds', 'Sleep', 'Travel'];
+const CLOCK = ['9pm', '12am', '3am', '6pm', 'all day', '6am', '3pm', '12pm', '9am'];
+const BODY = ['', 'head', '', 'left arm', 'torso', 'right arm', 'left leg', '', 'right leg'];
+
+// Calendar: "Earlier", then the last eight months ending with this one.
+const MONTHS = ['Earlier'];
+for (let back = 7; back >= 0; back--) {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth() - back, 1);
+  MONTHS.push(d.toLocaleString('en', { month: 'short' }));
 }
-const ynCells=m=>Array.from({length:9},(_,i)=>i===4?{mark:m}:{off:true});
-const lab=(labels,marks)=>labels.map((l,i)=>({label:l,mark:marks[i]}));
 
-const TRICKS=[
- ['Yes/no','Only the middle square counts. O is yes, X is no.',()=>grid(ynCells('O'),{small:true})],
- ['Life changes','Each square is a part of life. O: changed for the better. X: for the worse.',()=>grid(lab(CHANGES,['O','','X','','','','','','']),{small:true})],
- ['Dates','The grid is a calendar counting back from today. Bottom right is this month, top left is everything earlier. Mark as many as you need.',()=>grid(lab(MONTHS,['','','','','','','O','','']),{small:true})],
- ['Time of day','The grid is a clock. Around the edge, 12am to 9pm. Middle is all day. X worst, O mild, blank fine.',()=>grid(lab(CLOCK,['O','X','X','','','','','','']),{small:true})],
- ['Body location','The X\'s are a body: head, arms, legs. Flip a square to O where it is.',()=>grid(bodyCells(['','X','','O','X','O','X','','X']),{small:true})],
+// ---------- State ----------
+
+const BLANK_BODY = BODY.map(part => part ? 'X' : '');
+const NEXT_MARK = { '': 'O', O: 'X', X: '' };
+
+function freshState() {
+  const s = { changes: Array(9).fill(''), when: {}, clock: Array(9).fill(''), body: [...BLANK_BODY] };
+  for (const q of QUESTIONS) if (q.type === 'yn') s[q.id] = '';
+  return s;
+}
+
+let state = freshState();
+let current = 0;  // index into QUESTIONS; equal to QUESTIONS.length when done
+
+// ---------- Building a grid ----------
+
+const MARK_SVG = {
+  O: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="36"/></svg>',
+  X: '<svg viewBox="0 0 100 100"><path d="M20 20 L80 80"/><path d="M80 20 L20 80"/></svg>',
+  '': '',
+};
+
+// cells: nine of { label?, mark?: 'X' | 'O' | '', off?: true }
+// onTap(i): called when square i is tapped. No onTap makes the grid read-only.
+// fresh: index of the square to animate.
+function makeGrid(cells, { small = false, onTap = null, fresh = -1 } = {}) {
+  const grid = el('div', 'grid' + (small ? ' small' : ''));
+  cells.forEach((cell, i) => {
+    const square = el('button', 'cell');
+    square.type = 'button';
+    if (cell.mark) square.classList.add(cell.mark.toLowerCase());
+    if (cell.off) square.classList.add('off');
+    if (i === fresh) square.classList.add('fresh');
+    square.innerHTML = (cell.label ? `<span class="lab">${cell.label}</span>` : '') + MARK_SVG[cell.mark || ''];
+    if (onTap && !cell.off) square.onclick = () => onTap(i);
+    else square.disabled = true;
+    grid.appendChild(square);
+  });
+  return grid;
+}
+
+const yesNoCells = mark => Array.from({ length: 9 }, (_, i) => (i === 4 ? { mark } : { off: true }));
+const labeledCells = (labels, marks) => labels.map((label, i) => ({ label, mark: marks[i] }));
+const bodyCells = marks => BODY.map((part, i) => (part ? { mark: marks[i] } : { off: true }));
+
+// ---------- Rendering the current question ----------
+
+function renderQuestion(fresh = -1) {
+  const root = document.getElementById('question');
+  root.innerHTML = '';
+  if (current >= QUESTIONS.length) return renderDone(root);
+
+  const q = QUESTIONS[current];
+  root.append(el('div', 'qnum', `Question ${current + 1} of ${QUESTIONS.length}`));
+  root.append(el('p', 'qtext', q.text));
+
+  // Tap cycles blank -> O -> X -> blank on state[key][i]
+  const cycle = key => i => { state[key][i] = NEXT_MARK[state[key][i]]; renderQuestion(i); };
+
+  if (q.type === 'yn') {
+    root.append(el('p', 'hint', 'Tap the middle. O = yes, X = no.'));
+    root.append(makeGrid(yesNoCells(state[q.id]), {
+      onTap: () => { state[q.id] = NEXT_MARK[state[q.id]]; renderQuestion(4); },
+    }));
+  }
+
+  if (q.type === 'changes') {
+    root.append(el('p', 'hint', 'O = changed for the better, X = for the worse. Tap again to clear.'));
+    root.append(makeGrid(labeledCells(CHANGES, state.changes), { onTap: cycle('changes'), fresh }));
+    root.append(renderWhenGrids());
+  }
+
+  if (q.type === 'clock') {
+    root.append(el('p', 'hint', "It's a clock. X = worst, O = mild, blank = fine. Middle = all day."));
+    root.append(makeGrid(labeledCells(CLOCK, state.clock), { onTap: cycle('clock'), fresh }));
+  }
+
+  if (q.type === 'body') {
+    root.append(el('p', 'hint', "The X's are you. Flip one to O where it is."));
+    root.append(makeGrid(bodyCells(state.body), {
+      onTap: i => { state.body[i] = state.body[i] === 'X' ? 'O' : 'X'; renderQuestion(i); },
+      fresh,
+    }));
+  }
+
+  root.append(renderNav());
+  renderNote();
+}
+
+// One calendar grid per marked life change. Tap toggles a month.
+function renderWhenGrids() {
+  const wrap = el('div', 'whens');
+  state.changes.forEach((mark, i) => {
+    if (!mark) return;
+    const picked = state.when[i] || [];
+    const box = el('div', 'when');
+    box.append(el('p', 'hint', `When did ${CHANGES[i].toLowerCase()} change? Bottom right is this month.`));
+    box.append(makeGrid(labeledCells(MONTHS, MONTHS.map(m => (picked.includes(m) ? 'O' : ''))), {
+      onTap: j => {
+        const m = MONTHS[j];
+        state.when[i] = picked.includes(m) ? picked.filter(x => x !== m) : [...picked, m];
+        renderQuestion();
+      },
+    }));
+    wrap.append(box);
+  });
+  return wrap;
+}
+
+function renderNav() {
+  const nav = el('div', 'nav');
+  const last = QUESTIONS.length - 1;
+  if (current > 0) nav.append(button('Back', '', () => { current--; renderQuestion(); }));
+  if (current <= last) nav.append(button(current < last ? 'Next' : 'Finish', 'primary', () => { current++; renderQuestion(); }));
+  nav.append(button('Start over', 'quiet', () => { state = freshState(); current = 0; renderQuestion(); }));
+  return nav;
+}
+
+function renderDone(root) {
+  root.innerHTML = `
+    <div class="qnum">Done</div>
+    <p class="qtext">${QUESTIONS.length} grids, one note.</p>
+    <p class="hint">The note on the right is what the care team gets. Back to change an answer, or start over.</p>`;
+  root.append(renderNav());
+  renderNote();
+}
+
+// ---------- The note ----------
+
+const yesNo = mark => (mark === 'O' ? 'yes' : mark === 'X' ? 'no' : null);
+const marked = (labels, marks, mark) => labels.filter((_, i) => marks[i] === mark).join(', ');
+
+// One [question, answer] per question. Answer is null until the question has been reached.
+function noteLines() {
+  const changes = state.changes
+    .map((mark, i) => {
+      if (!mark) return null;
+      const when = state.when[i]?.length ? ', ' + state.when[i].join('/') : '';
+      return `${CHANGES[i].toLowerCase()} (${mark === 'O' ? 'better' : 'worse'}${when})`;
+    })
+    .filter(Boolean);
+  const worst = marked(CLOCK, state.clock, 'X');
+  const mild = marked(CLOCK, state.clock, 'O');
+  const spots = marked(BODY, state.body, 'O');
+
+  return QUESTIONS.map((q, i) => {
+    const reached = current > i;
+    let answer = null;
+    if (q.type === 'yn') answer = yesNo(state[q.id]);
+    if (q.type === 'changes' && (reached || changes.length)) answer = changes.join('; ') || 'nothing';
+    if (q.type === 'clock' && (reached || worst || mild)) answer = (worst || 'no bad time') + (mild ? '. Milder: ' + mild : '');
+    if (q.type === 'body' && (reached || spots)) answer = spots || 'nowhere marked';
+    return [q.text.replace(/\?$/, ''), answer];
+  });
+}
+
+function renderNote() {
+  const items = noteLines()
+    .map(([label, answer]) => (answer === null ? `<li class="todo">${label}: …</li>` : `<li>${label}: ${answer}.</li>`))
+    .join('');
+  document.getElementById('note').innerHTML = `<h3>Note for the care team</h3><ul>${items}</ul>`;
+}
+
+// ---------- Staff instructions ----------
+
+const INSTRUCTIONS = [
+  ['Yes/no', 'Only the middle square counts. O is yes, X is no.',
+    () => makeGrid(yesNoCells('O'), { small: true })],
+  ['Life changes', 'Each square is a part of life. O: changed for the better. X: for the worse.',
+    () => makeGrid(labeledCells(CHANGES, ['O', '', 'X', '', '', '', '', '', '']), { small: true })],
+  ['Dates', 'The grid is a calendar counting back from today. Bottom right is this month, top left is everything earlier. Mark as many as you need.',
+    () => makeGrid(labeledCells(MONTHS, ['', '', '', '', '', '', 'O', '', '']), { small: true })],
+  ['Time of day', 'The grid is a clock. Around the edge, 12am to 9pm. Middle is all day. X worst, O mild, blank fine.',
+    () => makeGrid(labeledCells(CLOCK, ['O', 'X', 'X', '', '', '', '', '', '']), { small: true })],
+  ['Body location', "The X's are a body: head, arms, legs. Flip a square to O where it is.",
+    () => makeGrid(bodyCells(['', 'X', '', 'O', 'X', 'O', 'X', '', 'X']), { small: true })],
 ];
-document.getElementById('tricks').append(...TRICKS.map(([t,d,g])=>{const el=document.createElement('div');el.className='trick';el.innerHTML=`<div><b>${t}</b>${d}</div>`;el.prepend(g());return el}));
 
-function renderQ(freshIdx=-1){
-  const root=document.getElementById('q');root.innerHTML='';
-  if(cur>=Q.length)return renderDone(root);
-  const q=Q[cur],add=e=>root.appendChild(e),h=(tag,cls,txt)=>{const e=document.createElement(tag);e.className=cls;e.textContent=txt;return e};
-  add(h('div','qnum',`Question ${cur+1} of ${Q.length}`));add(h('p','qtext',q.text));
-  const tap=(arr,i)=>{S[arr][i]=cycle[S[arr][i]];renderQ(i)};
-  if(q.type==='yn'){add(h('p','hint','Tap the middle. O = yes, X = no.'));add(grid(ynCells(S[q.id]),{onTap:()=>{S[q.id]=cycle[S[q.id]];renderQ(4)}}))}
-  if(q.type==='changes'){add(h('p','hint','O = changed for the better, X = for the worse. Tap again to clear.'));
-    add(grid(lab(CHANGES,S.changes),{onTap:i=>tap('changes',i),fresh:freshIdx}));
-    const ws=document.createElement('div');ws.className='whens';
-    S.changes.forEach((m,i)=>{if(!m)return;const w=document.createElement('div');w.className='when';w.append(h('p','hint',`When did ${CHANGES[i].toLowerCase()} change? Bottom right is this month.`));
-      const sel=S.when[i]||[];w.append(grid(lab(MONTHS,MONTHS.map(mo=>sel.includes(mo)?'O':'')),{onTap:j=>{const mo=MONTHS[j];S.when[i]=sel.includes(mo)?sel.filter(x=>x!==mo):[...sel,mo];renderQ()}}));ws.append(w)});
-    add(ws)}
-  if(q.type==='clock'){add(h('p','hint','It\'s a clock. X = worst, O = mild, blank = fine. Middle = all day.'));add(grid(lab(CLOCK,S.clock),{onTap:i=>tap('clock',i),fresh:freshIdx}))}
-  if(q.type==='body'){add(h('p','hint','The X\'s are you. Flip one to O where it is.'));add(grid(bodyCells(S.body),{onTap:i=>{S.body[i]=S.body[i]==='X'?'O':'X';renderQ(i)},fresh:freshIdx}))}
-  add(nav());renderNote();
+for (const [title, text, example] of INSTRUCTIONS) {
+  const box = el('div', 'trick');
+  box.append(example());
+  const caption = el('div');
+  caption.innerHTML = `<b>${title}</b>${text}`;
+  box.append(caption);
+  document.getElementById('tricks').append(box);
 }
-function nav(){
-  const n=document.createElement('div');n.className='nav';
-  const b=(t,cls,f)=>{const e=document.createElement('button');e.type='button';e.className='btn '+cls;e.textContent=t;e.onclick=f;return e};
-  if(cur>0)n.append(b('Back','',()=>{cur--;renderQ()}));
-  if(cur<Q.length)n.append(b(cur<Q.length-1?'Next':'Finish','primary',()=>{cur++;renderQ()}));
-  n.append(b('Start over','quiet',()=>{S=fresh();cur=0;renderQ()}));
-  return n;
+
+// ---------- Helpers ----------
+
+function el(tag, className = '', text = '') {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  if (text) e.textContent = text;
+  return e;
 }
-const yn=v=>v==='O'?'yes':v==='X'?'no':null;
-const list=(labels,marks,m)=>labels.filter((_,i)=>marks[i]===m).join(', ');
-function noteLines(){
-  const chg=S.changes.map((m,i)=>m&&`${CHANGES[i].toLowerCase()} (${m==='O'?'better':'worse'}${S.when[i]?.length?', '+S.when[i].join('/'):''})`).filter(Boolean);
-  const worst=list(CLOCK,S.clock,'X'),mild=list(CLOCK,S.clock,'O'),spots=list(BODY,S.body,'O');
-  const seen=i=>cur>i;
-  return Q.map((q,i)=>[q.text,
-    q.type==='yn'?yn(S[q.id]):
-    q.type==='changes'?(seen(i)||chg.length?(chg.join('; ')||'nothing'):null):
-    q.type==='clock'?(seen(i)||worst||mild?(worst||'no bad time')+(mild?'. Milder: '+mild:''):null):
-    (seen(i)||spots?(spots||'nowhere marked'):null)]);
+
+function button(label, className, onClick) {
+  const b = el('button', 'btn ' + className, label);
+  b.type = 'button';
+  b.onclick = onClick;
+  return b;
 }
-function renderNote(){
-  const n=document.getElementById('note');
-  n.innerHTML='<h3>Note for the care team</h3><ul>'+noteLines().map(([k,v])=>{k=k.replace(/\?$/,'');return v===null?`<li class="todo">${k}: …</li>`:`<li>${k}: ${v}.</li>`}).join('')+'</ul>';
-}
-function renderDone(root){
-  root.innerHTML=`<div class="qnum">Done</div><p class="qtext">${Q.length} grids, one note.</p><p class="hint">The note on the right is what the care team gets. Back to change an answer, or start over.</p>`;
-  root.append(nav());renderNote();
-}
-renderQ();
+
+renderQuestion();
 </script>
