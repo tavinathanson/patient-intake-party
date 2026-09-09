@@ -35,7 +35,7 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 
 ## Example patients (not required to use)
 
-Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Each folder has two files: **what the clinic knows** and **what's actually going on**. Pick a silly constraint and get from one to the other. Or skip the asking: summarize, diff, or draw what's already there.
+Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Each folder has two files: **what the clinic knows** and **what's actually going on**.
 
 **These are just examples. Pick a part of one, or two, or none...whatever is fun to play with.**
 
