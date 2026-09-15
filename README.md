@@ -2,13 +2,15 @@
 
 ## Patient Intake Party
 
-patient intake is usually a form, but the broader goal is <ins>helping the care team understand the patient's situation</ins>.
+patient intake is usually a form ([like this one](example-intake-form.md)), but the broader goal is <ins>helping the care team understand the patient's situation</ins>.
 
 this repo has some synthetic, LLM-generated patient examples.
 
 your mission, if you like missions: **Build something that makes patient intake better.**
 
 You don't need to know medicine. Make up whatever you need about the condition or what the care team wants. Have fun.
+
+**Example intake form:** [example-intake-form.md](example-intake-form.md), the kind of paper form a clinic hands you at the front desk.
 
 ### tl;dr 1. Pick a constraint 2. Pick a condition 3. Build something
 
@@ -24,7 +26,7 @@ You don't need to know medicine. Make up whatever you need about the condition o
 > * the patient has an extremely relevant comorbidity that he/she will not notice in a list of checkboxes because he/she doesn't remember what it's called
 > * the doctor has 3 seconds to read the intake before walking in
 
-**2. Pick a condition (see examples with data below, or pick something else)**
+**2. Pick a condition ([see examples with data below](#example-patients-not-required-to-use), or pick something else)**
 
 **3. Build something.** This could mean:
 * collect information differently
@@ -51,7 +53,7 @@ Five made-up patients in [`patients/`](patients), or all on one page in [patient
 | [Fig](patients/persistent-pain) (persistent pain) | at the clinic | pill bottle | 9 visits, 5 doctors | wife |
 | [Plum](patients/glaucoma) (glaucoma) | at the clinic | 2023 eye scan | eye pressure | daughter |
 
-The paper form the clinic uses today is in Fig's and Plum's folders.
+Fig's and Plum's folders each have a filled-out copy of the [example intake form](example-intake-form.md).
 
 ## Sources
 
