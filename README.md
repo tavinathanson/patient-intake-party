@@ -10,6 +10,8 @@ your mission, if you like missions: **Build something that makes patient intake 
 
 You don't need to know medicine. Make up whatever you need about the condition or what the care team wants. Have fun.
 
+### tl;dr 1. Pick a constraint 2. Pick a condition 3. Build something
+
 **1. Invent at least one constraint.** Realistic ones:
 * what if they can only use audio
 * what if their parent is doing this for them
@@ -22,7 +24,9 @@ You don't need to know medicine. Make up whatever you need about the condition o
 > * the patient has an extremely relevant comorbidity that he/she will not notice in a list of checkboxes because he/she doesn't remember what it's called
 > * the doctor has 3 seconds to read the intake before walking in
 
-**2. Build something.** This could mean:
+**2. Pick a condition (see examples with data below, or pick something else)**
+
+**3. Build something.** This could mean:
 * collect information differently
 * use/summarize/expand information we already have
 * figure out what’s missing
