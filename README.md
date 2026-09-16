@@ -57,6 +57,8 @@ git checkout -b my-team-name
 
 Your files go right next to this README, not in a subfolder: `index.html`, `package.json`, `main.py`, whatever you have. Leave the `patients/` folder alone or delete it, either is fine.
 
+No Dockerfile or config needed: [Railpack](https://railpack.com) looks at your files and figures out how to build and run them (see [deploy.yml](https://github.com/tavinathanson/patient-intake-party/blob/main/.github/workflows/deploy.yml) for the whole pipeline).
+
 ### 4. Push
 
 ```bash
@@ -72,7 +74,7 @@ About two minutes after any push, go to:
 
 Every push redeploys.
 
-**What runs:** it works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
+**What runs:** a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
 
 **Example:** the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is one `index.html` at the root, live at [tic-tac-toe-intake-oop.fly.dev](https://tic-tac-toe-intake-oop.fly.dev).
 
