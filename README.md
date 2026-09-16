@@ -65,17 +65,16 @@ git push -u origin my-team-name
 
 ### 5. Find your URL
 
-About two minutes after each push, in either place:
+About two minutes after any push, go to:
 
 * `https://my-team-name-intake-oop.fly.dev` (your branch name plus `-intake-oop`)
-* The [Deployments page](https://github.com/tavinathanson/patient-intake-party/deployments), which lists every team's link
+* Or use the [Deployments page](https://github.com/tavinathanson/patient-intake-party/deployments), which lists every team's link
 
 Every push redeploys.
 
 **What runs:** it works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
 
 **Example:** the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is one `index.html` at the root, live at [tic-tac-toe-intake-oop.fly.dev](https://tic-tac-toe-intake-oop.fly.dev).
-
 
 ## Example patients (not required to use)
 
