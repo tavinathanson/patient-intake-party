@@ -1,6 +1,7 @@
 # Every branch except main deploys to Fly at https://<branch>-intake-oop.fly.dev
 # The app is built with Railpack (https://railpack.com), which detects the stack from the files present.
-# Needs repo secrets FLY_API_TOKEN (an org token) and FLY_ORG (the org slug).
+# Needs repo secret FLY_API_TOKEN (an org token) and repo variable FLY_ORG (the org slug).
+# Each branch is registered as a GitHub environment, so live URLs show up under Deployments on the repo home page.
 name: deploy
 on:
   push:
@@ -11,6 +12,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_name }}
+      url: ${{ steps.deploy.outputs.url }}
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
     steps:
@@ -18,11 +22,12 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - uses: docker/setup-buildx-action@v3
       - run: curl -sSL https://railpack.com/install.sh | sh
-      - run: |
+      - id: deploy
+        run: |
           app="$(echo "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-19)-intake-oop"
           image="registry.fly.io/$app:$GITHUB_SHA"
-          org="${{ secrets.FLY_ORG || vars.FLY_ORG }}"
-          [ -n "$org" ] || { echo "::error::FLY_ORG is not set. Add it as a repo secret with your Fly org slug."; exit 1; }
+          org="${{ vars.FLY_ORG }}"
+          [ -n "$org" ] || { echo "::error::FLY_ORG is not set. Add it as a repo variable with your Fly org slug."; exit 1; }
           if ! out=$(flyctl apps create "$app" --org "$org" 2>&1) && ! flyctl status --app "$app" >/dev/null 2>&1; then
             echo "::error::Could not create Fly app '$app': $out"; exit 1
           fi
@@ -30,4 +35,5 @@ jobs:
           railpack prepare . --plan-out plan.json
           docker buildx build --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend -f plan.json --push -t "$image" .
           flyctl deploy --app "$app" --image "$image" --ha=false
+          echo "url=https://$app.fly.dev" >> "$GITHUB_OUTPUT"
           echo "### 🎉 https://$app.fly.dev" >> "$GITHUB_STEP_SUMMARY"

@@ -57,7 +57,7 @@ git checkout -b my-team-name
 git push -u origin my-team-name
 ```
 
-Two minutes later it'll be live at `https://my-team-name-intake-oop.fly.dev`. Every push redeploys.
+Two minutes later it'll be live at `https://my-team-name-intake-oop.fly.dev`. Every push redeploys. Your link also appears under **Deployments** on the [repo home page](https://github.com/tavinathanson/patient-intake-party), and next to your commit as a green check.
 
 It works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
 
