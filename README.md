@@ -65,11 +65,10 @@ git push -u origin my-team-name
 
 ### 5. Find your URL
 
-About two minutes after each push, in any of these places:
+About two minutes after each push, in either place:
 
 * `https://my-team-name-intake-oop.fly.dev` (your branch name plus `-intake-oop`)
 * The [Deployments page](https://github.com/tavinathanson/patient-intake-party/deployments), which lists every team's link
-* The green check next to your latest commit
 
 Every push redeploys.
 
