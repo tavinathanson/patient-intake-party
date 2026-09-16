@@ -37,7 +37,7 @@ You don't need to know medicine. Make up whatever you need about the condition o
 
 Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, viz
 
-[Live demo of a sample project](https://tavinathanson.github.io/patient-intake-party/demos/tic-tac-toe/): the patient can only answer with tic-tac-toe grids. Source in [demos/tic-tac-toe](demos/tic-tac-toe).
+[Live demo of a sample project](https://tic-tac-toe-intake.fly.dev): the patient can only answer with tic-tac-toe grids. Source is the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe).
 
 ### Deploy: push a branch
 
@@ -49,7 +49,7 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 git checkout -b my-team-name
 ```
 
-**Step 3: build at the top level of the repo.** Your files go right next to this README, not in a subfolder. So your `index.html`, or your `package.json`, or your `main.py` sits at the root. Leave the `patients/` and `demos/` folders alone or delete them, either is fine.
+**Step 3: build at the top level of the repo.** Your files go right next to this README, not in a subfolder. So your `index.html`, or your `package.json`, or your `main.py` sits at the root. Leave the `patients/` folder alone or delete it, either is fine.
 
 **Step 4: push.**
 
@@ -61,7 +61,7 @@ Two minutes later it'll be live at `https://my-team-name-intake.fly.dev`. Every 
 
 It works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
 
-Example: the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is the sample project above, deployed at [tic-tac-toe-intake.fly.dev](https://tic-tac-toe-intake.fly.dev).
+Example: the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is the sample project above. It's one `index.html` at the root, deployed at [tic-tac-toe-intake.fly.dev](https://tic-tac-toe-intake.fly.dev).
 
 
 ## Example patients (not required to use)
