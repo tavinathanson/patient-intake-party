@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brainrot General — Vibe intake</title>
+  <style>
+    :root { --ink: #30145c; --purple: #7135cf; --paper: #fff; --lavender: #eadeff; --lime: #d9fa77; --pink: #ffb8cc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--lavender); color: var(--ink); font-family: 'Trebuchet MS', sans-serif; font-size: 17px; line-height: 1.5; }
+    header { padding: 20px 5vw; display: flex; justify-content: space-between; gap: 12px; align-items: center; border-bottom: 2px solid var(--ink); background: var(--paper); }
+    .brand { font-weight: 900; font-size: 23px; letter-spacing: -1px; }
+    .badge { background: var(--lime); padding: 5px 14px; border: 2px solid var(--ink); border-radius: 30px; font-size: 14px; white-space: nowrap; }
+    main { max-width: 1120px; margin: auto; padding: 55px 24px; }
+    .intro { max-width: 780px; margin-bottom: 36px; }
+    h1 { font-family: 'Arial Black', 'Trebuchet MS', sans-serif; font-size: clamp(46px, 7vw, 82px); line-height: 1.02; letter-spacing: -4px; margin: 0 0 24px; }
+    .intro p { max-width: 590px; font-size: 19px; }
+    .layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; align-items: start; }
+    form { background: var(--paper); border: 2px solid var(--ink); border-radius: 18px; padding: 30px; box-shadow: 7px 7px 0 var(--purple); }
+    h2 { font-size: 24px; margin: 0 0 6px; letter-spacing: -.7px; }
+    .hint { margin: 0 0 24px; font-size: 14px; }
+    label, legend { font-weight: bold; }
+    input[type=text], select, textarea { display: block; width: 100%; font: inherit; color: var(--ink); background: #faf7ff; border: 2px solid #9f89bb; border-radius: 8px; padding: 12px; margin: 8px 0 24px; }
+    textarea { resize: vertical; min-height: 100px; }
+    fieldset { border: 0; margin: 0 0 24px; padding: 0; }
+    legend { margin-bottom: 10px; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .choice { display: flex; align-items: center; gap: 9px; padding: 10px; border: 2px solid #d6c8e9; border-radius: 8px; font-size: 14px; cursor: pointer; }
+    .choice:has(input:checked) { background: var(--lime); border-color: var(--ink); }
+    input { accent-color: var(--purple); }
+    input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; }
+    input[type=range] { width: 100%; margin: 14px 0 0; }
+    .range-labels { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 24px; }
+    button { width: 100%; border: 2px solid var(--ink); border-radius: 9px; padding: 15px; background: var(--purple); color: white; font: bold 18px 'Trebuchet MS', sans-serif; cursor: pointer; box-shadow: 3px 3px 0 var(--ink); }
+    button:hover { background: #5725a5; }
+    button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+    :focus-visible { outline: 3px solid #d63576; outline-offset: 4px; }
+    aside { padding-top: 14px; }
+    .sticker { display: inline-block; background: var(--pink); border: 2px solid var(--ink); padding: 10px 20px; border-radius: 50%; transform: rotate(8deg); font-weight: bold; margin: 0 0 24px 20px; }
+    .receipt { background: white; padding: 28px; border-top: 8px solid var(--ink); box-shadow: 0 8px 0 #cab7e6; overflow-wrap: anywhere; }
+    .receipt h2 { font-family: 'Courier New', monospace; font-size: 22px; }
+    .receipt hr { border: 0; border-top: 2px dashed #b6a6ca; margin: 22px 0; }
+    .receipt p { margin: 12px 0; }
+    .ticket { font-family: 'Courier New', monospace; font-size: 13px; }
+    .empty { padding: 20px 0; }
+    .empty span { font-size: 54px; display: block; }
+    .stamp { display: inline-block; border: 3px solid var(--purple); color: var(--purple); padding: 5px 12px; font-weight: bold; transform: rotate(-4deg); margin-top: 12px; }
+    .note { font-size: 13px; margin-top: 22px; }
+    footer { padding: 30px 24px; text-align: center; font-size: 13px; }
+    @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } main { padding-top: 35px; } h1 { letter-spacing: -2px; } form { padding: 22px; } header { flex-wrap: wrap; } }
+    @media (max-width: 380px) { .choices { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header><div class="brand">✳ Brainrot General</div><span class="badge">Terminally online. Walk-ins welcome.</span></header>
+  <main>
+    <div class="intro">
+      <h1>Chat, am I cooked?</h1>
+      <p>Welcome to the intake desk. Leave your lore, report your vibes, and let our imaginary staff assess the situation.</p>
+    </div>
+    <div class="layout">
+      <form id="intake">
+        <h2>The lore drop</h2>
+        <p class="hint">A fake intake for fake problems. Use made-up details only.</p>
+        <label for="name">What do we call you, legend?</label>
+        <input id="name" name="name" type="text" placeholder="e.g. Sir Yaps-a-Lot" maxlength="80" required>
+        <label for="reason">What brings you to the function?</label>
+        <select id="reason" name="reason">
+          <option>My aura has left the group chat</option>
+          <option>I said “it's giving” in a work meeting</option>
+          <option>The algorithm knows too much</option>
+          <option>I have become the yapper I feared</option>
+          <option>I've been perceived and need to recover</option>
+        </select>
+        <fieldset>
+          <legend>Current symptoms of being online</legend>
+          <div class="choices">
+            <label class="choice"><input type="checkbox" name="symptom" value="Chronic doomscrolling">Chronic doomscrolling</label>
+            <label class="choice"><input type="checkbox" name="symptom" value="Phantom notification">Phantom notification</label>
+            <label class="choice"><input type="checkbox" name="symptom" value="Unscheduled yap session">Unscheduled yap session</label>
+            <label class="choice"><input type="checkbox" name="symptom" value="Delulu side quest">Delulu side quest</label>
+            <label class="choice"><input type="checkbox" name="symptom" value="Skibidi on the brain">Skibidi on the brain</label>
+            <label class="choice"><input type="checkbox" name="symptom" value="NPC dialogue loop">NPC dialogue loop</label>
+          </div>
+        </fieldset>
+        <label for="aura">Current aura: <output id="aura-value" for="aura">50</output> / 100</label>
+        <input id="aura" name="aura" type="range" min="0" max="100" value="50">
+        <div class="range-labels"><span>Fully cooked</span><span>Main character</span></div>
+        <label for="lore">Any additional lore? (optional)</label>
+        <textarea id="lore" name="lore" maxlength="500" placeholder="It all started when I opened the comments…"></textarea>
+        <button type="submit">Generate my fake intake</button>
+        <p class="note">Just a parody. Nothing is sent or saved. This is not medical care.</p>
+      </form>
+      <aside>
+        <div class="sticker">100% unserious</div>
+        <section class="receipt" aria-labelledby="receipt-title">
+          <p class="ticket">Brainrot General / Vibe assessment desk</p>
+          <h2 id="receipt-title">Your intake receipt</h2>
+          <hr>
+          <div id="result" role="status" aria-live="polite" aria-atomic="true">
+            <div class="empty"><span aria-hidden="true">🫠</span><p>No lore on file. Yet.</p><p>Fill out the form and your fake intake summary will appear here.</p></div>
+          </div>
+          <hr>
+          <p class="ticket">Insurance accepted: imaginary.<br>Copay: one exceptionally niche meme.</p>
+        </section>
+        <p class="note">Our staff includes Dr. Touchgrass, a receptionist on their third side quest, and one very tired houseplant.</p>
+      </aside>
+    </div>
+  </main>
+  <footer>Brainrot General © 2026 · Fictional clinic. Real commitment to the bit.</footer>
+  <script>
+    const form = document.getElementById('intake');
+    const aura = document.getElementById('aura');
+    aura.addEventListener('input', () => {
+      document.getElementById('aura-value').value = aura.value;
+    });
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const result = document.getElementById('result');
+      result.replaceChildren();
+      const rows = [
+        ['Patient alias', data.get('name').trim() || 'Anonymous legend'],
+        ['Reason for visit', data.get('reason')],
+        ['Reported symptoms', data.getAll('symptom').join(', ') || 'None. Suspiciously normal.'],
+        ['Aura reading', `${data.get('aura')} / 100 — ${Number(data.get('aura')) < 35 ? 'Cooked, but the lore is immaculate.' : Number(data.get('aura')) < 75 ? 'Still loading the main character arc.' : 'Unreasonably powerful presence.'}`],
+        ['Additional lore', data.get('lore').trim() || 'The lore remains classified.'],
+        ['Assigned imaginary provider', 'Dr. Touchgrass, Department of Logging Off']
+      ];
+      for (const [label, value] of rows) {
+        const paragraph = document.createElement('p');
+        const heading = document.createElement('strong');
+        heading.textContent = `${label}: `;
+        paragraph.append(heading, document.createTextNode(value));
+        result.append(paragraph);
+      }
+      const stamp = document.createElement('div');
+      stamp.className = 'stamp';
+      stamp.textContent = 'Lore successfully acquired';
+      result.append(stamp);
+    });
+  </script>
+</body>
+</html>
