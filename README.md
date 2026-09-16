@@ -41,7 +41,7 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 
 ### Deploy: push a branch
 
-**Step 1, once per person: get push access.** Comment anything on the [pinned issue](https://github.com/tavinathanson/patient-intake-party/issues) while signed in to GitHub. Within a minute a bot replies with a link. Open it, click the green **Accept invitation** button, and you're in. (GitHub emails you the same invite, either works.)
+**Step 1, once per person: get push access.** Comment anything on the [pinned issue](https://github.com/tavinathanson/patient-intake-party/issues/1) while signed in to GitHub. Within a minute a bot replies with a link. Open it, click the green **Accept invitation** button, and you're in. (GitHub emails you the same invite, either works.)
 
 **Step 2: make a branch.** One branch per team, lowercase and dashes.
 
