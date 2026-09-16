@@ -37,7 +37,7 @@ You don't need to know medicine. Make up whatever you need about the condition o
 
 Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, viz
 
-[Live demo of a sample project](https://tic-tac-toe-intake.fly.dev): the patient can only answer with tic-tac-toe grids. Source is the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe).
+[Live demo of a sample project](https://tic-tac-toe-intake-oop.fly.dev): the patient can only answer with tic-tac-toe grids. Source is the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe).
 
 ### Deploy: push a branch
 
@@ -57,11 +57,11 @@ git checkout -b my-team-name
 git push -u origin my-team-name
 ```
 
-Two minutes later it'll be live at `https://my-team-name-intake.fly.dev`. Every push redeploys.
+Two minutes later it'll be live at `https://my-team-name-intake-oop.fly.dev`. Every push redeploys.
 
 It works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
 
-Example: the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is the sample project above. It's one `index.html` at the root, deployed at [tic-tac-toe-intake.fly.dev](https://tic-tac-toe-intake.fly.dev).
+Example: the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is the sample project above. It's one `index.html` at the root, deployed at [tic-tac-toe-intake-oop.fly.dev](https://tic-tac-toe-intake-oop.fly.dev).
 
 
 ## Example patients (not required to use)
