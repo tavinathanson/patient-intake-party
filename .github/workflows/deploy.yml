@@ -1,6 +1,6 @@
 # Every branch except main deploys to Fly at https://<branch>.fly.dev
 # The app is built with Railpack (https://railpack.com), which detects the stack from the files present.
-# Needs repo secret FLY_API_TOKEN (an org token). Optional: FLY_ORG variable.
+# Needs repo secrets FLY_API_TOKEN (an org token) and FLY_ORG (the org slug).
 name: deploy
 on:
   push:
@@ -21,9 +21,11 @@ jobs:
       - run: |
           app=$(echo "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-30)
           image="registry.fly.io/$app:$GITHUB_SHA"
-          flyctl apps create "$app" --org "${{ vars.FLY_ORG || 'personal' }}" \
-            || flyctl status --app "$app" >/dev/null \
-            || { echo "::error::The name '$app' is already taken on Fly by someone else. Rename your branch."; exit 1; }
+          org="${{ secrets.FLY_ORG || vars.FLY_ORG }}"
+          [ -n "$org" ] || { echo "::error::FLY_ORG is not set. Add it as a repo secret with your Fly org slug."; exit 1; }
+          if ! out=$(flyctl apps create "$app" --org "$org" 2>&1) && ! flyctl status --app "$app" >/dev/null 2>&1; then
+            echo "::error::Could not create Fly app '$app': $out. If the name is taken, rename your branch."; exit 1
+          fi
           flyctl auth docker
           railpack prepare . --plan-out plan.json
           docker buildx build --build-arg BUILDKIT_SYNTAX=ghcr.io/railwayapp/railpack-frontend -f plan.json --push -t "$image" .
