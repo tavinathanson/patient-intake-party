@@ -1,4 +1,4 @@
-# Every branch except main deploys to Fly at https://<branch>.fly.dev
+# Every branch except main deploys to Fly at https://<branch>-intake.fly.dev
 # The app is built with Railpack (https://railpack.com), which detects the stack from the files present.
 # Needs repo secrets FLY_API_TOKEN (an org token) and FLY_ORG (the org slug).
 name: deploy
@@ -19,12 +19,12 @@ jobs:
       - uses: docker/setup-buildx-action@v3
       - run: curl -sSL https://railpack.com/install.sh | sh
       - run: |
-          app=$(echo "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-30)
+          app="$(echo "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//' | cut -c1-23)-intake"
           image="registry.fly.io/$app:$GITHUB_SHA"
           org="${{ secrets.FLY_ORG || vars.FLY_ORG }}"
           [ -n "$org" ] || { echo "::error::FLY_ORG is not set. Add it as a repo secret with your Fly org slug."; exit 1; }
           if ! out=$(flyctl apps create "$app" --org "$org" 2>&1) && ! flyctl status --app "$app" >/dev/null 2>&1; then
-            echo "::error::Could not create Fly app '$app': $out. If the name is taken, rename your branch."; exit 1
+            echo "::error::Could not create Fly app '$app': $out"; exit 1
           fi
           flyctl auth docker
           railpack prepare . --plan-out plan.json
