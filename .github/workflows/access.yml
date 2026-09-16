@@ -1,0 +1,21 @@
+# Anyone who comments on the issue titled "Get push access" gets invited as a collaborator (push).
+# Needs repo secret ADMIN_TOKEN: a fine-grained PAT for this repo with Administration: write.
+name: access
+on:
+  issue_comment:
+    types: [created]
+jobs:
+  invite:
+    if: contains(github.event.issue.title, 'push access') && github.event.comment.user.login != github.repository_owner
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      USER: ${{ github.event.comment.user.login }}
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: gh api -X PUT "repos/$GITHUB_REPOSITORY/collaborators/$USER" -f permission=push
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue comment ${{ github.event.issue.number }} -R "$GITHUB_REPOSITORY" -b "@$USER you're invited. Accept here: https://github.com/$GITHUB_REPOSITORY/invitations"

@@ -39,6 +39,22 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 
 [Live demo of a sample project](https://tavinathanson.github.io/patient-intake-party/demos/tic-tac-toe/): the patient can only answer with tic-tac-toe grids. Source in [demos/tic-tac-toe](demos/tic-tac-toe).
 
+### Deploy: push a branch
+
+**Step 1, once per person: get push access.** Comment anything on the [pinned issue](https://github.com/tavinathanson/patient-intake-party/issues) while signed in to GitHub. Within a minute a bot replies with a link. Open it, click the green **Accept invitation** button, and you're in. (GitHub emails you the same invite, either works.)
+
+**Step 2: push a branch.** One branch per team, lowercase and dashes.
+
+```bash
+git checkout -b my-team-name
+git push -u origin my-team-name
+```
+
+Two minutes later it'll be live at `https://my-team-name.fly.dev`. Every push redeploys.
+
+It works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
+
+
 ## Example patients (not required to use)
 
 Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Each folder has two files: **what the clinic knows** and **what's actually going on**.
