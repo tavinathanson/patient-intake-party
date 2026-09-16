@@ -39,29 +39,43 @@ Anything goes here, e.g. form, UI, API, agentic something-or-other, voice app, v
 
 [Live demo of a sample project](https://tic-tac-toe-intake-oop.fly.dev): the patient can only answer with tic-tac-toe grids. Source is the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe).
 
-### Deploy: push a branch
+## Deploy: push a branch, get a URL
 
-**Step 1, once per person: get push access.** Comment anything on the [pinned issue](https://github.com/tavinathanson/patient-intake-party/issues/1) while signed in to GitHub. Within a minute a bot replies with a link. Open it, click the green **Accept invitation** button, and you're in. (GitHub emails you the same invite, either works.)
+### 1. Get push access (once per person)
 
-**Step 2: make a branch.** One branch per team, lowercase and dashes.
+Comment anything on [issue #1](https://github.com/tavinathanson/patient-intake-party/issues/1) while signed in to GitHub. Within a minute a bot replies with an invite link. Open it and click the green **Accept invitation** button. (GitHub emails you the same invite.)
+
+### 2. Make a branch
+
+One branch per team, lowercase and dashes.
 
 ```bash
 git checkout -b my-team-name
 ```
 
-**Step 3: build at the top level of the repo.** Your files go right next to this README, not in a subfolder. So your `index.html`, or your `package.json`, or your `main.py` sits at the root. Leave the `patients/` folder alone or delete it, either is fine.
+### 3. Build at the top level
 
-**Step 4: push.**
+Your files go right next to this README, not in a subfolder: `index.html`, `package.json`, `main.py`, whatever you have. Leave the `patients/` folder alone or delete it, either is fine.
+
+### 4. Push
 
 ```bash
 git push -u origin my-team-name
 ```
 
-Two minutes later it'll be live at `https://my-team-name-intake-oop.fly.dev`. Every push redeploys. Your link also appears under **Deployments** on the [repo home page](https://github.com/tavinathanson/patient-intake-party), and next to your commit as a green check.
+### 5. Find your URL
 
-It works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
+About two minutes after each push, in any of these places:
 
-Example: the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is the sample project above. It's one `index.html` at the root, deployed at [tic-tac-toe-intake-oop.fly.dev](https://tic-tac-toe-intake-oop.fly.dev).
+* `https://my-team-name-intake-oop.fly.dev` (your branch name plus `-intake-oop`)
+* The [Deployments page](https://github.com/tavinathanson/patient-intake-party/deployments), which lists every team's link
+* The green check next to your latest commit
+
+Every push redeploys.
+
+**What runs:** it works out how to run your project from the files in it ([Railpack](https://railpack.com)): a plain `index.html`, Next.js, Django, Flask, Go, whatever. Python apps: put `gunicorn` in `requirements.txt`, and for Flask name the file `main.py`.
+
+**Example:** the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is one `index.html` at the root, live at [tic-tac-toe-intake-oop.fly.dev](https://tic-tac-toe-intake-oop.fly.dev).
 
 
 ## Example patients (not required to use)
