@@ -115,12 +115,6 @@
   button.act.no{flex:1 1 calc(50% - 4px)}
   .hint{margin:12px 0 0; font-size:12px; color:var(--dim); text-align:center; min-height:16px}
 
-  /* within-question counter, so an 8-item reel doesn't feel infinite */
-  .subcount{
-    margin:10px 0 0 32px; font-size:11px; color:var(--gold); letter-spacing:.06em;
-    font-weight:700; opacity:.9;
-  }
-
   /* jackpot */
   .jackpot{
     position:absolute; inset:0; z-index:5; display:grid; place-items:center;
@@ -219,7 +213,7 @@
 
 <script>
 const SLOT_H = 56, LOOPS = 14;
-let DATA = null, qi = 0, answers = [], reelPos = 0;
+let DATA = null, qi = 0, answers = [];
 let gen = 0, spinTimer = null;   // gen invalidates in-flight spins when the question changes
 let absIdx = 0;                  // position on the repeated strip; every spin only ever moves forward
 const PASSES = 2;                // full trips through every option before it settles
@@ -261,7 +255,6 @@ function render(){
   pips();
   if(qi >= DATA.questions.length) return handoff();
   const q = DATA.questions[qi];
-  reelPos = 0;
 
   const items = q.mode === 'spin_scale'
     ? Array.from({length: q.reel_range[1]-q.reel_range[0]+1}, (_,i) => ({value:i, num:true}))
@@ -275,7 +268,6 @@ function render(){
     <p class="printed ${q.not_on_paper_form?'ghost':''}">
       ${q.not_on_paper_form ? '★ not on the paper form' : 'paper form: ' + q.printed_as}
     </p>
-    ${q.mode==='spin_through_all' ? `<p class="subcount" id="subcount">1 OF ${items.length}</p>` : ''}
     <div class="machine">
       <div class="window"><div class="payline"></div><div class="strip" id="strip"></div></div>
       <button class="lever" id="lever" aria-label="Pull the lever">
@@ -283,9 +275,7 @@ function render(){
       </button>
     </div>
     <div class="acts" id="acts"></div>
-    <p class="hint" id="hint">${q.mode==='spin_through_all'
-      ? 'Pull to spin the reel. Yes or no on whatever it lands on.'
-      : 'Pull the lever. Keep what it lands on, or pull again.'}</p>`;
+    <p class="hint" id="hint">Pull the lever. Keep what it lands on, or pull again.</p>`;
 
   // build a long looping strip so every pull has a full reel to travel through
   const strip = $('#strip');
@@ -316,12 +306,11 @@ function setStrip(i, animate, ms=0){
 // Every pull is a real spin: PASSES full trips through all the options, then it
 // settles on `land`. Afterwards the strip snaps back to an identical-looking
 // position further up, so the reel can be pulled forever without running out.
-function spin(items, land, onLanded, quick){
+function spin(items, land, onLanded){
   const len = items.length;
   const offset = ((land - (absIdx % len)) + len) % len;
   const target = absIdx + PASSES * len + offset;
-  // walk-through reels get pulled many times per question, so they spin brisker
-  const ms = reduced ? 0 : (quick ? 850 + Math.random()*200 : 1500 + Math.random()*500);
+  const ms = reduced ? 0 : 1400 + Math.random()*400;
   const mine = gen;
 
   setStrip(target, true, ms);
@@ -345,18 +334,6 @@ function pull(q, items){
   lever.dataset.spinning = '1';
   $('#acts').innerHTML = '';
   $('#hint').textContent = 'Spinning…';
-
-  if(q.mode === 'spin_through_all'){
-    // spins the whole reel, then settles on the option being asked about
-    if(reelPos >= items.length){ lever.dataset.spinning = '0'; return; }
-    const sub = $('#subcount');
-    if(sub) sub.textContent = `${reelPos+1} OF ${items.length}`;
-    spin(items, reelPos, () => {
-      lever.dataset.spinning = '0';
-      showYesNo(q, items[reelPos]);
-    }, true);
-    return;
-  }
 
   const land = Math.floor(Math.random() * items.length);
   spin(items, land, () => {
@@ -382,32 +359,12 @@ function jackpot(text, then){
   setTimeout(()=>{ el.remove(); then && then(); }, reduced ? 200 : 1000);
 }
 
-function showYesNo(q, item){
-  $('#hint').textContent = item.plain_language || 'Yes or no. Then pull again.';
-  $('#acts').innerHTML = `<button class="act go" id="yes">Yes</button>
-                          <button class="act no" id="no">No</button>
-                          <button class="act no" id="dunno">Not sure</button>`;
-  const step = verdict => {
-    if(verdict !== 'no') answers.push({q, item, verdict});
-    const advance = () => {
-      reelPos++;
-      if(reelPos >= (q.reel||[]).length || item.terminal){ qi++; return render(); }
-      $('#acts').innerHTML = '';                  // no auto-advance — the lever drives it
-      $('#hint').textContent = 'Pull again for the next one.';
-    };
-    // a yes the paper form never captured is the one worth celebrating
-    if(verdict === 'yes') return jackpot(item.paper_caught_it === false ? 'JACKPOT!' : 'HIT!', advance);
-    advance();
-  };
-  $('#yes').onclick = () => step('yes');
-  $('#no').onclick = () => step('no');
-  $('#dunno').onclick = () => step('unsure');
-}
-
 function accept(q, item){
   answers.push({q, item, verdict:'picked'});
   const go = () => { qi++; render(); };
-  if(item.chart_match) return jackpot('JACKPOT!', go);   // matches what the chart knows
+  // an answer the paper form never captured is the one worth celebrating
+  if(item.paper_caught_it === false) return jackpot('JACKPOT!', go);
+  if(item.chart_match) return jackpot('HIT!', go);
   go();
 }
 
@@ -424,18 +381,10 @@ function buildIntake(){
     answers: {}
   };
   for(const a of answers){
-    const id = a.q.id;
     out.pulls++;
-    if(a.item.paper_caught_it === false) out.missed_on_paper++;
-    if(a.q.mode === 'spin_through_all'){
-      (out.answers[id] ||= []).push({
-        item: a.item.value,
-        said: a.verdict,
-        ...(a.item.paper_caught_it === false ? {missed_on_paper: true} : {})
-      });
-    }else{
-      out.answers[id] = a.item.value;
-    }
+    const missed = a.item.paper_caught_it === false;
+    if(missed) out.missed_on_paper++;
+    out.answers[a.q.id] = { value: a.item.value, missed_on_paper: missed };
   }
   return out;
 }
@@ -473,21 +422,11 @@ function buildReceipt(intake){
   L.push(rule('-'));
 
   for(const q of DATA.questions){
-    const v = intake.answers[q.id];
-    if(v === undefined) continue;
-    const head = q.printed_as === 'NOT ON THE PAPER FORM'
-      ? '* ' + q.id.replace(/_/g,' ').toUpperCase()
-      : q.id.replace(/_/g,' ').toUpperCase();
-    L.push(head);
-    if(Array.isArray(v)){
-      if(!v.length) L.push('  (nothing selected)');
-      for(const x of v){
-        const mark = x.missed_on_paper ? ' *' : '';
-        L.push(cols('  ' + x.item.replace(/_/g,' '), x.said.toUpperCase() + mark));
-      }
-    }else{
-      L.push(wrap(String(v).replace(/_/g,' ')));
-    }
+    const a = intake.answers[q.id];
+    if(!a) continue;
+    const star = a.missed_on_paper || q.not_on_paper_form;
+    L.push((star ? '* ' : '') + q.id.replace(/_/g,' ').toUpperCase());
+    L.push(wrap(String(a.value).replace(/_/g,' ')));
     L.push('');
   }
 

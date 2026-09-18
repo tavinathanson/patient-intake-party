@@ -18,10 +18,11 @@
   },
 
   "reel_modes": {
-    "spin_to_pick": "Reel cycles all options. Lever stops it. Lands on one answer.",
-    "spin_through_all": "Reel walks every option one at a time. Yes / No on each. This is the checkbox-grid replacement.",
+    "spin_to_pick": "Reel spins through every option, lands on one. That is the answer.",
     "spin_scale": "Reel is 0-10. Lands on a number."
   },
+
+  "one_question_one_pull": "Every question takes exactly one pull and gives exactly one answer. Seven pulls, whole intake. Nothing to grind through.",
 
   "questions": [
     {
@@ -57,21 +58,19 @@
       "id": "past_conditions",
       "order": 3,
       "printed_as": "Past conditions (check all that apply)",
-      "prompt": "Has a doctor ever told you that you have...",
-      "mode": "spin_through_all",
+      "prompt": "Besides the diabetes — what else are you being treated for?",
+      "mode": "spin_to_pick",
       "paper_answer": ["diabetes"],
       "is_the_whole_point": true,
       "reel": [
-        { "value": "diabetes", "label": "Diabetes", "emoji": "🩸", "chart_match": true, "paper_caught_it": true },
-        { "value": "depression_anxiety", "label": "Depression or anxiety", "emoji": "🌧️", "chart_match": true, "paper_caught_it": false, "plain_language": "Ever been on something for your mood or nerves?", "flag": "He is prescribed sertraline. He did not tick this box. It is printed one row below the box he did tick." },
-        { "value": "arthritis", "label": "Arthritis", "emoji": "🦴" },
-        { "value": "heart_disease", "label": "Heart disease", "emoji": "❤️" },
-        { "value": "high_blood_pressure", "label": "High blood pressure", "emoji": "🩺" },
-        { "value": "kidney_disease", "label": "Kidney disease", "emoji": "🫘" },
-        { "value": "thyroid", "label": "Thyroid disease", "emoji": "🦋" },
-        { "value": "none_of_these", "label": "None of these", "emoji": "🚫", "terminal": true }
+        { "value": "depression_anxiety", "label": "Something for my mood or nerves", "plain_language": "he would never call this 'depression / anxiety'", "emoji": "🌧️", "chart_match": true, "paper_caught_it": false, "flag": "He is prescribed sertraline. He did not tick this box on paper — it is printed one row below the box he did tick." },
+        { "value": "arthritis", "label": "My joints", "emoji": "🦴" },
+        { "value": "heart_disease", "label": "My heart", "emoji": "❤️" },
+        { "value": "high_blood_pressure", "label": "Blood pressure", "emoji": "🩺" },
+        { "value": "thyroid", "label": "Thyroid", "emoji": "🦋" },
+        { "value": "nothing_else", "label": "Nothing else", "emoji": "🚫" }
       ],
-      "care_team_note": "Paper form: 15 boxes offered, 1 ticked, 2 true. The reel asks about each one out loud, in words he uses, and takes a yes or a no before it moves."
+      "care_team_note": "The paper form offered 15 boxes, got 1 tick, and 2 were true. One pull, one answer — and the option is worded the way he'd say it, not the way the form prints it. 'Depression / anxiety' is a phrase he skims past. 'Something for my mood or nerves' is a phrase he answers."
     },
 
     {
@@ -100,19 +99,18 @@
       "id": "medications_taken",
       "order": 5,
       "printed_as": "Current medications",
-      "prompt": "We know what you were prescribed. Which ones are you ACTUALLY taking?",
-      "mode": "spin_through_all",
+      "prompt": "Of the pills you were given — which one have you stopped, or skip?",
+      "mode": "spin_to_pick",
       "paper_answer": "metformin, the nerve pill, meloxicam, tylenol",
       "reel_from_chart": true,
       "reel": [
-        { "value": "metformin", "label": "Metformin", "plain_language": "the sugar one, twice a day", "emoji": "💊", "truth": "taking" },
-        { "value": "sertraline", "label": "Sertraline", "plain_language": "the mood one, small white pill", "emoji": "💊", "truth": "stopped_months_ago", "paper_caught_it": false, "flag": "STOPPED. Nobody at the clinic knows. Not on his paper list — he listed four, the chart has five, this is the missing one." },
-        { "value": "gabapentin", "label": "Gabapentin", "plain_language": "the nerve one, three times a day", "emoji": "💊", "truth": "skips_some_days", "flag": "Skips it on days he has things to do. Says it makes him foggy. Reads as non-response to treatment." },
-        { "value": "meloxicam", "label": "Meloxicam", "plain_language": "the one for swelling", "emoji": "💊", "truth": "taking_daily" },
-        { "value": "cyclobenzaprine", "label": "Cyclobenzaprine", "plain_language": "the muscle one at night", "emoji": "💊", "truth": "ran_out_in_2025", "flag": "Finished it in 2025. Still listed Active on the med list." }
+        { "value": "sertraline", "label": "The mood one", "plain_language": "small white pill — he stopped it months ago", "emoji": "💊", "truth": "stopped_months_ago", "chart_match": true, "paper_caught_it": false, "flag": "STOPPED. Nobody at the clinic knows. Not on his paper list — he listed four, the chart has five, this is the missing one." },
+        { "value": "gabapentin", "label": "The nerve one", "plain_language": "three a day, makes him foggy", "emoji": "💊", "truth": "skips_some_days", "flag": "Skips it on days he has things to do. Reads as non-response to treatment." },
+        { "value": "cyclobenzaprine", "label": "The muscle one at night", "plain_language": "ran out in 2025", "emoji": "💊", "truth": "ran_out_in_2025", "flag": "Finished it in 2025. Still listed Active on the med list." },
+        { "value": "meloxicam", "label": "The one for swelling", "emoji": "💊", "truth": "taking_daily" },
+        { "value": "none", "label": "I take all of them", "emoji": "✅" }
       ],
-      "answer_options": ["Taking it", "Stopped it", "Skip it sometimes", "What is that?"],
-      "care_team_note": "The single highest-value screen here. He keeps every pill in one bottle and can't tell them apart, so the reel names them the way HE does, not the way the pharmacy does."
+      "care_team_note": "The highest-value pull here. Asking 'which are you taking' gets a list that matches the chart. Asking which one he STOPPED gets the sertraline — the one answer nobody at the clinic has. The reel names pills the way he does, because he keeps them all in one bottle and can't tell them apart."
     },
 
     {

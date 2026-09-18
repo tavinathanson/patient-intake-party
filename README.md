@@ -19,24 +19,32 @@ That is **literally Fig**. On the paper form he ticked `diabetes` and skipped
 `Depression / anxiety` — which is printed one row below it, and which he takes
 sertraline for. Fifteen boxes, one tick, two true answers.
 
-A reel cannot be skimmed. It shows **one option at a time, alone, in 48px type**,
-in the words the patient uses ("Ever been on something for your mood or nerves?"),
-and it will not advance until it gets a yes or a no.
+A reel cannot be skimmed. It shows options **one at a time, alone, in big type**,
+worded the way the patient would say them. `Depression / anxiety` is a phrase Fig
+skims past. *"Something for my mood or nerves"* is a phrase he answers.
 
-The slot machine isn't decoration on the form. It's the fix for the exact failure
-mode already sitting in his chart.
+**Seven questions, seven pulls.** One pull gives one answer, then the form moves
+on — no grinding through a list. So each question has to be the *right* question:
+
+| instead of asking | it asks |
+|---|---|
+| tick all 15 conditions that apply | "Besides the diabetes — what else are you being treated for?" |
+| list every medication you take | "Which one have you **stopped**, or skip?" |
+
+That second one is the whole trick. "What are you taking?" gets a list that
+matches the chart. "Which did you stop?" gets the sertraline — the one fact
+nobody at the clinic has.
 
 ## Pull the lever
 
 Every pull spins the **whole reel** — two full passes through every option — then
-settles on one. No quiet stepping between options: if you're being asked, the reel
-spun for it.
+settles on one. That landing is the answer. Keep it, or pull again.
 
-Say **yes** and the machine pays out:
+When it lands on something the chart cares about, the machine pays out:
 
-- **HIT** — a yes the paper form already caught
-- **JACKPOT** — a yes the paper form *missed*. Say yes to "ever been on something
-  for your mood or nerves?" and that's a jackpot, because the checkbox grid never got it.
+- **HIT** — an answer the paper form already caught
+- **JACKPOT** — an answer the paper form *missed*. Landing on "something for my
+  mood or nerves", or on the pill he quietly stopped, is a jackpot.
 
 ## The receipt
 
@@ -44,12 +52,14 @@ At the end it prints a receipt — every answer, the pull count, the jackpot cou
 and a `*` beside everything the paper form never captured.
 
 ```
-PAST CONDITIONS
-  diabetes                     YES
-  depression anxiety         YES *
+* PAST CONDITIONS
+  depression anxiety
+
+* MEDICATIONS TAKEN
+  sertraline
 ...
-PULLS                            9
-JACKPOTS                         3
+PULLS                            7
+JACKPOTS                         2
 * MISSED ON PAPER                2
 ```
 
@@ -82,9 +92,10 @@ part of the app.
 
 | mode | behaviour | used for |
 |---|---|---|
-| `spin_to_pick` | reel spins, lever stops it, keep or pull again | one-of-many |
-| `spin_through_all` | walks every option, yes/no on each | the checkbox-grid replacement |
+| `spin_to_pick` | reel spins through every option, lands on one | every question |
 | `spin_scale` | reel of 0–10 | pain score |
+
+One pull, one answer, always.
 
 ## Run it
 
