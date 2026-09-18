@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cursed Intake</title>
+<meta name="description" content="A side-scrolling patient intake form. Fill each block before the screen scrolls past it, or die.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HUD -->
+<header id="hud" class="hud" aria-live="off">
+  <div class="hud-item"><span class="hud-label">PATIENT</span><span id="hud-score">000000</span></div>
+  <div class="hud-item"><span class="hud-label">&nbsp;</span><span><span class="coin-icon" aria-hidden="true"></span>×<span id="hud-coins">00</span></span></div>
+  <div class="hud-item"><span class="hud-label">WORLD</span><span id="hud-world">1-1</span></div>
+  <div class="hud-item"><span class="hud-label">TIME</span><span id="hud-time">400</span></div>
+  <div class="hud-item"><span class="hud-label">LIVES</span><span id="hud-lives">×3</span></div>
+  <button id="mute" class="hud-btn" type="button" aria-pressed="false" title="Toggle sound">♪ ON</button>
+</header>
+
+<!-- The level -->
+<main id="stage" class="stage">
+  <div class="sky"></div>
+  <div class="parallax hills" id="hills"></div>
+  <div class="parallax clouds" id="clouds"></div>
+  <div class="parallax bushes" id="bushes"></div>
+
+  <div id="world" class="world">
+    <form id="intake" class="cards" autocomplete="off" novalidate></form>
+    <div id="props" class="props"></div>
+  </div>
+
+  <div class="ground" id="ground"></div>
+  <div class="danger-zone" id="danger"></div>
+
+  <div id="player" class="player" aria-hidden="true">
+    <div class="sprite" id="sprite"></div>
+  </div>
+
+  <div id="popups" class="popups" aria-hidden="true"></div>
+  <div id="fireworks" class="fireworks" aria-hidden="true"></div>
+</main>
+
+<!-- Title screen -->
+<section id="screen-title" class="screen">
+  <div class="panel">
+    <h1 class="title">CURSED<br>INTAKE</h1>
+    <p class="subtitle">a side-scrolling patient intake form</p>
+    <div class="rules">
+      <p>▸ The screen scrolls right. It never stops.</p>
+      <p>▸ Fill in each block before it leaves the left edge.</p>
+      <p>▸ If a block scrolls off while you're <em>still typing in it</em>, you die.</p>
+      <p>▸ Let a <span class="req">★ required</span> block slip past empty? You fall in the pit. You die.</p>
+      <p>▸ Every block you finish makes the screen scroll a little faster.</p>
+      <p>▸ Die and the whole form resets. Naturally.</p>
+    </div>
+    <div class="controls">
+      <p><kbd>Tab</kbd> next block &nbsp; <kbd>Enter</kbd> commit &amp; jump ahead &nbsp; <kbd>Esc</kbd> let go of a block</p>
+      <p><kbd>Shift</kbd> or <kbd>→</kbd> (when not typing) to RUN and bank time bonus</p>
+    </div>
+    <fieldset class="difficulty">
+      <legend>SPEED</legend>
+      <label><input type="radio" name="difficulty" value="easy"> EASY</label>
+      <label><input type="radio" name="difficulty" value="normal" checked> NORMAL</label>
+      <label><input type="radio" name="difficulty" value="hard"> HARD</label>
+    </fieldset>
+    <button id="btn-start" class="big-btn" type="button">▶ START</button>
+    <p class="hiscore">TOP SCORE <span id="hiscore">000000</span></p>
+    <p class="fineprint">Not a real form. Not medical advice. Nothing you type leaves your browser.</p>
+  </div>
+</section>
+
+<!-- Death screen -->
+<section id="screen-death" class="screen hidden">
+  <div class="panel panel-death">
+    <h2 id="death-title">YOU DIED</h2>
+    <p id="death-reason" class="death-reason"></p>
+    <p class="death-stats">SCORE <span id="death-score">0</span> &nbsp; BLOCKS <span id="death-coins">0</span></p>
+    <p id="death-hint" class="death-hint">The form has been reset. All of it.</p>
+    <button id="btn-retry" class="big-btn" type="button">↻ RESTART FORM</button>
+  </div>
+</section>
+
+<!-- Clear screen -->
+<section id="screen-clear" class="screen hidden">
+  <div class="panel panel-clear">
+    <h2>COURSE CLEAR!</h2>
+    <p class="clear-sub">Intake submitted to the care team.</p>
+    <table class="score-table">
+      <tr><td>BLOCKS</td><td id="clear-blocks">0</td></tr>
+      <tr><td>FIELD POINTS</td><td id="clear-field-pts">0</td></tr>
+      <tr><td>TIME BONUS</td><td id="clear-time-bonus">0</td></tr>
+      <tr class="total"><td>TOTAL</td><td id="clear-total">0</td></tr>
+    </table>
+    <p id="clear-newbest" class="newbest hidden">★ NEW TOP SCORE ★</p>
+    <h3>CARE TEAM SUMMARY</h3>
+    <dl id="summary" class="summary"></dl>
+    <div class="row">
+      <button id="btn-copy" class="small-btn" type="button">COPY JSON</button>
+      <button id="btn-again" class="big-btn" type="button">▶ PLAY AGAIN</button>
+    </div>
+  </div>
+</section>
+
+<script src="game.js"></script>
+</body>
+</html>

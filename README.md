@@ -1,3 +1,30 @@
+# Cursed Intake
+
+A side-scrolling patient intake form. The screen scrolls right at a constant speed, like an auto-scroll level in a platformer. Each intake question is a block in the level. Fill it in before it scrolls past the player.
+
+**Rules**
+
+* If the block you are typing in scrolls off behind the player, you die. Death jingle, form resets, start over.
+* If a ★ required block slips past empty, you fall in the pit. Same outcome.
+* Optional blocks can be skipped.
+* Three lives. Run out and it's GAME OVER (the form still resets either way).
+
+**Score and time**
+
+* Every completed block is worth 100 points, plus up to 200 more the further right it is when you finish it.
+* Every 10 blocks earns a 1-UP.
+* TIME counts down from 400 across the level. Hold `Shift` or `→` (when not typing) to run, and every tick left at the flag is worth 50 points.
+* Three worlds (1-1 Who are you, 1-2 Medical stuff, 1-3 The hard questions). Each one scrolls faster. Every block you complete also nudges the speed up about 3.5%, so by the last block the screen moves about 1.6× as fast as it did at the start.
+* Reach the flag and you get a "Course Clear" screen with the care team summary and a Copy JSON button. Nothing leaves the browser.
+
+**Controls:** `Tab` next block, `Enter` commit and jump to the next block, `Esc` let go of a block, click the sky to let go too. Pick EASY / NORMAL / HARD on the title screen.
+
+**Run it:** open `index.html`, or `python3 -m http.server` and visit `http://localhost:8000`. Plain HTML, CSS and JS, no build step. Sounds are synthesized with the Web Audio API, the sprite (a certain doctor) is CSS box-shadow pixel art.
+
+Built on the [patient-intake-party](https://github.com/tavinathanson/patient-intake-party) template. The original README follows.
+
+---
+
 ![Did I hear party?](did-i-hear-party.jpg)
 
 ## Patient Intake Party
