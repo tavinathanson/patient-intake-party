@@ -60,22 +60,22 @@ INSURERS = [
     },
 ]
 
-# Multilingual translated conditions
+# Multilingual conditions without English translations
 DEFAULT_CONDITIONS = [
-    {"id": "arthritis", "label": "Gelenkentzündung (Arthritis)", "lang": "German"},
-    {"id": "asthma", "label": "Άσθμα (Asthma)", "lang": "Greek"},
-    {"id": "cancer", "label": "癌 (Cancer)", "lang": "Japanese"},
-    {"id": "copd", "label": "Emphysème pulmonaire (COPD)", "lang": "French"},
-    {"id": "depression_anxiety", "label": "Depresión / Ansiedad", "lang": "Spanish"},
-    {"id": "diabetes", "label": "Sockersjuka (Diabetes)", "lang": "Swedish"},
-    {"id": "glaucoma", "label": "녹내장 (Glaucoma)", "lang": "Korean"},
-    {"id": "heart_disease", "label": "Болезнь сердца (Heart Disease)", "lang": "Russian"},
-    {"id": "high_blood_pressure", "label": "Høyt blodtrykk (Hypertension)", "lang": "Norwegian"},
-    {"id": "high_cholesterol", "label": "Wysoki cholesterol (Cholesterol)", "lang": "Polish"},
-    {"id": "kidney_disease", "label": "Bệnh thận (Kidney Disease)", "lang": "Vietnamese"},
-    {"id": "seizures", "label": "Kohtaukset (Seizures)", "lang": "Finnish"},
-    {"id": "stroke", "label": "中风 (Stroke)", "lang": "Chinese"},
-    {"id": "thyroid_disease", "label": "Tiroid hastalığı (Thyroid)", "lang": "Turkish"},
+    {"id": "arthritis", "label": "Gelenkentzündung"},
+    {"id": "asthma", "label": "Άσθμα"},
+    {"id": "cancer", "label": "癌"},
+    {"id": "copd", "label": "Emphysème pulmonaire"},
+    {"id": "depression_anxiety", "label": "Depresión y ansiedad"},
+    {"id": "diabetes", "label": "Sockersjuka"},
+    {"id": "glaucoma", "label": "녹내장"},
+    {"id": "heart_disease", "label": "Болезнь сердца"},
+    {"id": "high_blood_pressure", "label": "Høyt blodtrykk"},
+    {"id": "high_cholesterol", "label": "Wysoki cholesterol"},
+    {"id": "kidney_disease", "label": "Bệnh thận"},
+    {"id": "seizures", "label": "Kohtaukset"},
+    {"id": "stroke", "label": "中风"},
+    {"id": "thyroid_disease", "label": "Tiroid hastalığı"},
 ]
 
 BOOK_FALLBACK_CACHE = {

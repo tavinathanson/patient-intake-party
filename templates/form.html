@@ -191,20 +191,20 @@
     </div>
   </fieldset>
 
-  <!-- Cursed Past Conditions: Multilingual -->
+  <!-- Cursed Past Conditions: Multilingual (Pure foreign languages) -->
   <fieldset>
     <legend>Past conditions (Multi-language)</legend>
-    <div class="grid">
+    <div class="conditions-grid">
       {% for cond in conditions %}
-      <label for="cond_{{ cond.id }}">
+      <label for="cond_{{ cond.id }}" class="condition-checkbox-label">
         <input type="checkbox" id="cond_{{ cond.id }}" name="past_conditions" value="{{ cond.id }}"
                {% if cond.id in form_data.get('past_conditions', []) or cond.label|lower in form_data.get('past_conditions', []) %}checked{% endif %}>
-        {{ cond.label }}
+        <span>{{ cond.label }}</span>
       </label>
       {% endfor %}
     </div>
-    <label for="past_conditions_other">
-      Autre / Sonstiges (Other):
+    <label for="past_conditions_other" style="margin-top: 0.75rem;">
+      Autre / Sonstiges:
       <input type="text" id="past_conditions_other" name="past_conditions_other" 
              value="{% for c in form_data.get('past_conditions', []) %}{% if c not in ['diabetes', 'arthritis', 'asthma', 'cancer', 'copd', 'depression_anxiety', 'glaucoma', 'heart_disease', 'high_blood_pressure', 'high_cholesterol', 'kidney_disease', 'seizures', 'stroke', 'thyroid_disease'] %}{{ c }}{% endif %}{% endfor %}">
     </label>
