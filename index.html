@@ -288,6 +288,65 @@
   .bm-verdict { margin: 16px auto 0; }
   .fp-btn.bm-fine { background: #fff1a8; }
 
+  /* ---------- Yell-into-the-mic loudness picker (how bad does it hurt) ---------- */
+  .lm-stage { display: flex; align-items: center; justify-content: center; gap: 22px; margin: 8px 0 14px; }
+  .lm-mic {
+    position: relative;
+    width: 128px; height: 128px; padding: 0;
+    display: grid; place-items: center; align-content: center; gap: 2px;
+    font: inherit; font-weight: bold; font-size: .95rem; color: #2a2233;
+    border: 4px solid #2a2233; border-radius: 50%;
+    background: #ff6fc0; cursor: pointer;
+    box-shadow: 6px 6px 0 #2a2233;
+    touch-action: none;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    transition: transform .08s, box-shadow .08s, background .12s;
+  }
+  .lm-mic-icon { font-size: 52px; line-height: 1; }
+  .lm-mic:active,
+  .lm-mic.is-listening { transform: translate(4px,4px); box-shadow: 2px 2px 0 #2a2233; background: #ff4b4b; }
+  .lm-mic.is-listening::before {
+    content: ""; position: absolute; inset: -14px; border-radius: 50%;
+    border: 4px dashed #ff4b4b;
+    animation: ring 1s ease-out infinite;
+  }
+  @keyframes ring { 0% { transform: scale(.9); opacity: .9 } 100% { transform: scale(1.25); opacity: 0 } }
+  .lm-face { font-size: clamp(56px, 16vw, 84px); line-height: 1; }
+  .fp-card.is-listening .lm-face { animation: wiggle .32s ease-in-out infinite; }
+  .fp-card.is-hushed { background: #ece6f5; transition: background .6s; }
+
+  .lm-scale {
+    display: flex; align-items: flex-end; justify-content: center; gap: 10px;
+    padding: 12px 10px 8px;
+    background: #f3ecdc; border: 3px dashed #c9b8a0; border-radius: 18px;
+  }
+  .lm-rung {
+    flex: 1 1 0; max-width: 110px; min-width: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px;
+  }
+  .lm-rung i {
+    display: block; width: 100%; height: var(--h);
+    background: #fff; border: 3px solid #2a2233; border-radius: 12px 12px 6px 6px;
+    box-shadow: 3px 3px 0 #2a2233;
+    transition: background .12s, transform .12s;
+  }
+  .lm-rung.is-lit i { background: var(--c); }
+  .lm-rung.is-peak i { transform: translateY(-6px) rotate(-2deg); }
+  .lm-rung span { font-size: .85rem; text-align: center; line-height: 1.1; height: 2.3em; }
+  /* The fifth rung stays hidden until a yell stops. Nobody gets it for just being quiet. */
+  .lm-secret { display: none; }
+  .lm-scale.is-revealed .lm-secret { display: flex; animation: popin .5s cubic-bezier(.2,1.6,.4,1); }
+  .lm-secret i { border-style: dashed; }
+  .lm-secret span { font-weight: bold; }
+  @keyframes popin { from { transform: scale(0) } to { transform: scale(1) } }
+
+  .lm .fp-meter { flex-wrap: wrap; }
+  .lm .fp-meter-bar { flex: 1 1 140px; }
+  .lm .fp-meter-bar i { transition: width .06s linear; }
+  .lm-verdict { margin: 14px auto 0; }
+  .lm-fallback-btns { margin-top: 8px; }
+  .lm-fallback-btns .fp-btn { font-size: 1rem; padding: 10px 16px; }
+
   /* splash: needed so Chrome lets us talk (speech needs a user gesture) */
   #splash {
     position: fixed; inset: 0; z-index: 10;
@@ -318,6 +377,7 @@
     <section id="q-name"></section>
     <section id="q-age"></section>
     <section id="q-hurt"></section>
+    <section id="q-howbad"></section>
   </form>
 </main>
 
@@ -408,7 +468,9 @@
       return current;
     }
 
-    return { say, whenDone: () => current, supported: !!synth };
+    const cancel = () => { if (synth) synth.cancel(); };
+
+    return { say, cancel, whenDone: () => current, supported: !!synth };
   })();
 
   // ---------- The finger-painting input ----------
@@ -1070,6 +1132,369 @@
 
   window.BodyMapInput = BodyMapInput;
 
+  // ---------- The yell-into-the-microphone input ----------
+  // Louder = worse. The worst of all is no sound at all, but that rung only shows itself
+  // after a yell that stops. Being quiet before you've made any noise doesn't count.
+  const PAIN_TIERS = [
+    { id: 'a_little',   label: 'a little',   face: '🙁', color: '#4fd35a', db: null }, // anything above room noise
+    { id: 'a_lot',      label: 'a lot',      face: '😣', color: '#ffe23a', db: -26 },
+    { id: 'very_bad',   label: 'very bad',   face: '😖', color: '#ff9a1f', db: -16 },
+    { id: 'really_bad', label: 'really bad', face: '😭', color: '#ff4b4b', db: -8 },
+  ];
+  const PAIN_SILENT = { id: 'silent', label: 'too bad for words', face: '😶', color: '#2a2233' };
+  const PAIN_VERDICTS = {
+    a_little:   "A little ouch. Barely a boo-boo. One sticker should fix that.",
+    a_lot:      "A lot! Okay, that's a real ouch. Two stickers.",
+    very_bad:   "Very bad! Ow, my ears. I mean... ow, your everything.",
+    really_bad: "REALLY bad. The whole waiting room heard that. Help is on the way.",
+    silent:     "Wait. You went quiet. Quiet is the worst ouch there is. Doctor! Come quick!",
+  };
+  const NO_PEEP    = "I didn't hear a peep. Hold the microphone down and let it OUT.";
+  const NO_MIC_MSG = "No microphone for me? Okay. Tap how bad it hurts instead.";
+  const MIC_UNLOCKED = 'Microphone unlocked! Now hold it down and let it out.';
+  const CALIBRATE_MS = 400;    // the first bit of every hold is the room, not the kid
+  const SILENCE_MS   = 2000;   // quiet-after-noise this long = the secret rung
+  const MAX_HOLD_MS  = 12000;  // nobody needs to yell longer than this
+
+  class LoudnessInput {
+    constructor(root, { question, hint = '', name = 'answer' }) {
+      this.root = root;
+      this.question = question;
+      this.hint = hint;
+      this.name = name;
+      this.value = null;      // tier id once answered
+      this.holding = false;   // finger (or spacebar) is down on the mic
+      this.live = false;      // microphone is open and being listened to
+      this.holdId = 0;
+      this.audio = null;
+
+      this.render();
+      this.bind();
+    }
+
+    render() {
+      this.root.className = 'lm';
+      const rung = (t, i, cls = '') => `
+        <div class="lm-rung${cls}" data-tier="${i}" style="--c:${t.color}; --h:${36 + i * 20}px">
+          <i></i><span>${t.label}</span>
+        </div>`;
+      this.root.innerHTML = `
+        <div class="fp-card">
+          <div class="fp-toast" role="status" aria-live="polite"></div>
+          <div class="fp-question">
+            <button type="button" class="fp-speak" aria-label="Hear the question again" title="Say it again, robot">🔊</button>
+            <div>
+              <h2>${this.question}</h2>
+              ${this.hint ? `<p class="fp-hint">${this.hint}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="lm-stage">
+            <button type="button" class="lm-mic" aria-pressed="false"
+              aria-label="Hold down and make your ouch noise. Louder means it hurts more.">
+              <span class="lm-mic-icon" aria-hidden="true">🎤</span>
+              <span class="lm-mic-text">Hold &amp; yell</span>
+            </button>
+            <div class="lm-face" aria-hidden="true">😐</div>
+          </div>
+
+          <div class="lm-scale" aria-hidden="true">
+            ${PAIN_TIERS.map((t, i) => rung(t, i)).join('')}
+            ${rung(PAIN_SILENT, PAIN_TIERS.length, ' lm-secret')}
+          </div>
+
+          <div class="fp-meter">
+            <span class="fp-meter-label lm-status">Scream-o-meter: hold the mic</span>
+            <div class="fp-meter-bar" aria-hidden="true"><i></i></div>
+          </div>
+
+          <p class="fp-verdict lm-verdict" hidden></p>
+
+          <details class="fp-fallback lm-fallback">
+            <summary>No microphone? Tap how bad it hurts instead (quieter, but allowed)</summary>
+            <div class="fp-actions lm-fallback-btns">
+              ${PAIN_TIERS.map(t => `
+                <button type="button" class="fp-btn" data-tier="${t.id}" style="background:${t.color}">${t.face} ${t.label}</button>`).join('')}
+            </div>
+          </details>
+
+          <input type="hidden" name="${this.name}" class="lm-value">
+        </div>`;
+
+      const $ = s => this.root.querySelector(s);
+      this.card      = $('.fp-card');
+      this.mic       = $('.lm-mic');
+      this.micText   = $('.lm-mic-text');
+      this.face      = $('.lm-face');
+      this.scale     = $('.lm-scale');
+      this.rungs     = [...this.root.querySelectorAll('.lm-rung')];
+      this.liveBar   = $('.fp-meter-bar i');
+      this.statusEl  = $('.lm-status');
+      this.verdictEl = $('.lm-verdict');
+      this.toastEl   = $('.fp-toast');
+      this.fallback  = $('.lm-fallback');
+      this.hidden    = $('.lm-value');
+    }
+
+    bind() {
+      this.root.querySelector('.fp-speak').addEventListener('click', () => this.speakQuestion());
+
+      // Walkie-talkie: hold to yell, let go when you're done.
+      const mic = this.mic;
+      mic.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        try { mic.setPointerCapture(e.pointerId); } catch (_) {}
+        this.startHold();
+      });
+      mic.addEventListener('pointerup',     () => this.endHold());
+      mic.addEventListener('pointercancel', () => this.endHold());
+      mic.addEventListener('lostpointercapture', () => this.endHold());
+      mic.addEventListener('contextmenu', e => e.preventDefault());
+      mic.addEventListener('keydown', e => {
+        if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); this.startHold(); }
+      });
+      mic.addEventListener('keyup', e => {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); this.endHold(); }
+      });
+      mic.addEventListener('blur', () => this.endHold());
+      window.addEventListener('blur', () => this.endHold());
+
+      this.root.querySelectorAll('.lm-fallback-btns .fp-btn').forEach(b => {
+        b.addEventListener('click', () => this.answer(b.dataset.tier));
+      });
+    }
+
+    speakQuestion() {
+      return Voice.say(this.question, {
+        onstart: () => this.card.classList.add('is-talking'),
+        onend:   () => this.card.classList.remove('is-talking'),
+      });
+    }
+
+    // ----- the hold -----
+    async startHold() {
+      if (this.holding) return;
+      this.holding = true;
+      const id = ++this.holdId;
+      this.peakTier = -1;
+      this.quietSince = null;
+      this.floor = -100;
+      this.env = -100;
+
+      Voice.cancel(); // hush the robot so the microphone doesn't hear it
+      this.card.classList.add('is-listening');
+      this.mic.classList.add('is-listening');
+      this.mic.setAttribute('aria-pressed', 'true');
+      this.micText.textContent = 'Let it out!';
+      this.light(-1);
+      this.setFace('😐');
+      this.setStatus('Scream-o-meter: mic warming up');
+
+      let stream = null;
+      try { stream = await this.grabMic(); } catch (_) { stream = null; }
+
+      if (id !== this.holdId) { stopStream(stream); return; }   // a newer hold took over
+      if (!stream) { this.holding = false; this.resetMicVisuals(); this.paint(this.value); this.noMic(); return; }
+      if (!this.holding) {                                       // let go while the permission box was up
+        stopStream(stream);
+        this.paint(this.value);
+        this.toast(MIC_UNLOCKED);
+        Voice.say(MIC_UNLOCKED);
+        return;
+      }
+      this.listen(stream);
+    }
+
+    endHold(how) {
+      if (!this.holding) return;
+      this.holding = false;
+      cancelAnimationFrame(this.raf);
+      const wasLive = this.live;
+      this.closeMic();
+      this.resetMicVisuals();
+      if (!wasLive) return;   // never got as far as listening; startHold() explains why
+
+      if (how === 'silent') { this.answer(PAIN_SILENT.id); return; }
+      if (this.peakTier < 0) {
+        this.paint(this.value);
+        this.setStatus('Scream-o-meter: not a peep');
+        this.shake();
+        this.toast(NO_PEEP);
+        Voice.say(NO_PEEP);
+        return;
+      }
+      this.answer(PAIN_TIERS[this.peakTier].id);
+    }
+
+    resetMicVisuals() {
+      this.card.classList.remove('is-listening');
+      this.mic.classList.remove('is-listening');
+      this.mic.setAttribute('aria-pressed', 'false');
+      this.micText.textContent = 'Hold & yell';
+      this.liveBar.style.width = '0%';
+    }
+
+    // ----- the microphone -----
+    async grabMic() {
+      const md = navigator.mediaDevices;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!md || !md.getUserMedia || !AC) return null;
+      if (!this.audio) this.audio = new AC();   // created inside the tap so iOS allows it
+      if (this.audio.state === 'suspended') this.audio.resume();
+      // Raw loudness please: with auto gain on, every yell gets turned down to a whisper.
+      return md.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    }
+
+    listen(stream) {
+      this.stream = stream;
+      this.source = this.audio.createMediaStreamSource(stream);
+      this.analyser = this.audio.createAnalyser();
+      this.analyser.fftSize = 2048;
+      this.buf = new Float32Array(this.analyser.fftSize);
+      this.source.connect(this.analyser);
+      this.live = true;
+      this.t0 = performance.now();
+      this.setStatus('Scream-o-meter: listening…');
+      this.tick(this.t0);
+    }
+
+    closeMic() {
+      this.live = false;
+      if (this.source) { try { this.source.disconnect(); } catch (_) {} this.source = null; }
+      this.analyser = null;
+      stopStream(this.stream);
+      this.stream = null;
+    }
+
+    tick(prev) {
+      if (!this.holding || !this.live) return;
+      const now = performance.now();
+      const dt = Math.min(100, now - prev);
+
+      this.analyser.getFloatTimeDomainData(this.buf);
+      let sum = 0;
+      for (let i = 0; i < this.buf.length; i++) sum += this.buf[i] * this.buf[i];
+      const db = 20 * Math.log10(Math.max(Math.sqrt(sum / this.buf.length), 1e-5)); // dBFS, -100..0
+
+      // Fast attack, slow release: a yell holds its peak for a beat instead of flickering.
+      this.env = Math.max(db, this.env - 0.07 * dt);
+      this.liveBar.style.width = Math.max(0, Math.min(100, (this.env + 60) / 60 * 100)) + '%';
+
+      const elapsed = now - this.t0;
+      if (elapsed < CALIBRATE_MS) {
+        // Room noise. Capped so a kid who yells the instant they press still counts.
+        this.floor = Math.min(-35, Math.max(this.floor, db));
+      } else if (this.judge(now)) {
+        return;
+      }
+      if (elapsed > MAX_HOLD_MS) { this.endHold(); return; }
+      this.raf = requestAnimationFrame(() => this.tick(now));
+    }
+
+    // Turn the current loudness into a rung. Returns true if the hold ended itself.
+    judge(now) {
+      const noiseGate = Math.max(this.floor + 8, -45);
+      const quietGate = Math.max(this.floor + 4, -50);
+
+      let tier = -1;
+      if (this.env > noiseGate) {
+        tier = 0;
+        for (let i = 1; i < PAIN_TIERS.length; i++) if (this.env >= PAIN_TIERS[i].db) tier = i;
+      }
+      if (tier > this.peakTier) {
+        this.peakTier = tier;
+        this.setFace(PAIN_TIERS[tier].face);
+        this.setStatus(`Scream-o-meter: ${PAIN_TIERS[tier].label}!`);
+        this.micText.textContent = 'Let it out!';
+      }
+      this.light(tier, this.peakTier);
+      if (this.peakTier < 0) return false;   // quiet before any noise is just waiting
+
+      // Noise, then nothing. Give it a beat, then it's the secret rung.
+      if (this.env < quietGate) {
+        if (this.quietSince === null) this.quietSince = now;
+        const quietFor = now - this.quietSince;
+        if (quietFor > 700) {
+          this.micText.textContent = '…hello?';
+          this.setStatus('Scream-o-meter: …hello?');
+        }
+        if (quietFor >= SILENCE_MS) { this.endHold('silent'); return true; }
+      } else {
+        this.quietSince = null;
+      }
+      return false;
+    }
+
+    // ----- drawing -----
+    light(upTo, peak = upTo) {
+      this.rungs.forEach((r, i) => {
+        r.classList.toggle('is-lit',  i <= upTo);
+        r.classList.toggle('is-peak', i === peak);
+      });
+    }
+    setFace(f) { this.face.textContent = f; }
+    setStatus(s) { this.statusEl.textContent = s; }
+
+    // Light the scale, face and status for a tier id (or nothing).
+    paint(id) {
+      const i = id === PAIN_SILENT.id ? PAIN_TIERS.length : PAIN_TIERS.findIndex(t => t.id === id);
+      const tier = i < 0 ? null : (PAIN_TIERS[i] || PAIN_SILENT);
+      this.light(i, i);
+      this.setFace(tier ? tier.face : '😐');
+      this.setStatus(tier ? `Scream-o-meter: ${tier.label}` : 'Scream-o-meter: hold the mic');
+    }
+
+    toast(msg) {
+      this.toastEl.textContent = msg;
+      this.toastEl.classList.add('is-on');
+      clearTimeout(this._toastT);
+      this._toastT = setTimeout(() => this.toastEl.classList.remove('is-on'), 2800);
+    }
+
+    shake() {
+      this.card.classList.remove('is-shaking');
+      void this.card.offsetWidth; // restart animation
+      this.card.classList.add('is-shaking');
+    }
+
+    // ----- the answer -----
+    answer(id) {
+      this.value = id;
+      const silent = id === PAIN_SILENT.id;
+      if (silent) {
+        this.scale.classList.add('is-revealed');
+        this.card.classList.add('is-hushed');
+        clearTimeout(this._hushT);
+        this._hushT = setTimeout(() => this.card.classList.remove('is-hushed'), 2500);
+      }
+      this.paint(id);
+      this.hidden.value = id;
+
+      const verdict = PAIN_VERDICTS[id];
+      this.verdictEl.textContent = verdict;
+      this.verdictEl.hidden = false;
+      Voice.say(verdict, silent ? { pitch: 0.9, rate: 0.9 } : {});
+
+      this.root.dispatchEvent(new CustomEvent('fp:answer', {
+        bubbles: true,
+        detail: { name: this.name, value: id },
+      }));
+    }
+
+    noMic() {
+      this.fallback.open = true;
+      this.setStatus('Scream-o-meter: no microphone');
+      this.toast(NO_MIC_MSG);
+      Voice.say(NO_MIC_MSG);
+    }
+  }
+
+  function stopStream(stream) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+  }
+
+  window.LoudnessInput = LoudnessInput;
+
   // ---------- Wire up the page ----------
   const nameQ = new FingerPaintInput(document.getElementById('q-name'), {
     question: "What's your name?",
@@ -1089,12 +1514,19 @@
     name: 'hurt_spots',
   });
 
+  const howBadQ = new LoudnessInput(document.getElementById('q-howbad'), {
+    question: 'How bad does it hurt?',
+    hint: "Hold the microphone and make your OUCH noise. Louder means worse. Let go when you're done.",
+    name: 'pain_level',
+  });
+
   document.getElementById('intake').addEventListener('submit', e => e.preventDefault());
   document.getElementById('intake').addEventListener('fp:answer', e => {
     console.log('Intake answer:', e.detail);
     // Move the party along to the next question once this one is answered.
     const next = e.detail.name === 'patient_name' && ageQ.value === null ? ageQ
                : e.detail.name === 'patient_age'  && !hurtQ.touched     ? hurtQ
+               : e.detail.name === 'hurt_spots'   && hurtQ.value.length && howBadQ.value === null ? howBadQ
                : null;
     if (next) {
       Voice.whenDone().then(() => {
