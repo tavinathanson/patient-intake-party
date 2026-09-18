@@ -3,7 +3,7 @@
 const $ = id => document.getElementById(id);
 const ALPHABET = 'abcdefghijklmnopqrstuvwxyz';
 const FLIP_MS = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 700;
-let story, S, typing;
+let story, S, typing, past, justBurnt = [];
 
 const el = (tag, props = {}, ...kids) => {
   const n = Object.assign(document.createElement(tag), props);
@@ -23,6 +23,7 @@ function test(c) {
   return day
     && (!c.stat || inRange(S.stats[c.stat].value, c))
     && (!c.lettersLeft || inRange(lettersLeft(), c.lettersLeft))
+    && (!c.lettersOut || inRange(Object.values(S.letters).filter(n => !n).length, c.lettersOut))
     && (c.items || []).every(i => S.items.has(i))
     && (c.flags || []).every(f => S.flags.has(f))
     && !(c.not || []).some(f => S.flags.has(f));
@@ -46,7 +47,9 @@ const resolve = next => {
 
 // Applies everything a choice (or typed answer) carries, then moves on.
 function act(c, spoken = '') {
+  past.push({ spoken, state: structuredClone(S) });
   lettersOf(spoken).forEach(ch => S.letters[ch]--);
+  justBurnt = [...new Set(lettersOf(spoken))].filter(ch => !S.letters[ch]);
   for (const [k, d] of Object.entries(c.effects || {})) {
     const s = S.stats[k];
     s.value = Math.min(s.max, Math.max(s.min, s.value + d));
@@ -65,18 +68,46 @@ function act(c, spoken = '') {
 
 const button = (label, onclick, props = {}) => el('button', { textContent: label, onclick, ...props });
 
-function preview(cost) {
-  for (const tile of $('letters').children) tile.dataset.cost = cost[tile.dataset.letter] ? '-' + cost[tile.dataset.letter] : '';
+// Restores the state from before the last answer, which also refunds its letters.
+function back() {
+  S = past.pop().state;
+  $('ending').hidden = true;
+  render(S.node);
 }
 
-function choiceButton(c) {
-  const variants = [].concat(c.text).map(fill);
-  const label = variants.find(affordable);
-  const b = button(label || variants[0], () => act(c, label), { disabled: !label });
-  if (!label) b.title = 'Not enough letters left in the bag';
-  b.onpointerenter = b.onfocus = () => preview(costOf(label || ''));
-  b.onpointerleave = b.onblur = () => preview({});
-  return b;
+function backLabel() {
+  const { spoken } = past.at(-1);
+  return (story.backLabel || 'Back') + (spoken ? `: “${spoken}”` : '');
+}
+
+function preview(cost, blocked = new Set()) {
+  for (const tile of $('letters').children) {
+    tile.dataset.cost = cost[tile.dataset.letter] ? '-' + cost[tile.dataset.letter] : '';
+    tile.classList.toggle('shake', blocked.has(tile.dataset.letter));
+  }
+}
+
+// One row per meaning, one pill per wording, so the player picks the wording they can afford.
+function choiceRow(c) {
+  const pills = [].concat(c.text).map(fill).map(label => {
+    const b = button(label, () => act(c, label), { disabled: !affordable(label) });
+    b.onpointerenter = b.onfocus = () => preview(costOf(label));
+    b.onpointerleave = b.onblur = () => preview({});
+    return b;
+  });
+  return el('div', { className: 'row' }, ...pills);
+}
+
+function burn(chars) {
+  if (!chars.length) return;
+  const flames = Array.from({ length: 28 }, () => {
+    const f = el('span', { textContent: '🔥' });
+    f.style.cssText = `left:${Math.random() * 100}%;animation-delay:${Math.random() * .6}s;font-size:${1.5 + Math.random() * 3}rem`;
+    return f;
+  });
+  const fire = el('div', { className: 'fire' }, ...flames, el('b', { textContent: `No more ${chars.join(' or ').toUpperCase()}!` }));
+  document.body.append(fire);
+  setTimeout(() => fire.remove(), 2400);
 }
 
 function inputBox(inp) {
@@ -84,11 +115,14 @@ function inputBox(inp) {
   // Drop any letter the bag can't pay for. Covers typing, paste, and phone keyboards.
   field.oninput = () => {
     const left = { ...S.letters };
+    const blocked = new Set();
     field.value = [...field.value].filter(ch => {
       const k = ch.toLowerCase();
-      return !(k in left) || left[k]-- > 0;
+      const ok = !(k in left) || left[k]-- > 0;
+      if (!ok) blocked.add(k);
+      return ok;
     }).join('');
-    preview(costOf(field.value));
+    preview(costOf(field.value), blocked);
   };
   const say = () => {
     if (!field.value.trim()) return;
@@ -106,10 +140,12 @@ function renderHud() {
   $('items').replaceChildren(...[...S.items].map(i => el('span', { className: 'chip', textContent: i })));
   $('items').hidden = !S.items.size;
   $('letters').replaceChildren(...Object.entries(S.letters).map(([c, n]) => {
-    const tile = el('span', { className: n ? 'tile' : 'tile burnt' }, c.toUpperCase(), el('small', { textContent: n }));
+    const tile = el('span', { className: `tile${n ? '' : ' burnt'}${justBurnt.includes(c) ? ' burning' : ''}` }, c.toUpperCase(), el('small', { textContent: n }));
     tile.dataset.letter = c;
     return tile;
   }));
+  burn(justBurnt);
+  justBurnt = [];
 }
 
 const statBar = s => {
@@ -152,9 +188,14 @@ function show(node, controls) {
 function render(id) {
   const node = story.nodes[id];
   if (node.ending) return end(node);
-  const controls = (node.choices || []).filter(c => test(c.condition)).map(choiceButton);
+  S.node = id;
+  const controls = (node.choices || []).filter(c => test(c.condition)).map(choiceRow);
   if (node.input) controls.unshift(inputBox(node.input));
   if (node.skip) controls.push(button(story.skipLabel || 'Skip', () => act(node.skip), { className: 'skip' }));
+  if (past.length) {
+    const stuck = controls.some(c => c.querySelector(':disabled'));
+    controls.push(button(backLabel(), back, { className: stuck ? 'back urgent' : 'back' }));
+  }
   show(node, controls);
 }
 
@@ -186,10 +227,13 @@ function end(node) {
   $('ending').className = node.endingType || '';
   $('endStats').replaceChildren(...Object.values(S.stats).map(statBar));
   $('report').replaceChildren(...(story.report ? reportView(story.report) : []));
+  $('back').textContent = past.length ? backLabel() : '';
+  $('back').hidden = !past.length;
   $('ending').hidden = false;
 }
 
 function start() {
+  past = [];
   S = {
     day: 1, items: new Set(), flags: new Set(), vars: {}, records: [], bags: {},
     stats: structuredClone(story.stats),
@@ -203,4 +247,5 @@ function start() {
 }
 
 $('again').onclick = start;
+$('back').onclick = back;
 fetch('story.json').then(r => r.json()).then(j => { story = j; start(); });

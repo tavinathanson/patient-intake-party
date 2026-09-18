@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240"><rect width="400" height="240" fill="#f3e3bd"/><ellipse cx="200" cy="222" rx="170" ry="14" fill="#000" opacity=".12"/><g transform=""><path d="M120 170Q40 195 32 125l-14-4 18-14 8 20Q52 165 128 150z" fill="#4f9d69"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240"><defs><style>path:not([stroke]),ellipse,circle,rect{stroke:#3a2a1d;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}.bg,.bg *{stroke:none}</style>
+<filter id="ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>
+<filter id="wash" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012 .03" numOctaves="3" seed="9"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .4  0 0 0 0 .25  0 0 0 .55 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .18 0"/></filter>
+<radialGradient id="vig" r=".75"><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#f6ecd6"/></radialGradient></defs><g class="bg"><rect width="400" height="240" fill="#f3e3bd"/><rect width="400" height="240" filter="url(#wash)"/></g><g filter="url(#ink)"><ellipse cx="200" cy="222" rx="170" ry="14" fill="#000" opacity=".12"/><g transform=""><path d="M120 170Q40 195 32 125l-14-4 18-14 8 20Q52 165 128 150z" fill="#4f9d69"/>
 <path d="M172 112 118 28l34 40 22-44 22 50 30-40-10 78z" fill="#3b7d52"/>
 <rect x="140" y="185" width="24" height="36" rx="8" fill="#3b7d52"/><rect x="215" y="185" width="24" height="36" rx="8" fill="#3b7d52"/>
 <ellipse cx="190" cy="150" rx="80" ry="55" fill="#4f9d69"/><ellipse cx="200" cy="170" rx="50" ry="30" fill="#f2d58a"/>
@@ -7,4 +11,4 @@
 <path d="M285 48l-6-26 18 18zM305 44l4-26 12 22z" fill="#f2d58a"/>
 <circle cx="305" cy="64" r="8" fill="#fff"/><circle cx="307" cy="65" r="4" fill="#2b2118"/><circle cx="352" cy="76" r="2.5" fill="#2b2118"/>
 <path d="M322 92q12 8 26 2" stroke="#2b2118" stroke-width="3" fill="none" stroke-linecap="round"/>
-<g fill="#d8432e" opacity=".75"><circle cx="160" cy="98" r="9"/><circle cx="150" cy="196" r="7"/><circle cx="228" cy="196" r="7"/><circle cx="268" cy="112" r="8"/><circle cx="326" cy="60" r="5"/></g></g></svg>
+<g fill="#d8432e" opacity=".75"><circle cx="160" cy="98" r="9"/><circle cx="150" cy="196" r="7"/><circle cx="228" cy="196" r="7"/><circle cx="268" cy="112" r="8"/><circle cx="326" cy="60" r="5"/></g></g></g><g class="bg"><rect width="400" height="240" filter="url(#grain)"/><rect width="400" height="240" fill="url(#vig)"/></g></svg>

@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240"><rect width="400" height="240" fill="#f3e3bd"/><ellipse cx="200" cy="222" rx="170" ry="14" fill="#000" opacity=".12"/><g transform="translate(170 60) scale(.6)"><path d="M120 170Q40 195 32 125l-14-4 18-14 8 20Q52 165 128 150z" fill="#4f9d69"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 240"><defs><style>path:not([stroke]),ellipse,circle,rect{stroke:#3a2a1d;stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}.bg,.bg *{stroke:none}</style>
+<filter id="ink" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>
+<filter id="wash" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".012 .03" numOctaves="3" seed="9"/><feColorMatrix values="0 0 0 0 .55  0 0 0 0 .4  0 0 0 0 .25  0 0 0 .55 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2"/><feColorMatrix values="0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .18 0"/></filter>
+<radialGradient id="vig" r=".75"><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#f6ecd6"/></radialGradient></defs><g class="bg"><rect width="400" height="240" fill="#f3e3bd"/><rect width="400" height="240" filter="url(#wash)"/></g><g filter="url(#ink)"><ellipse cx="200" cy="222" rx="170" ry="14" fill="#000" opacity=".12"/><g transform="translate(170 60) scale(.6)"><path d="M120 170Q40 195 32 125l-14-4 18-14 8 20Q52 165 128 150z" fill="#4f9d69"/>
 <path d="M172 112 118 28l34 40 22-44 22 50 30-40-10 78z" fill="#3b7d52"/>
 <rect x="140" y="185" width="24" height="36" rx="8" fill="#3b7d52"/><rect x="215" y="185" width="24" height="36" rx="8" fill="#3b7d52"/>
 <ellipse cx="190" cy="150" rx="80" ry="55" fill="#4f9d69"/><ellipse cx="200" cy="170" rx="50" ry="30" fill="#f2d58a"/>
@@ -11,4 +15,4 @@
 <path d="M58 84h54l14 96H44z" fill="#c9a26b"/><path d="M60 110l20 14 16-10 22 12M52 150l26-8 20 12 24-6" stroke="#a5814e" stroke-width="2" fill="none"/>
 <path d="M50 60q35-46 70 0l6 34q-40-20-82 0z" fill="#8a5a2b"/><circle cx="85" cy="62" r="24" fill="#e8b48c"/>
 <circle cx="77" cy="60" r="3"/><circle cx="94" cy="60" r="3"/><path d="M78 72q8 6 15 0" stroke="#2b2118" stroke-width="2.5" fill="none"/>
-<path d="M66 40l4-20 10 12 8-16 8 16 10-12 2 22z" fill="#f2c230" transform="rotate(-12 85 30)"/><circle cx="68" cy="70" r="5" fill="#2b2118" opacity=".3"/></g></svg>
+<path d="M66 40l4-20 10 12 8-16 8 16 10-12 2 22z" fill="#f2c230" transform="rotate(-12 85 30)"/><circle cx="68" cy="70" r="5" fill="#2b2118" opacity=".3"/></g></g><g class="bg"><rect width="400" height="240" filter="url(#grain)"/><rect width="400" height="240" fill="url(#vig)"/></g></svg>
