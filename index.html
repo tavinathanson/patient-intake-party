@@ -243,6 +243,15 @@
   .done-card { text-align: center; color: var(--paper); padding: 10px 4px; }
   .done-card .big { font-family: "Pirata One", cursive; font-size: clamp(1.6rem, 5vw, 2.4rem); color: var(--brass); }
 
+  .plunder {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: center;
+    margin-top: 18px; color: var(--rope); font-family: "IM Fell English", serif;
+  }
+  .plunder-label { color: var(--paper); }
+  .plunder-status { flex-basis: 100%; text-align: center; font-size: .92rem; min-height: 1.2em; }
+  .plunder-status.ok { color: var(--brass); }
+  .plunder-status.err { color: var(--danger); }
+
   footer { text-align: center; margin-top: 26px; color: var(--rope); font-size: .85rem; }
   footer a { color: var(--brass); }
 
@@ -858,14 +867,84 @@
           <button class="act ghost" id="backBtn" type="button">◀ Come About</button>
           <button class="act" id="resetBtn" type="button">New Voyage</button>
         </div>
+        <div class="plunder">
+          <span class="plunder-label">Share yer booty:</span>
+          <button class="act" id="buryBtn" type="button">🪙 Bury yer Booty</button>
+          <button class="act ghost" id="raidBtn" type="button">🏴‍☠️ Raid a Ship</button>
+          <input type="file" id="raidFile" accept="application/json,.json" hidden />
+          <span class="plunder-status" id="plunderStatus"></span>
+        </div>
       </div>`;
     document.getElementById("backBtn").onclick = () => { state.current = N - 1; renderAll(); };
     document.getElementById("resetBtn").onclick = () => {
       QUESTIONS.forEach(x => { state.answers[x.id] = x.type === "multi" ? [] : null; });
       state.current = 0; renderAll();
     };
+    document.getElementById("buryBtn").onclick = buryBooty;
+    const raidFile = document.getElementById("raidFile");
+    document.getElementById("raidBtn").onclick = () => raidFile.click();
+    raidFile.onchange = () => { if (raidFile.files[0]) raidShip(raidFile.files[0]); };
     helm = null; spinEl = null;
     coinRain(42);
+  }
+
+  function plunderSay(msg, kind) {
+    const el = document.getElementById("plunderStatus");
+    if (el) { el.textContent = msg; el.className = "plunder-status" + (kind ? " " + kind : ""); }
+  }
+
+  // ---- Raid: export / import the intake as a JSON "treasure chest" ----
+  const CHEST_VERSION = 1;
+
+  function buryBooty() {
+    const chest = {
+      chest: "man-the-helm-intake",
+      version: CHEST_VERSION,
+      buried: new Date().toISOString(),
+      answers: state.answers,
+    };
+    const blob = new Blob([JSON.stringify(chest, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "treasure-chest.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    plunderSay("Booty buried in treasure-chest.json — hand it to yer crew.", "ok");
+  }
+
+  function raidShip(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let chest;
+      try { chest = JSON.parse(reader.result); }
+      catch { plunderSay("That chest be locked — not readable treasure (bad JSON).", "err"); return; }
+      if (!chest || chest.chest !== "man-the-helm-intake" || typeof chest.answers !== "object") {
+        plunderSay("That be no intake chest, ye been swindled.", "err"); return;
+      }
+      // Merge only known questions/options; ignore any unknown or malformed booty.
+      let taken = 0;
+      QUESTIONS.forEach(q => {
+        const val = chest.answers[q.id];
+        if (q.type === "single") {
+          if (typeof val === "string" && getOpt(q.id, val)) { state.answers[q.id] = val; taken++; }
+          else state.answers[q.id] = null;
+        } else {
+          if (Array.isArray(val)) {
+            const clean = val.filter(l => typeof l === "string" && getOpt(q.id, l));
+            state.answers[q.id] = clean;
+            if (clean.length) taken++;
+          } else state.answers[q.id] = [];
+        }
+      });
+      state.current = N; // stay on the harbor screen showing the plundered manifest
+      renderAll();
+      plunderSay(taken ? `Raid successful — plundered ${taken} answer${taken === 1 ? "" : "s"} onto yer manifest.` : "Chest was empty, naught to plunder.", taken ? "ok" : "err");
+    };
+    reader.onerror = () => plunderSay("Couldn't haul that chest aboard.", "err");
+    reader.readAsText(file);
   }
 
   function renderAll() { renderStage(); renderLog(); }
