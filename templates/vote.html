@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vote — Vibe Diagnosis</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="wrap narrow">
+
+  <div class="brand">
+    <div class="dot"></div>
+    <div>VIBE DIAGNOSIS<small>you are the human in the loop</small></div>
+  </div>
+
+  <h1 style="font-size:28px">What's wrong with <span class="g">@{{ handle }}</span>?</h1>
+  <p class="sub">A machine looked at photos and made these up. You get the actual vote. Pick one — you can change your mind until voting closes.</p>
+
+  {% for c in cards %}
+  <button class="vopt" data-id="{{ c.id }}">
+    <strong>{{ c.name }}</strong>
+    <span>{{ c.complaint }}</span>
+  </button>
+  {% endfor %}
+
+  <div class="status" id="status"></div>
+
+  <div class="disclaimer">
+    You are voting on a joke. Nobody can read a condition off a photograph — that's the
+    entire point of this thing.
+  </div>
+</div>
+
+<script>
+const SID = "{{ sid }}";
+const KEY = 'vdvoter';
+let voter = localStorage.getItem(KEY);
+if (!voter) {
+  voter = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  localStorage.setItem(KEY, voter);
+}
+
+const status = document.getElementById('status');
+
+document.querySelectorAll('.vopt').forEach(btn => {
+  btn.onclick = async () => {
+    const res = await fetch('/api/vote/' + SID, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voter, choice: btn.dataset.id })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      status.className = 'status err';
+      status.textContent = data.error || 'Something went wrong.';
+      return;
+    }
+    document.querySelectorAll('.vopt').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    status.className = 'status';
+    status.textContent = 'Vote locked in. ' + data.total + (data.total === 1 ? ' vote' : ' votes') + ' so far.';
+  };
+});
+</script>
+</body>
+</html>
