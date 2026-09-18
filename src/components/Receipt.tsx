@@ -1,8 +1,8 @@
 import type { Dossier } from '../types.ts'
 import type { KnownPatient } from '../patients.ts'
 
-// The three fields that are actually true, because the patient typed them.
-export const TRUSTED_FIELD_IDS = ['name', 'date_of_birth', 'date'] as const
+// The fields that are actually true, because the patient typed them or a clock did.
+export const TRUSTED_FIELD_IDS = ['name', 'date_of_birth', 'day_of_life'] as const
 
 interface ReceiptProps {
   dossier: Dossier
@@ -20,52 +20,68 @@ export function Receipt({ dossier, corrections, knownPatient, onRestart }: Recei
   const confirmedCount = allFields.length - invented.length
 
   return (
-    <section className="receipt">
-      <h2>Sent to your care team</h2>
-      <p className="receipt-lede">
-        {allFields.length} fields. You confirmed {confirmedCount}. We invented {invented.length}.
-        All three biometric checks passed.
-      </p>
+    <div className="record-page">
+      <article className="record receipt">
+        <header className="record-head">
+          <div>
+            <span className="verified addendum">⬡ ADDENDUM A — DISCLOSURE OF METHOD</span>
+            <h1>Filed with your care team</h1>
+            <p className="record-meta">{dossier.recordId} · {dossier.mrn} · all three biometric checks passed</p>
+          </div>
+        </header>
 
-      <h3>What we made up</h3>
-      <ul className="receipt-list">
-        {invented.map((field) => (
-          <li key={field.id}>
-            <b>{field.label}</b>
-            <span>{field.value}</span>
-            <i>{field.reasoning}</i>
-          </li>
-        ))}
-      </ul>
+        <p className="receipt-lede">
+          <b>{allFields.length}</b> fields transmitted. You confirmed <b>{confirmedCount}</b>.
+          We invented <b>{invented.length}</b>.
+        </p>
 
-      {knownPatient ? (
-        <div className="truth">
-          <h3>What {knownPatient.name.split(' ')[0]} would have told you</h3>
-          <p className="truth-source">
-            Real form filled out by: {knownPatient.filledOutBy} · <code>{knownPatient.folder}</code>
-          </p>
-          <ul>
-            {knownPatient.truths.map((truth) => (
-              <li key={truth}>{truth}</li>
+        <section className="record-section">
+          <h2><span className="sec-num">§A</span> Fields we made up</h2>
+          <ul className="receipt-list">
+            {invented.map((field) => (
+              <li key={field.id}>
+                <b>{field.label}</b>
+                <span>{field.value}</span>
+                <i>{field.reasoning}</i>
+              </li>
             ))}
           </ul>
-          <p className="truth-kicker">None of that is on the form. A human filled that one out.</p>
-        </div>
-      ) : (
-        <div className="truth">
-          <h3>For comparison</h3>
-          <p>
-            Plum Kohlrabi is 83 and has glaucoma. His daughter filled out his paper intake form at
-            the front desk and left every past-conditions box blank. He has COPD, and a year ago he
-            quietly stopped one of his two eye drops because it made him wheeze.
-          </p>
-          <p className="truth-kicker">A human filled that one out.</p>
-        </div>
-      )}
+        </section>
 
-      <button type="button" className="primary" onClick={onRestart}>
-        Do someone else
-      </button>
-    </section>
+        <section className="record-section">
+          {knownPatient ? (
+            <>
+              <h2><span className="sec-num">§B</span> What {knownPatient.name.split(' ')[0]} would have told you</h2>
+              <p className="truth-source">
+                The real form was filled out by: {knownPatient.filledOutBy} · <code>{knownPatient.folder}</code>
+              </p>
+              <ul className="truth-list">
+                {knownPatient.truths.map((truth) => (
+                  <li key={truth}>{truth}</li>
+                ))}
+              </ul>
+              <p className="truth-kicker">None of that is on the record. A human filled that one out.</p>
+            </>
+          ) : (
+            <>
+              <h2><span className="sec-num">§B</span> For comparison</h2>
+              <p className="truth-body">
+                Plum Kohlrabi is 83 and has glaucoma. His daughter filled out his paper intake form at
+                the front desk and left every past-conditions box blank. He has COPD, and a year ago he
+                quietly stopped one of his two eye drops because it made him wheeze.
+              </p>
+              <p className="truth-kicker">A human filled that one out.</p>
+            </>
+          )}
+        </section>
+
+        <footer className="record-foot">
+          <span>⎘ Retention: indefinite</span>
+          <span>This addendum is not normally shown to the patient.</span>
+        </footer>
+      </article>
+
+      <button type="button" className="primary wide" onClick={onRestart}>Locate someone else</button>
+    </div>
   )
 }

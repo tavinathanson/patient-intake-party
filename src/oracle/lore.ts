@@ -172,3 +172,53 @@ export const STREETS = [
 export const RELATIONSHIPS = ['sister', 'son', 'neighbour', 'wife', 'husband', 'daughter', 'former roommate'] as const
 
 export const FIRST_NAMES = ['Cherry', 'Olive', 'Bramble', 'Juniper', 'Rowan', 'Clementine', 'Hazel', 'Sorrel'] as const
+
+// ICD-10 codes for the checklist conditions. Real codes, attached to diagnoses
+// we invented from a birthday, which is the most medically plausible-looking
+// thing on the whole page.
+export const ICD10: Record<string, string> = {
+  'Arthritis': 'M19.90',
+  'Asthma': 'J45.909',
+  'Cancer': 'C80.1',
+  'COPD / emphysema': 'J44.9',
+  'Depression / anxiety': 'F41.1',
+  'Diabetes': 'E11.9',
+  'Glaucoma': 'H40.9',
+  'Heart disease': 'I25.10',
+  'High blood pressure': 'I10',
+  'High cholesterol': 'E78.5',
+  'Kidney disease': 'N18.9',
+  'Seizures': 'G40.909',
+  'Stroke': 'I63.9',
+  'Thyroid disease': 'E03.9',
+}
+
+// Nodes the shell pretends to break into. Real product names, entirely
+// fictional intrusions.
+export const HIE_NODES = [
+  { name: 'Epic Hyperspace', tag: '[ACCESS GRANTED]' },
+  { name: 'Cerner Millennium', tag: '[READ-ONLY]' },
+  { name: 'Availity claims clearinghouse', tag: '[DECODED]' },
+  { name: 'CVS #8813 fill history', tag: '[14 FILLS]' },
+] as const
+
+export const TICKER_EVENTS = [
+  'Record pulled for M. T——— · Cedar Falls, IA',
+  'Natal chart cast without consent · Brookfield, WI',
+  'Dossier compiled for R. K——— · Riverton, OH',
+  'Ephemeris node: READ-ONLY',
+  'Record pulled for D. B——— · Millbrook, NY',
+  'Mercury retrograde — 3 records re-run',
+  'Allscripts timeout (as always)',
+  'Access logs scrubbed',
+  'Record pulled for S. N——— · Cedar Falls, IA',
+  'Life Path recalculated mid-session',
+] as const
+
+export const PROVIDERS = [
+  'Alden Pruitt, MD',
+  'Priya Ranganathan, DO',
+  'Marcus Oyelaran, MD',
+  'Saoirse Whitfield, MD',
+  'Tobias Vance, DO',
+] as const

@@ -35,17 +35,17 @@ export function GateCard({ spec, patientName, onPass }: GateCardProps) {
     setMessage('Waiting for the sensor…')
     const outcome = await requestPlatformBiometric(patientName)
     if (outcome === 'passed') {
-      setMessage('Identity confirmed. Releasing records.')
+      setMessage('Dermal signature confirmed. Declassifying section.')
       window.setTimeout(onPass, 700)
       return
     }
     if (outcome === 'unsupported') {
       setStatus('holding')
-      setMessage('No sensor found. Press and hold the pad instead.')
+      setMessage('No sensor on this device. Press and hold the pad instead.')
       return
     }
     setStatus('declined')
-    setMessage('Verification declined.')
+    setMessage('Scan declined by the subject.')
   }
 
   function startHold() {
@@ -80,28 +80,23 @@ export function GateCard({ spec, patientName, onPass }: GateCardProps) {
     setTaps(next)
     if (next.length >= REQUIRED_TAPS) {
       const bpm = bpmFromTaps(next)
-      setMessage(bpm === null ? 'Baseline recorded.' : `Resting rate ${bpm} bpm. Baseline recorded.`)
+      setMessage(bpm === null ? 'Baseline recorded.' : `Resting rate ${String(bpm)} bpm. Baseline recorded.`)
       window.setTimeout(onPass, 900)
     }
   }
 
   return (
-    <div className="gate">
-      <div className="gate-head">
-        <span className="gate-lock">locked</span>
-        <h3>{spec.title}</h3>
+    <div className="seal">
+      <div className="seal-stripe">
+        <span>SEALED</span>
+        <span>{spec.sealNote}</span>
       </div>
-      <p className="gate-blurb">{spec.blurb}</p>
-      <p className="gate-unlocks">Unlocks: {spec.unlocksLabel}</p>
+      <h4>{spec.title}</h4>
+      <p className="seal-blurb">{spec.blurb}</p>
+      <p className="seal-unlocks">Declassifies: {spec.unlocksLabel}</p>
 
       {spec.id === 'touch' && status === 'holding' && (
-        <button
-          type="button"
-          className="pad"
-          onPointerDown={startHold}
-          onPointerUp={cancelHold}
-          onPointerLeave={cancelHold}
-        >
+        <button type="button" className="pad" onPointerDown={startHold} onPointerUp={cancelHold} onPointerLeave={cancelHold}>
           hold here
         </button>
       )}
@@ -110,12 +105,13 @@ export function GateCard({ spec, patientName, onPass }: GateCardProps) {
         <div className="retina">
           {stream ? <video ref={videoRef} autoPlay playsInline muted /> : <div className="retina-blank" />}
           <div className="retina-scanline" />
+          <div className="retina-reticle" />
         </div>
       )}
 
       {spec.id === 'pulse' && status === 'running' && (
         <button type="button" className="pad pulse-pad" onClick={registerTap}>
-          {taps.length === 0 ? 'tap with your pulse' : `${taps.length} / ${REQUIRED_TAPS}`}
+          {taps.length === 0 ? 'tap with your pulse' : `${String(taps.length)} / ${String(REQUIRED_TAPS)}`}
         </button>
       )}
 
@@ -135,11 +131,11 @@ export function GateCard({ spec, patientName, onPass }: GateCardProps) {
 
       {status === 'declined' && (
         <button type="button" className="primary" onClick={onPass}>
-          Continue without verification
+          Declassify without verification
         </button>
       )}
 
-      {message && <p className="gate-message">{message}</p>}
+      {message && <p className="seal-message">{message}</p>}
     </div>
   )
 }

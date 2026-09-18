@@ -1,26 +1,31 @@
 import type { GateSpec } from './types.ts'
 
 // Each gate costs the patient more dignity and buys the clinic more fiction.
+// The seal notes borrow the shell's voice: the record is not incomplete, it is
+// classified, and only your body can declassify it.
 export const GATES: readonly GateSpec[] = [
   {
     id: 'touch',
-    title: 'Confirm it is really you',
-    blurb: 'Touch the sensor. We use your fingerprint to confirm your identity before releasing your medication history.',
-    cta: 'Scan fingerprint',
-    unlocksLabel: 'reason for visit, medications, allergies',
+    title: 'Section sealed — dermal signature required',
+    blurb: 'Federal rules oblige us to confirm you are you before releasing your own medication history to you. Touch the sensor.',
+    cta: 'Authenticate fingerprint',
+    unlocksLabel: '§3 presenting complaint, medications, allergies',
+    sealNote: 'CREDENTIALS INSUFFICIENT · 45 CFR §164.508',
   },
   {
     id: 'retina',
-    title: 'Ocular verification',
-    blurb: 'Look directly into the camera and hold still. Required before we can display your past conditions.',
+    title: 'Section sealed — ocular verification required',
+    blurb: 'Diagnoses are protected at a higher tier. Look directly into the camera and hold still while we pretend to read your retina.',
     cta: 'Begin retinal scan',
-    unlocksLabel: 'past conditions and surgeries',
+    unlocksLabel: '§4 active diagnoses and surgical history',
+    sealNote: 'TIER 2 PHI · BIOMETRIC BINDING REQUIRED',
   },
   {
     id: 'pulse',
-    title: 'Resting cardiac baseline',
-    blurb: 'Find your pulse and tap along with it. Six taps. This calibrates your family history.',
-    cta: 'Tap your pulse',
-    unlocksLabel: 'family and social history',
+    title: 'Section sealed — cardiac baseline required',
+    blurb: 'Family history is inferred from your surname, which we can only justify once we have a pulse on file. Find yours and tap along with it.',
+    cta: 'Record cardiac baseline',
+    unlocksLabel: '§5 family and social history',
+    sealNote: 'AWAITING LIVE SUBJECT CONFIRMATION',
   },
 ]

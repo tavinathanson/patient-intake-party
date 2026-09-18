@@ -3,9 +3,9 @@ interface BiorhythmChartProps {
 }
 
 const CYCLES = [
-  { label: 'physical', period: 23, colour: 'var(--astro)' },
-  { label: 'emotional', period: 28, colour: 'var(--numero)' },
-  { label: 'intellectual', period: 33, colour: 'var(--record)' },
+  { label: 'physical', period: 23, colour: 'var(--violet)' },
+  { label: 'emotional', period: 28, colour: 'var(--amber)' },
+  { label: 'intellectual', period: 33, colour: 'var(--cyan)' },
 ] as const
 
 const WIDTH = 520

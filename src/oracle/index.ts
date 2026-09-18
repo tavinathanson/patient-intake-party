@@ -1,9 +1,9 @@
-import type { Biorhythms, Dossier, SearchResponse, Section } from '../types.ts'
+import type { Biorhythms, Dossier, SearchResponse, Section, TraceLine } from '../types.ts'
 import { hashString, makeRandom, pick, pickSome } from './seed.ts'
 import {
   ANIMAL_INSURERS, CHINESE_ANIMALS, CONDITION_CHECKLIST, DESTINY_ALLERGENS,
-  FAMILY_CONDITIONS, FIRST_NAMES, LIFE_PATHS, RELATIONSHIPS, SIGN_LORE,
-  STREETS, SURGERY_POOL, SURNAME_ORIGINS, destinyNumber, reduceToRoot, zodiacFor,
+  FAMILY_CONDITIONS, FIRST_NAMES, HIE_NODES, ICD10, LIFE_PATHS, RELATIONSHIPS,
+  SIGN_LORE, STREETS, SURGERY_POOL, SURNAME_ORIGINS, destinyNumber, reduceToRoot, zodiacFor,
 } from './lore.ts'
 
 const MS_PER_DAY = 86_400_000
@@ -48,23 +48,28 @@ function lifePathFor(dob: string): number {
   return reduceToRoot(total)
 }
 
+function hostOf(link: string): string {
+  try {
+    return new URL(link).hostname.replace(/^www\./, '')
+  } catch {
+    return 'the open web'
+  }
+}
+
 // If the real search found something, we cite it. The citation is real; the
 // value it supposedly supports is not. That gap is the joke.
 function citation(search: SearchResponse, index: number): string | null {
   const result = search.results[index]
   if (!result) return null
-  let host = result.link
-  try {
-    host = new URL(result.link).hostname.replace(/^www\./, '')
-  } catch {
-    host = 'the open web'
-  }
   const snippet = result.snippet.slice(0, 90)
-  return snippet ? `Cross-referenced with ${host}: "${snippet}…"` : `Cross-referenced with ${host}.`
+  return snippet
+    ? `Cross-referenced with ${hostOf(result.link)}: "${snippet}…"`
+    : `Cross-referenced with ${hostOf(result.link)}.`
 }
 
 export function buildDossier(name: string, dob: string, search: SearchResponse): Dossier {
-  const random = makeRandom(hashString(`${name.trim().toLowerCase()}|${dob}`))
+  const seed = hashString(`${name.trim().toLowerCase()}|${dob}`)
+  const random = makeRandom(seed)
   const [yearText = '1990', monthText = '01', dayText = '01'] = dob.split('-')
   const year = Number(yearText)
   const month = Number(monthText)
@@ -88,36 +93,37 @@ export function buildDossier(name: string, dob: string, search: SearchResponse):
   const extras = pickSome(random, CONDITION_CHECKLIST.filter((item) => item !== lore.condition), extraCount)
   const conditions = [lore.condition, ...extras]
 
+  // Vitals read off the sine waves. A number derived from a birthday, printed
+  // to one decimal place, looks exactly like a number derived from a cuff.
+  const systolic = Math.round(118 + rhythms.physical * 26)
+  const diastolic = Math.round(76 + rhythms.emotional * 14)
+  const heartRate = Math.round(72 + rhythms.physical * 16)
+  const temperature = (98.2 + rhythms.intellectual * 0.6).toFixed(1)
+  const spo2 = Math.round(96 + rhythms.emotional * 2)
+
   const identity: Section = {
     id: 'identity',
-    title: 'Identity',
+    title: 'Patient information',
     gate: null,
+    layout: 'rows',
     fields: [
       {
-        id: 'filled_out_by', label: 'Filled out by', value: '23andGuess inference engine',
-        provenance: 'vibes', reasoning: 'No human was involved in completing this form.',
-      },
-      {
-        id: 'date', label: 'Date', value: new Date().toISOString().slice(0, 10),
-        provenance: 'record', reasoning: 'System clock. One of the two things on this page we are sure about.',
-      },
-      {
-        id: 'name', label: 'Name', value: name,
-        provenance: 'record', reasoning: 'You typed this. The other thing we are sure about.',
+        id: 'name', label: 'Full legal name', value: name,
+        provenance: 'record', reasoning: 'You typed this. One of the two things on this page we are sure about.',
       },
       {
         id: 'date_of_birth', label: 'Date of birth', value: dob,
         provenance: 'record', reasoning: 'You typed this too, and then we built everything below out of it.',
       },
       {
-        id: 'address', label: 'Address',
+        id: 'address', label: 'Street address',
         value: `${10 + Math.floor(random() * 180)} ${pick(random, STREETS) ?? 'Orchard Lane'}`,
         provenance: search.results.length > 0 ? 'record' : 'vibes',
         reasoning: citation(search, 0) ?? 'No public record found, so we picked a street that sounded residential.',
       },
       {
         id: 'phone', label: 'Phone',
-        value: `555-0${String(100 + Math.floor(random() * 899))}`,
+        value: `(555) 0${String(100 + Math.floor(random() * 899))}-${String(1000 + Math.floor(random() * 8999))}`,
         provenance: search.results.length > 1 ? 'record' : 'vibes',
         reasoning: citation(search, 1) ?? 'Invented. Please do not call it.',
       },
@@ -129,22 +135,54 @@ export function buildDossier(name: string, dob: string, search: SearchResponse):
       },
       {
         id: 'member_id', label: 'Member ID',
-        value: `${animal.slice(0, 2).toUpperCase()}${String(Math.floor(random() * 9e7) + 1e7)}`,
+        value: `${animal.slice(0, 3).toUpperCase()}-${String(Math.floor(random() * 9e8) + 1e8)}`,
         provenance: 'vibes', reasoning: 'Generated. It has the right number of digits, which is most of the battle.',
       },
       {
         id: 'emergency_contact', label: 'Emergency contact',
-        value: `${pick(random, FIRST_NAMES) ?? 'Cherry'} ${surname}, ${pick(random, RELATIONSHIPS) ?? 'sister'}, 555-0${String(100 + Math.floor(random() * 899))}`,
+        value: `${pick(random, FIRST_NAMES) ?? 'Cherry'} ${surname} (${pick(random, RELATIONSHIPS) ?? 'sister'})`,
         provenance: 'vibes',
         reasoning: 'The person whose name would appear most often beside yours, if we had checked.',
+      },
+      {
+        id: 'filled_out_by', label: 'Completed by', value: 'MEDTRACE inference engine',
+        provenance: 'vibes', reasoning: 'No human was involved in completing this record.',
+      },
+    ],
+  }
+
+  const vitals: Section = {
+    id: 'vitals',
+    title: 'Vitals — last encounter',
+    gate: null,
+    layout: 'tiles',
+    fields: [
+      {
+        id: 'blood_pressure', label: 'Blood pressure', value: `${systolic}/${diastolic}`,
+        ...(systolic >= 130 || diastolic >= 85 ? { flag: 'ELEVATED — STAGE 1/2' } : {}),
+        provenance: 'numerological',
+        reasoning: `Physical cycle ${rhythms.physical.toFixed(2)}, emotional ${rhythms.emotional.toFixed(2)}, scaled to something that looks like a cuff reading.`,
+      },
+      {
+        id: 'heart_rate', label: 'Heart rate', value: `${heartRate} bpm`,
+        provenance: 'numerological', reasoning: `72 plus your physical biorhythm. No pulse was taken.`,
+      },
+      {
+        id: 'temp_spo2', label: 'Temp / SpO₂', value: `${temperature} °F · ${spo2}%`,
+        provenance: 'numerological', reasoning: 'Within… a range.',
+      },
+      {
+        id: 'day_of_life', label: 'Day of life', value: daysAlive.toLocaleString(),
+        provenance: 'record', reasoning: 'Days between your birthday and today. Actually true.',
       },
     ],
   }
 
   const presenting: Section = {
     id: 'presenting',
-    title: 'Reason for visit, medications, allergies',
+    title: 'Presenting complaint and medications',
     gate: 'touch',
+    layout: 'rows',
     fields: [
       {
         id: 'reason_for_visit', label: 'Reason for visit', value: COMPLAINTS[trough],
@@ -168,16 +206,18 @@ export function buildDossier(name: string, dob: string, search: SearchResponse):
 
   const history: Section = {
     id: 'history',
-    title: 'Past conditions and surgeries',
+    title: 'Active diagnoses and surgical history',
     gate: 'retina',
+    layout: 'rows',
     fields: [
       {
-        id: 'past_conditions', label: 'Past conditions', value: conditions.join(', '),
+        id: 'past_conditions', label: 'Active diagnoses', value: conditions.join(', '),
+        codes: conditions.map((condition) => ({ label: condition, code: ICD10[condition] ?? 'R69' })),
         provenance: 'astrological',
         reasoning: `${sign} rules ${lore.rules}, which gives ${lore.condition}.${extras.length > 0 ? ` Life Path ${lifePath} adds ${extras.length} more.` : ''}`,
       },
       {
-        id: 'past_surgeries', label: 'Past surgeries',
+        id: 'past_surgeries', label: 'Surgical history',
         value: `${pick(random, SURGERY_POOL) ?? 'appendectomy'} (${year + 20 + Math.floor(random() * 30)})`,
         provenance: 'vibes',
         reasoning: 'Most people have had one of these. Statistically we are probably fine.',
@@ -189,6 +229,7 @@ export function buildDossier(name: string, dob: string, search: SearchResponse):
     id: 'social',
     title: 'Family and social history',
     gate: 'pulse',
+    layout: 'rows',
     fields: [
       {
         id: 'family_history', label: 'Family history',
@@ -199,7 +240,7 @@ export function buildDossier(name: string, dob: string, search: SearchResponse):
       {
         id: 'tobacco', label: 'Tobacco',
         value: random() > 0.6 ? 'Former (quit, year unclear)' : 'Never',
-        provenance: 'astrological', reasoning: `Saturn was doing something at your birth. ${lore.tell}.`,
+        provenance: 'astrological', reasoning: `Saturn was doing something at your birth. The subject ${lore.tell}.`,
       },
       {
         id: 'alcohol', label: 'Alcohol', value: random() > 0.5 ? 'Occasional' : 'None',
@@ -212,21 +253,22 @@ export function buildDossier(name: string, dob: string, search: SearchResponse):
     ],
   }
 
-  const trace = buildTrace({ name, sign, lore: lore.rules, lifePath, lifePathLore: lifePathLore.name, animal, daysAlive, trough, rhythms, search })
-
   return {
     name, dob, sign, signRules: lore.rules, lifePath, lifePathName: lifePathLore.name,
-    chineseAnimal: animal, daysAlive, biorhythms: rhythms, search, trace,
-    sections: [identity, presenting, history, social],
+    chineseAnimal: animal, daysAlive, biorhythms: rhythms, search,
+    trace: buildTrace({ name, sign, signRules: lore.rules, lifePath, lifePathName: lifePathLore.name, animal, daysAlive, trough, rhythms, search }),
+    sections: [identity, vitals, presenting, history, social],
+    recordId: `23ME-${String(seed).slice(0, 6)}-${animal.slice(0, 2).toUpperCase()}`,
+    mrn: `MRN-${String(seed % 99_999_999).padStart(8, '0')}`,
   }
 }
 
 interface TraceInput {
   name: string
   sign: string
-  lore: string
+  signRules: string
   lifePath: number
-  lifePathLore: string
+  lifePathName: string
   animal: string
   daysAlive: number
   trough: keyof Biorhythms
@@ -234,30 +276,51 @@ interface TraceInput {
   search: SearchResponse
 }
 
-// The lines that stream past during the "search". Real results first so the
-// fabrication rides in on the back of something true.
-function buildTrace(input: TraceInput): string[] {
-  const lines: string[] = [`Querying open web for "${input.name}"…`]
+// The MEDTRACE shell. It talks like it is breaking into Epic. It is casting a
+// natal chart. Nothing in the first half is real except the search results, and
+// nothing in the second half is real at all.
+function buildTrace(input: TraceInput): TraceLine[] {
+  const lines: TraceLine[] = [
+    { kind: 'prompt', text: `medtrace --locate --deep-scan "${input.name}"` },
+    { kind: 'banner', text: 'MEDTRACE v4.2.1 :: secure records interrogation shell' },
+    { kind: 'info', text: 'establishing encrypted tunnel (AES-256-GCM)', tag: '[OK]' },
+    { kind: 'info', text: 'spoofing clinician workstation · session ID 0x7F3A9C' },
+  ]
 
+  for (const node of HIE_NODES.slice(0, 2)) {
+    lines.push({ kind: 'probe', text: `probing HIE node: ${node.name}`, tag: node.tag, bar: true })
+  }
+  lines.push({ kind: 'warn', text: 'WARNING: 3 failed integrity checks logged — rotating exit node' })
+
+  // The one honest moment in the whole shell.
   if (!input.search.configured) {
-    lines.push('Search unavailable — no key configured. Switching to inference.')
+    lines.push({ kind: 'warn', text: 'open-web index: no credentials configured — falling back to inference', tag: '[SKIPPED]' })
   } else if (input.search.error) {
-    lines.push(`Search failed (${input.search.error}). Switching to inference.`)
+    lines.push({ kind: 'warn', text: `open-web index unreachable (${input.search.error})`, tag: '[FAILED]' })
   } else if (input.search.results.length === 0) {
-    lines.push('0 public records found.')
-    lines.push('No digital footprint. Confidence increased.')
+    lines.push({ kind: 'probe', text: 'querying open-web index', tag: '[0 MATCHES]', bar: true })
+    lines.push({ kind: 'ok', text: 'no digital footprint detected — confidence increased' })
   } else {
-    lines.push(`${input.search.results.length} public records matched.`)
+    lines.push({
+      kind: 'probe', text: 'querying open-web index',
+      tag: `[${input.search.results.length} MATCHES]`, bar: true,
+    })
     for (const result of input.search.results.slice(0, 3)) {
-      lines.push(`✓ ${result.title.slice(0, 70)}`)
+      lines.push({ kind: 'ok', text: `↳ ${result.title.slice(0, 64)}` })
     }
   }
 
-  lines.push(`Natal chart cast — birth time assumed 12:00.`)
-  lines.push(`${input.sign} rules ${input.lore}.`)
-  lines.push(`Year of the ${input.animal}. Plan matched.`)
-  lines.push(`Life Path ${input.lifePath} — ${input.lifePathLore}.`)
-  lines.push(`Day ${input.daysAlive.toLocaleString()} of life. ${input.trough} cycle at ${input.rhythms[input.trough].toFixed(2)}.`)
-  lines.push('9 fields recovered. Biometric verification required for the remaining 9.')
+  lines.push({ kind: 'probe', text: 'casting natal chart · birth time assumed 12:00', tag: '[CHART CAST]', bar: true })
+  lines.push({ kind: 'info', text: `${input.sign} rules ${input.signRules}` })
+  lines.push({ kind: 'info', text: `year of the ${input.animal} — payer matched from the zodiac` })
+  lines.push({ kind: 'info', text: `Life Path ${input.lifePath} — ${input.lifePathName}` })
+  lines.push({
+    kind: 'probe',
+    text: `interpolating vitals from day ${input.daysAlive.toLocaleString()} sine curves`,
+    tag: '[INTERPOLATED]', bar: true,
+  })
+  lines.push({ kind: 'warn', text: 'psychiatric annex detected … credentials insufficient, noted' })
+  lines.push({ kind: 'probe', text: 'compiling patient dossier', tag: '[COMPILED]', bar: true })
+  lines.push({ kind: 'ok', text: 'scrubbing access logs — no one will ever know', tag: '[OK]' })
   return lines
 }
