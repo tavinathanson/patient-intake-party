@@ -144,6 +144,37 @@
     font-size: 0.85rem;
   }
   .fine-print { color: var(--muted); font-size: 0.8rem; font-style: italic; }
+  .answer-line {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .edit-btn {
+    font-family: Georgia, serif;
+    font-size: 0.72rem;
+    font-weight: bold;
+    padding: 2px 10px;
+    border: 1.5px solid var(--ink);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .edit-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Printing outputs only the filled-in paper form. */
+  @media print {
+    .card { border: none; box-shadow: none; padding: 0; }
+    .card > div { display: none !important; }
+    body.printing #done { display: block !important; }
+    body.printing #done h1,
+    body.printing #done .subtitle,
+    body.printing #done .continue-row,
+    body.printing #done .edit-btn { display: none; }
+    .sheet { border: none; box-shadow: none; }
+  }
 </style>
 </head>
 <body>
@@ -168,15 +199,29 @@
       </div>
     </div>
 
-    <!-- success -->
+    <!-- confirmation -->
     <div id="done" class="hidden">
-      <h1>Intake complete. Thank you!</h1>
-      <p class="subtitle">We've filled out your form based on your responses.
-        Please review for accuracy.</p>
+      <h1>Almost done — please verify your information.</h1>
+      <p class="subtitle">Review each response below carefully. If anything is
+        incorrect, select <strong>Edit</strong> to revise your answer.</p>
       <div class="sheet" id="sheet"></div>
-      <p class="fine-print">If any information is incorrect, please notify the front
-        desk by selecting the appropriate image.</p>
-      <div class="continue-row"><button id="restart">Start over</button></div>
+      <div class="continue-row"><button id="confirmBtn">I confirm this information is correct</button></div>
+    </div>
+
+    <!-- success -->
+    <div id="final" class="hidden">
+      <h1>Intake complete. One last step!</h1>
+      <p>Please <strong>print this form</strong> and <strong>fax it to your
+        provider</strong> before your appointment.</p>
+      <p class="subtitle">A fax number is not provided on this page. If you need
+        the fax number, please call our office. Please note the fax number cannot
+        be given out over the phone.</p>
+      <p class="fine-print">Blotworth Family Clinic thanks you for your patience.
+        The doctor will see you (and what you see) shortly.</p>
+      <div class="continue-row">
+        <button id="printBtn">Print form</button>
+        <button id="restart">Start over</button>
+      </div>
     </div>
   </main>
 
@@ -278,6 +323,7 @@
   const responses = {};   // field -> answer string or array
   let multiSelected = new Set();
   let locked = false;
+  let editing = false;    // revising one answer from the confirmation screen
 
   function showQuestion() {
     const q = QUESTIONS[current];
@@ -307,6 +353,17 @@
       });
       blotGrid.appendChild(opt);
     });
+
+    // When revising the multi-select, preselect the current answers.
+    if (q.multi && editing && Array.isArray(responses[q.field])) {
+      q.answers.forEach((a, i) => {
+        if (responses[q.field].includes(a)) {
+          multiSelected.add(i);
+          blotGrid.children[i].classList.add('selected');
+        }
+      });
+      continueBtn.disabled = multiSelected.size === 0;
+    }
   }
 
   function select(q, i, opt) {
@@ -335,6 +392,11 @@
   });
 
   function advance() {
+    if (editing) {
+      editing = false;
+      finish();
+      return;
+    }
     current++;
     if (current < QUESTIONS.length) showQuestion();
     else finish();
@@ -345,6 +407,12 @@
     done.classList.remove('hidden');
     const today = new Date().toLocaleDateString('en-US',
       { year: 'numeric', month: 'long', day: 'numeric' });
+    const edit = (field) =>
+      `<button class="edit-btn" data-field="${field}">Edit</button>`;
+    const answerLine = (field) =>
+      `<div class="answer-line"><span class="pen">${responses[field]}</span>${edit(field)}</div>`;
+    const row = (field) =>
+      `<tr><td class="label">${field}</td><td>${answerLine(field)}</td></tr>`;
     const symptoms = (responses['Current symptoms'] || [])
       .map(s => `<li class="pen">${s}</li>`).join('');
     document.getElementById('sheet').innerHTML = `
@@ -352,19 +420,35 @@
       <p class="clinic">Blotworth Family Clinic &middot; “We see what you see.”</p>
       <table>
         <tr><td class="label">Date</td><td class="pen">${today}</td></tr>
-        <tr><td class="label">Name</td><td class="pen">${responses['Name']}</td></tr>
-        <tr><td class="label">Date of birth</td><td class="pen">${responses['Date of birth']}</td></tr>
-        <tr><td class="label">Address</td><td class="pen">${responses['Address']}</td></tr>
-        <tr><td class="label">Occupation</td><td class="pen">${responses['Occupation']}</td></tr>
+        ${row('Name')}
+        ${row('Date of birth')}
+        ${row('Address')}
+        ${row('Occupation')}
       </table>
-      <p class="section">Current symptoms (all that apply)</p>
+      <p class="section"><span class="answer-line">Current symptoms (all that apply)
+        ${edit('Current symptoms')}</span></p>
       <ul>${symptoms}</ul>
       <p class="section">Duration of symptoms</p>
-      <p class="pen">${responses['Symptom duration']}</p>
+      ${answerLine('Symptom duration')}
       <p class="section">Relevant medical history</p>
-      <p class="pen">${responses['Medical history']}</p>
-      <div class="stamp">Verified accurate</div>`;
+      ${answerLine('Medical history')}`;
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => editQuestion(btn.dataset.field));
+    });
   }
+
+  function editQuestion(field) {
+    editing = true;
+    current = QUESTIONS.findIndex(q => q.field === field);
+    done.classList.add('hidden');
+    quiz.classList.remove('hidden');
+    showQuestion();
+  }
+
+  document.getElementById('confirmBtn').addEventListener('click', () => {
+    done.classList.add('hidden');
+    document.getElementById('final').classList.remove('hidden');
+  });
 
   document.getElementById('startBtn').addEventListener('click', () => {
     intro.classList.add('hidden');
@@ -373,9 +457,16 @@
     showQuestion();
   });
 
+  document.getElementById('printBtn').addEventListener('click', () => {
+    document.body.classList.add('printing');
+    window.print();
+    document.body.classList.remove('printing');
+  });
+
   document.getElementById('restart').addEventListener('click', () => {
     for (const k in responses) delete responses[k];
-    done.classList.add('hidden');
+    editing = false;
+    document.getElementById('final').classList.add('hidden');
     quiz.classList.remove('hidden');
     current = 0;
     showQuestion();
