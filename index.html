@@ -254,9 +254,27 @@ const rint = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 const FIRST = ["Fig","Plum","Cherry","Quince","Endive","Radish","Sorrel","Damson","Kumquat","Fennel","Chard","Persimmon"];
 const LAST  = ["Kohlrabi","Bramble","Quickthorn","Marrow","Thistlewaite","Sorrel","Underbough","Pemberton"];
 
-const ARTISTS = ["Wet Cardigan","The Sunday Scaries","Doom Fern","Lukewarm Bath","Basement Cousins","Glass Ankle",
-  "Two Sad Dads","Ambient Dentist","Sincerely Nobody","Fleetwood Mock","Parking Garage Choir","Soft Launch",
-  "Emotional Support Bassoon","The Unread Messages"];
+/* what the patient actually listens to — real tracks, correctly attributed */
+const SAD_TRACKS = [
+  { t:"Skinny Love",             a:"Bon Iver",           len:"3:58" },
+  { t:"Motion Sickness",         a:"Phoebe Bridgers",    len:"3:49" },
+  { t:"Between the Bars",        a:"Elliott Smith",      len:"2:22" },
+  { t:"Exit Music (For a Film)", a:"Radiohead",          len:"4:24" },
+  { t:"Casimir Pulaski Day",     a:"Sufjan Stevens",     len:"5:54" },
+  { t:"Nobody",                  a:"Mitski",             len:"3:14" },
+  { t:"Landslide",               a:"Fleetwood Mac",      len:"3:19" },
+  { t:"Pink Moon",               a:"Nick Drake",         len:"2:04" },
+  { t:"Someone Like You",        a:"Adele",              len:"4:45" },
+  { t:"The Night We Met",        a:"Lord Huron",         len:"3:28" },
+  { t:"Fade Into You",           a:"Mazzy Star",         len:"4:56" },
+  { t:"Liability",               a:"Lorde",              len:"2:52" },
+  { t:"Videotape",               a:"Radiohead",          len:"4:39" },
+  { t:"Nothing Compares 2 U",    a:"Sinéad O'Connor",    len:"5:07" },
+  { t:"Baker Street",            a:"Gerry Rafferty",     len:"6:03" },  // the saxophone incident
+  { t:"Careless Whisper",        a:"George Michael",     len:"6:32" },
+];
+
+const ARTISTS = [...new Set(SAD_TRACKS.map(s => s.a))];
 
 const PLAYLISTS = ["crying in the car (2019)","songs for staring at a wall","gym but sad","3am thoughts",
   "dishes & dread","walking to the pharmacy","clean girl morning (abandoned)","focus (did not focus)",
@@ -418,9 +436,24 @@ function fillForm(){
 }
 
 /* ---------- the form fights back (and always wins) ---------- */
-const SONG_TITLES = ["Sunday, But Fine","Vitamin D (Extended Mix)","Walk Outside","Eight Hours (Sleep Edit)",
-  "Nobody Is Watching You Parallel Park","Hydration","Call Your Mother Back","Leg Day, Emotionally",
-  "A Room With A Window","Texture Of A Normal Week","Low Stakes Tuesday","Fine, Actually","Morning, Unforced"];
+/* what the form prescribes instead — also real, also correctly attributed */
+const UPBEAT_TRACKS = [
+  { t:"Walking on Sunshine",                 a:"Katrina and the Waves",      len:"3:58" },
+  { t:"Here Comes the Sun",                  a:"The Beatles",                len:"3:05" },
+  { t:"September",                           a:"Earth, Wind & Fire",         len:"3:35" },
+  { t:"Lovely Day",                          a:"Bill Withers",               len:"4:14" },
+  { t:"Dancing Queen",                       a:"ABBA",                       len:"3:52" },
+  { t:"Mr. Blue Sky",                        a:"Electric Light Orchestra",   len:"5:03" },
+  { t:"Don't Stop Me Now",                   a:"Queen",                      len:"3:29" },
+  { t:"Good as Hell",                        a:"Lizzo",                      len:"2:39" },
+  { t:"I Wanna Dance with Somebody",         a:"Whitney Houston",            len:"4:52" },
+  { t:"Uptown Funk",                         a:"Mark Ronson ft. Bruno Mars", len:"4:30" },
+  { t:"Three Little Birds",                  a:"Bob Marley & The Wailers",   len:"3:00" },
+  { t:"Signed, Sealed, Delivered I'm Yours", a:"Stevie Wonder",              len:"2:38" },
+  { t:"Levitating",                          a:"Dua Lipa",                   len:"3:23" },
+  { t:"Best Day of My Life",                 a:"American Authors",           len:"3:14" },
+  { t:"About Damn Time",                     a:"Lizzo",                      len:"3:11" },
+];
 const SONG_WHY = ["for your cortisol","3x daily, with food","replaces two sad songs","may reduce 3am sessions",
   "clinically upbeat","prescribed","gateway to a walk","contains no saxophone"];
 
@@ -469,12 +502,15 @@ function closeModal(){
 }
 
 function evidenceLine(){
-  return "evidence: " + rint(9,96) + " plays of “" + pick(SONG_TITLES) + "” — " +
-         pick(vibe.artists) + ", mostly after " + rint(1,4) + "am";
+  const top = SAD_TRACKS.filter(s => vibe.artists.includes(s.a));
+  const s = pick(top.length ? top : SAD_TRACKS);
+  return "evidence: " + rint(9,96) + " plays of “" + s.t + "” — " +
+         s.a + ", mostly after " + rint(1,4) + "am";
 }
 
 function songList(){
-  return picks(SONG_TITLES, 5).map(t => ({ t, a: pick(ARTISTS), why: pick(SONG_WHY) }));
+  const whys = picks(SONG_WHY, 5);
+  return picks(UPBEAT_TRACKS, 5).map((s,i) => ({ ...s, why: whys[i] }));
 }
 
 function renderStage(){
@@ -496,7 +532,7 @@ function renderStage(){
     $("#mEvidence").hidden = true;
     const ul = $("#mSongs");
     ul.innerHTML = songList().map(s => `<li><span class="art"></span>
-        <span><span class="t">${s.t}</span><br><span class="a">${s.a} · ${rint(2,4)}:${String(rint(10,59))}</span></span>
+        <span><span class="t">${s.t}</span><br><span class="a">${s.a} · ${s.len}</span></span>
         <span class="why">${s.why}</span></li>`).join("");
     ul.hidden = false;
   } else {
