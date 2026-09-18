@@ -103,3 +103,4 @@ Patients are LLM-generated. Images are real:
 * [pen-photo.jpg](patients/glp1/pen-photo.jpg): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Ozempic%C2%AE_3ml.jpg), CC BY-SA 4.0
 * [pill-bottle.jpg](patients/persistent-pain/pill-bottle.jpg): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Pill_Bottle_of_Assorted_Pills.JPG), CC BY-SA 3.0
 * [optic-disc-2023.png](patients/glaucoma/optic-disc-2023.png): [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Optic_disc_topography,_case_1,_R,_glaucoma.png), CC BY-SA 3.0
+* [images/](images) (team-winner branch): inkblots from [Wikimedia Commons, Category:Rorschach inkblots](https://commons.wikimedia.org/wiki/Category:Rorschach_inkblots) — the Rorschach cards are public domain; see each file's Commons page for details

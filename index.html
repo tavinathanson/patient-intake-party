@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inkblot Intake</title>
+<style>
+  :root {
+    --ink: #1c1b22;
+    --paper: #faf7f0;
+    --accent: #7c5cff;
+    --muted: #6b6875;
+    --pen: #1a3a8f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 640px;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+  h1 { margin: 0 0 4px; font-size: 1.5rem; }
+  .subtitle { margin: 0 0 20px; color: var(--muted); font-style: italic; }
+  .progress {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .question { font-size: 1.25rem; font-weight: bold; margin: 0 0 4px; }
+  .instruction { margin: 0 0 20px; color: var(--muted); font-style: italic; }
+  .blot-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .blot-option {
+    background: var(--paper);
+    border: 2px solid #ddd6c8;
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s, border-color 0.1s, box-shadow 0.1s;
+  }
+  .blot-option:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .blot-option.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent);
+  }
+  .blot-option img {
+    width: 100%;
+    height: 160px;
+    object-fit: contain;
+    display: block;
+    background: #fff;
+    border-radius: 6px;
+  }
+  .continue-row { margin-top: 20px; text-align: right; }
+  button {
+    font: inherit;
+    font-weight: bold;
+    padding: 10px 20px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button:not(:disabled):hover { filter: brightness(1.1); }
+  button:not(:disabled):active { transform: translate(1px, 1px); }
+  .hidden { display: none; }
+
+  /* ---- paper form (success screen) ---- */
+  .sheet {
+    background: #fff;
+    border: 1px solid #bbb;
+    padding: 28px 32px;
+    margin: 16px 0 20px;
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.15);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .sheet h2 {
+    font-family: Georgia, serif;
+    text-align: center;
+    margin: 0 0 2px;
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+  }
+  .sheet .clinic {
+    text-align: center;
+    color: #555;
+    font-size: 0.78rem;
+    margin-bottom: 18px;
+  }
+  .sheet table { width: 100%; border-collapse: collapse; }
+  .sheet td {
+    border-bottom: 1px solid #999;
+    padding: 6px 4px;
+    vertical-align: bottom;
+  }
+  .sheet td.label { width: 34%; color: #333; }
+  .sheet .section { font-weight: bold; margin: 18px 0 4px; }
+  .pen {
+    font-family: 'Bradley Hand', 'Segoe Script', 'Comic Sans MS', cursive;
+    color: var(--pen);
+    font-size: 1.05rem;
+  }
+  .sheet ul { margin: 4px 0 0 4px; padding-left: 18px; }
+  .sheet li { margin-bottom: 2px; }
+  .stamp {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 4px 12px;
+    border: 3px double #a02020;
+    color: #a02020;
+    font-family: Georgia, serif;
+    font-weight: bold;
+    letter-spacing: 2px;
+    transform: rotate(-4deg);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+  }
+  .fine-print { color: var(--muted); font-size: 0.8rem; font-style: italic; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <!-- intro -->
+    <div id="intro">
+      <h1>Welcome to your patient intake.</h1>
+      <p class="subtitle">Our clinic uses a modern, image-based intake instrument.
+        For each question, simply select the image that best represents your answer.
+        There are no wrong answers.</p>
+      <div class="continue-row"><button id="startBtn">Begin intake</button></div>
+    </div>
+
+    <!-- question flow -->
+    <div id="quiz" class="hidden">
+      <p class="progress" id="progress"></p>
+      <p class="question" id="questionText"></p>
+      <p class="instruction" id="instructionText"></p>
+      <div class="blot-grid" id="blotGrid"></div>
+      <div class="continue-row hidden" id="continueRow">
+        <button id="continueBtn" disabled>Continue</button>
+      </div>
+    </div>
+
+    <!-- success -->
+    <div id="done" class="hidden">
+      <h1>Intake complete. Thank you!</h1>
+      <p class="subtitle">We've filled out your form based on your responses.
+        Please review for accuracy.</p>
+      <div class="sheet" id="sheet"></div>
+      <p class="fine-print">If any information is incorrect, please notify the front
+        desk by selecting the appropriate image.</p>
+      <div class="continue-row"><button id="restart">Start over</button></div>
+    </div>
+  </main>
+
+<script>
+  // Each question shows 4 unique inkblots; each blot secretly maps to an answer.
+  const QUESTIONS = [
+    {
+      field: 'Name',
+      text: 'What is your first and last name?',
+      images: ['images/blot-01.jpg', 'images/blot-02.jpg', 'images/blot-03.jpg', 'images/blot-04.jpg'],
+      answers: [
+        'Gorlak Femurson',
+        'Brenda Nightjar-Ople',
+        'Tibius Wrench III',
+        'Doreen Spatula',
+      ],
+    },
+    {
+      field: 'Date of birth',
+      text: 'What is your date of birth?',
+      images: ['images/blot-05.jpg', 'images/blot-06.jpg', 'images/blot-07.jpg', 'images/blot-08.jpg'],
+      answers: [
+        'February 30, 1899',
+        'The night the lighthouse went dark',
+        '1962 (twice)',
+        'Early Cretaceous, allegedly',
+      ],
+    },
+    {
+      field: 'Address',
+      text: 'What is your home address?',
+      images: ['images/blot-09.jpg', 'images/blot-10.jpg', 'images/kerner.png', 'images/klecksografie.jpg'],
+      answers: [
+        'Third mattress from the left, Mattress Emporium, NJ',
+        'Beneath the old carousel, Pier 7',
+        '1600 Pennsylvania Ave (the other one)',
+        'The grain silo with strong opinions, Route 9',
+      ],
+    },
+    {
+      field: 'Occupation',
+      text: 'What is your occupation?',
+      images: ['images/normalized-01.jpg', 'images/normalized-02.jpg', 'images/normalized-03.jpg', 'images/normalized-04.jpg'],
+      answers: [
+        'Freelance lighthouse critic',
+        'Retired child prodigy',
+        'Regional finalist, competitive napping',
+        'Pigeon negotiator (union)',
+      ],
+    },
+    {
+      field: 'Current symptoms',
+      text: 'Please select all symptoms you are experiencing.',
+      multi: true,
+      images: ['images/normalized-05.jpg', 'images/normalized-06.jpg', 'images/normalized-07.jpg', 'images/normalized-08.jpg'],
+      answers: [
+        'Phantom jazz hands',
+        'Persistent sensation of being watched by owls',
+        'Elbows feel “too formal”',
+        'Distant accordion music at mealtimes',
+      ],
+    },
+    {
+      field: 'Symptom duration',
+      text: 'How long have you been experiencing these symptoms?',
+      images: ['images/normalized-09.jpg', 'images/normalized-10.jpg', { src: 'images/blot-02.jpg', rot: 180 }, { src: 'images/blot-05.jpg', rot: 180 }],
+      answers: [
+        'Since the Clinton administration',
+        'Eleven consecutive Tuesdays',
+        'Ever since the incident at the aquarium',
+        'Roughly one and a half moons',
+      ],
+    },
+    {
+      field: 'Medical history',
+      text: 'Please describe your relevant medical history.',
+      images: ['images/black-on-white.png', 'images/rorschach-like.png', { src: 'images/blot-07.jpg', rot: 180 }, { src: 'images/normalized-03.jpg', rot: 180 }],
+      answers: [
+        'Struck by lightning once; improved slightly',
+        'Born with an extra sense of foreboding',
+        'Appendix successfully removed (not mine)',
+        'Chronic déjà vu. Chronic déjà vu.',
+      ],
+    },
+  ];
+
+  // ---- flow ----
+  const intro = document.getElementById('intro');
+  const quiz = document.getElementById('quiz');
+  const done = document.getElementById('done');
+  const progress = document.getElementById('progress');
+  const questionText = document.getElementById('questionText');
+  const instructionText = document.getElementById('instructionText');
+  const blotGrid = document.getElementById('blotGrid');
+  const continueRow = document.getElementById('continueRow');
+  const continueBtn = document.getElementById('continueBtn');
+
+  let current = 0;
+  const responses = {};   // field -> answer string or array
+  let multiSelected = new Set();
+  let locked = false;
+
+  function showQuestion() {
+    const q = QUESTIONS[current];
+    locked = false;
+    multiSelected = new Set();
+    progress.textContent = `Question ${current + 1} of ${QUESTIONS.length}`;
+    questionText.textContent = q.text;
+    instructionText.textContent = q.multi
+      ? 'Select every image that applies to you, then continue.'
+      : 'Select the image that best represents your answer.';
+    continueRow.classList.toggle('hidden', !q.multi);
+    continueBtn.disabled = true;
+
+    blotGrid.innerHTML = '';
+    q.answers.forEach((answer, i) => {
+      const opt = document.createElement('div');
+      opt.className = 'blot-option';
+      opt.setAttribute('role', 'button');
+      opt.tabIndex = 0;
+      const img = typeof q.images[i] === 'string' ? { src: q.images[i] } : q.images[i];
+      const style = img.rot ? ` style="transform: rotate(${img.rot}deg)"` : '';
+      opt.innerHTML = `<img src="${img.src}" alt="Inkblot option ${i + 1}"${style} />`;
+      const pick = () => select(q, i, opt);
+      opt.addEventListener('click', pick);
+      opt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
+      });
+      blotGrid.appendChild(opt);
+    });
+  }
+
+  function select(q, i, opt) {
+    if (locked) return;
+    if (q.multi) {
+      if (multiSelected.has(i)) {
+        multiSelected.delete(i);
+        opt.classList.remove('selected');
+      } else {
+        multiSelected.add(i);
+        opt.classList.add('selected');
+      }
+      continueBtn.disabled = multiSelected.size === 0;
+    } else {
+      locked = true;
+      opt.classList.add('selected');
+      responses[q.field] = q.answers[i];
+      setTimeout(advance, 350);
+    }
+  }
+
+  continueBtn.addEventListener('click', () => {
+    const q = QUESTIONS[current];
+    responses[q.field] = [...multiSelected].sort().map(i => q.answers[i]);
+    advance();
+  });
+
+  function advance() {
+    current++;
+    if (current < QUESTIONS.length) showQuestion();
+    else finish();
+  }
+
+  function finish() {
+    quiz.classList.add('hidden');
+    done.classList.remove('hidden');
+    const today = new Date().toLocaleDateString('en-US',
+      { year: 'numeric', month: 'long', day: 'numeric' });
+    const symptoms = (responses['Current symptoms'] || [])
+      .map(s => `<li class="pen">${s}</li>`).join('');
+    document.getElementById('sheet').innerHTML = `
+      <h2>New Patient Intake Form</h2>
+      <p class="clinic">Blotworth Family Clinic &middot; “We see what you see.”</p>
+      <table>
+        <tr><td class="label">Date</td><td class="pen">${today}</td></tr>
+        <tr><td class="label">Name</td><td class="pen">${responses['Name']}</td></tr>
+        <tr><td class="label">Date of birth</td><td class="pen">${responses['Date of birth']}</td></tr>
+        <tr><td class="label">Address</td><td class="pen">${responses['Address']}</td></tr>
+        <tr><td class="label">Occupation</td><td class="pen">${responses['Occupation']}</td></tr>
+      </table>
+      <p class="section">Current symptoms (all that apply)</p>
+      <ul>${symptoms}</ul>
+      <p class="section">Duration of symptoms</p>
+      <p class="pen">${responses['Symptom duration']}</p>
+      <p class="section">Relevant medical history</p>
+      <p class="pen">${responses['Medical history']}</p>
+      <div class="stamp">Verified accurate</div>`;
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    intro.classList.add('hidden');
+    quiz.classList.remove('hidden');
+    current = 0;
+    showQuestion();
+  });
+
+  document.getElementById('restart').addEventListener('click', () => {
+    for (const k in responses) delete responses[k];
+    done.classList.add('hidden');
+    quiz.classList.remove('hidden');
+    current = 0;
+    showQuestion();
+  });
+</script>
+</body>
+</html>
