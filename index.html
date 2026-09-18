@@ -219,8 +219,24 @@
   footer { text-align: center; margin-top: 26px; color: var(--rope); font-size: .85rem; }
   footer a { color: var(--brass); }
 
+  .trail-booty {
+    position: fixed;
+    left: 0; top: 0;
+    z-index: 9999;
+    pointer-events: none;
+    font-size: 1.4rem;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    animation: booty-fade 900ms ease-out forwards;
+  }
+  @keyframes booty-fade {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), calc(-50% + 26px)) rotate(var(--spin, 0deg)) scale(.6); }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #wheelSpin, .chip { transition: none !important; }
+    .trail-booty { display: none !important; }
   }
 </style>
 </head>
@@ -651,6 +667,29 @@
   };
 
   renderAll();
+
+  // ---- Pirate emoji mouse trail (fades away) ----
+  (() => {
+    const BOOTY = ["🏴‍☠️", "☠️", "⚓", "🦜", "🗺️", "💰", "🪙", "⚔️", "🧭", "🍺", "🦑", "🐙"];
+    let last = 0;
+    const spawn = (x, y) => {
+      const now = performance.now();
+      if (now - last < 45) return; // throttle so we don't flood the deck
+      last = now;
+      const s = document.createElement("span");
+      s.className = "trail-booty";
+      s.textContent = BOOTY[(Math.random() * BOOTY.length) | 0];
+      const drift = (Math.random() * 24 - 12).toFixed(1);
+      const spin = (Math.random() * 60 - 30).toFixed(1);
+      s.style.left = x + "px";
+      s.style.top = y + "px";
+      s.style.setProperty("--drift", drift + "px");
+      s.style.setProperty("--spin", spin + "deg");
+      document.body.appendChild(s);
+      s.addEventListener("animationend", () => s.remove());
+    };
+    window.addEventListener("pointermove", (e) => spawn(e.clientX, e.clientY), { passive: true });
+  })();
 })();
 </script>
 </body>
