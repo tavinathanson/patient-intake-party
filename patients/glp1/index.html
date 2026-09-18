@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="A whimsical, fictional GLP-1 patient intake prototype." />
+  <title>Small Dose, Big Goals — GLP-1 check-in</title>
+  <style>
+    :root {
+      --ink: #243328;
+      --muted: #69776c;
+      --cream: #fffaf0;
+      --paper: #fffdf8;
+      --leaf: #3c7a57;
+      --leaf-dark: #22563b;
+      --mint: #dff3df;
+      --peach: #ffb994;
+      --papaya: #ff7a59;
+      --lemon: #f8d76b;
+      --lilac: #d8cef7;
+      --red: #bb3e3e;
+      --shadow: 0 18px 50px rgba(50, 68, 48, .12);
+      --radius: 26px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 6% 5%, rgba(255,185,148,.55) 0 9%, transparent 9.2%),
+        radial-gradient(circle at 94% 2%, rgba(216,206,247,.7) 0 8%, transparent 8.2%),
+        var(--cream);
+      font-family: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+      line-height: 1.45;
+    }
+
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+
+    .demo-ribbon {
+      padding: 9px 18px;
+      color: #fff;
+      background: var(--leaf-dark);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px 16px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; font-size: 24px; }
+    .brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50% 50% 44% 56%; background: var(--mint); transform: rotate(-8deg); }
+    .brand-mark span { transform: rotate(8deg); font-size: 24px; }
+    .save-state { color: var(--muted); font-size: 13px; }
+    .save-state::before { content: "●"; margin-right: 7px; color: var(--leaf); }
+
+    main { max-width: 1180px; margin: 0 auto; padding: 12px 24px 80px; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 1.3fr .7fr;
+      gap: 36px;
+      align-items: center;
+      min-height: 330px;
+      padding: 48px;
+      border: 2px solid rgba(36,51,40,.08);
+      border-radius: 38px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -60px;
+      bottom: -110px;
+      width: 330px;
+      height: 330px;
+      border-radius: 45% 55% 55% 45%;
+      background: var(--peach);
+      transform: rotate(12deg);
+    }
+
+    .eyebrow { margin: 0 0 10px; color: var(--papaya); font-size: 13px; font-weight: 900; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { max-width: 700px; margin: 0; font-size: clamp(42px, 7vw, 78px); line-height: .97; letter-spacing: -.055em; }
+    h1 em { color: var(--leaf); font-style: normal; }
+    .hero-copy { max-width: 650px; margin: 22px 0 0; color: var(--muted); font-size: 18px; }
+
+    .hero-illustration {
+      position: relative;
+      z-index: 1;
+      justify-self: center;
+      width: min(100%, 390px);
+      height: auto;
+      transform: rotate(1deg);
+      filter: drop-shadow(0 18px 25px rgba(34,86,59,.12));
+    }
+
+    .progress-wrap { margin: 34px 4px 28px; }
+    .progress-meta { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 800; }
+    .progress-track { overflow: hidden; height: 10px; border-radius: 99px; background: #e8e4d8; }
+    .progress-fill { width: 72%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--papaya), var(--lemon)); }
+
+    .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 22px; }
+    .card { grid-column: span 6; padding: 30px; border: 1.5px solid rgba(36,51,40,.09); border-radius: var(--radius); background: var(--paper); box-shadow: 0 10px 34px rgba(50,68,48,.07); }
+    .card.wide { grid-column: 1 / -1; }
+    .card h2 { margin: 0; font-size: 27px; letter-spacing: -.03em; }
+    .card-intro { margin: 7px 0 24px; color: var(--muted); }
+    .number { display: inline-grid; place-items: center; width: 32px; height: 32px; margin-right: 9px; border-radius: 12px; color: var(--leaf-dark); background: var(--mint); font-size: 15px; vertical-align: 3px; }
+
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    label { display: block; color: var(--muted); font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    input, textarea {
+      width: 100%;
+      margin-top: 7px;
+      padding: 13px 15px;
+      border: 1.5px solid #d9ddd3;
+      border-radius: 14px;
+      outline: none;
+      color: var(--ink);
+      background: #fff;
+      transition: border .2s, box-shadow .2s;
+    }
+    input:focus, textarea:focus { border-color: var(--leaf); box-shadow: 0 0 0 4px rgba(60,122,87,.13); }
+    textarea { min-height: 94px; resize: vertical; }
+
+    .dose-choice, .feeling-choice { display: flex; flex-wrap: wrap; gap: 9px; margin: 16px 0 20px; }
+    .chip { position: relative; cursor: pointer; }
+    .chip input { position: absolute; opacity: 0; pointer-events: none; }
+    .chip span { display: block; padding: 10px 14px; border: 1.5px solid #d9ddd3; border-radius: 99px; background: #fff; font-size: 14px; font-weight: 750; transition: .18s ease; }
+    .chip input:checked + span { border-color: var(--leaf); color: #fff; background: var(--leaf); transform: translateY(-2px); box-shadow: 0 5px 0 #244d36; }
+
+    .alert { display: flex; gap: 11px; margin-top: 18px; padding: 14px 16px; border-radius: 14px; color: #75332d; background: #ffe4dc; font-size: 14px; }
+    .alert strong { display: block; }
+
+    .weight-chart { width: 100%; height: auto; margin-top: 12px; overflow: visible; }
+    .chart-label { fill: var(--muted); font-size: 11px; }
+    .chart-line { fill: none; stroke: var(--papaya); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { fill: url(#chartWash); }
+    .chart-point { fill: var(--paper); stroke: var(--papaya); stroke-width: 3; }
+    .chart-note { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 13px; background: #fff3eb; font-size: 13px; font-weight: 800; }
+
+    .food-lab { display: grid; grid-template-columns: .85fr 1.15fr; gap: 26px; align-items: stretch; }
+    .food-pantry { padding: 20px; border-radius: 22px; background: #f3efe5; }
+    .food-pantry h3, .day-board h3 { margin: 0 0 6px; font-size: 16px; }
+    .hint { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+    .food-items { display: flex; flex-wrap: wrap; gap: 10px; }
+    .food {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 12px;
+      border: 1.5px solid rgba(36,51,40,.1);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 4px 0 rgba(36,51,40,.11);
+      cursor: grab;
+      font-size: 14px;
+      font-weight: 800;
+      user-select: none;
+      transition: transform .15s, opacity .15s;
+    }
+    .food:hover { transform: translateY(-2px) rotate(-1deg); }
+    .food.dragging { opacity: .45; transform: rotate(4deg); }
+    .food button { display: none; margin-left: 4px; padding: 0; border: 0; color: var(--muted); background: none; cursor: pointer; }
+    .meal .food button { display: inline; }
+
+    .custom-food { display: flex; gap: 8px; margin-top: 16px; }
+    .custom-food input { margin: 0; min-width: 0; }
+    .mini-button { flex: 0 0 auto; padding: 0 15px; border: 0; border-radius: 13px; color: #fff; background: var(--leaf); cursor: pointer; font-weight: 900; }
+
+    .day-board { position: relative; padding: 20px; border: 2px dashed #b8c5b8; border-radius: 22px; background: #fbfff8; }
+    .day-board-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+    .calorie-counter { flex: 0 0 auto; min-width: 106px; padding: 9px 12px; border-radius: 15px; color: var(--leaf-dark); background: var(--lemon); text-align: right; box-shadow: 0 4px 0 #d5b64d; transition: transform .16s, background .16s; }
+    .calorie-counter.preview { background: var(--peach); transform: scale(1.06) rotate(1deg); }
+    .calorie-counter strong { display: block; font-size: 20px; line-height: 1; }
+    .calorie-counter small { font-size: 10px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
+    .meals { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .meal { min-height: 128px; padding: 13px; border-radius: 17px; background: #fff; box-shadow: inset 0 0 0 1px #e1e8dd; transition: .18s; }
+    .meal.over { background: var(--mint); box-shadow: inset 0 0 0 2px var(--leaf); transform: scale(1.015); }
+    .meal-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; color: var(--leaf-dark); font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .meal-items { display: flex; flex-wrap: wrap; gap: 7px; }
+    .meal-empty { color: #9ca79e; font-size: 12px; font-style: italic; }
+    .food-summary { margin: 15px 0 0; color: var(--muted); font-size: 13px; }
+    .meal .food { flex-wrap: wrap; cursor: default; padding: 7px 9px; }
+    .food-name { width: 100%; }
+    .quantity { display: inline-flex; align-items: center; gap: 6px; padding: 2px 4px; border-radius: 9px; background: #f3efe5; font-size: 11px; }
+    .quantity .qty-button { display: inline-grid; place-items: center; width: 21px; height: 21px; margin: 0; border: 0; border-radius: 7px; color: var(--leaf-dark); background: #fff; cursor: pointer; font-weight: 950; }
+    .quantity .qty-value { min-width: 12px; text-align: center; font-weight: 950; }
+    .item-calories { margin-left: auto; color: var(--muted); font-size: 10px; font-weight: 800; }
+
+    .connect-card { display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: center; padding: 22px; border-radius: 20px; background: linear-gradient(135deg, #292f43, #4e5271); color: #fff; }
+    .connect-card p { max-width: 640px; margin: 6px 0 0; color: #d9dcee; font-size: 14px; }
+    .connect-button { padding: 13px 18px; border: 0; border-radius: 14px; color: #273045; background: var(--lemon); box-shadow: 0 5px 0 #caa83e; cursor: pointer; font-weight: 950; transition: .15s; }
+    .connect-button:hover { transform: translateY(-2px); }
+    .connect-button.connected { color: #fff; background: var(--leaf); box-shadow: 0 5px 0 var(--leaf-dark); }
+    .privacy-note { margin-top: 12px; color: var(--muted); font-size: 12px; }
+    .statement-insights { margin-top: 18px; padding: 22px; border: 1.5px solid #d9ddd3; border-radius: 20px; background: #fffdf8; animation: reveal .35s ease both; }
+    .statement-insights[hidden] { display: none; }
+    .statement-insights h3 { margin: 0; font-size: 20px; }
+    .statement-insights > p { margin: 5px 0 15px; color: var(--muted); font-size: 13px; }
+    .dining-samples { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .dining-sample { padding: 13px; border-radius: 15px; background: #f3efe5; }
+    .dining-sample .emoji { display: block; margin-bottom: 6px; font-size: 23px; }
+    .dining-sample strong { display: block; font-size: 13px; }
+    .dining-sample small { color: var(--muted); font-size: 11px; }
+    .spend-panel { display: grid; grid-template-columns: 1.45fr .55fr; gap: 20px; margin: 18px 0; padding: 18px; border-radius: 18px; background: #f7f5ee; }
+    .spend-chart { width: 100%; height: auto; overflow: visible; }
+    .spend-grid { stroke: #d9ddd3; stroke-width: 1; }
+    .spend-bar { fill: var(--lilac); rx: 7px; transition: opacity .2s; }
+    .spend-bar.latest { fill: var(--papaya); }
+    .spend-label { fill: var(--muted); font-size: 10px; font-weight: 800; }
+    .spend-stat { display: flex; flex-direction: column; justify-content: center; padding: 16px; border-radius: 15px; color: #fff; background: var(--leaf-dark); }
+    .spend-stat strong { font-size: 30px; line-height: 1; }
+    .spend-stat span { margin-top: 7px; color: #dff3df; font-size: 12px; }
+    @keyframes reveal { from { opacity: 0; transform: translateY(8px); } }
+
+    .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 24px; padding: 24px 4px 0; }
+    .submit-row p { max-width: 620px; margin: 0; color: var(--muted); font-size: 13px; }
+    .submit { padding: 16px 24px; border: 0; border-radius: 16px; color: #fff; background: var(--papaya); box-shadow: 0 6px 0 #be4e36; cursor: pointer; font-size: 16px; font-weight: 950; }
+
+    dialog { width: min(460px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 20px; box-shadow: 0 30px 90px rgba(23,35,27,.35); }
+    dialog::backdrop { background: rgba(23,35,27,.55); backdrop-filter: blur(4px); }
+    .modal-body { padding: 22px 26px 26px; }
+    .link-top { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid #e5e8e2; }
+    .link-brand { display: flex; align-items: center; gap: 8px; font-weight: 950; }
+    .link-logo { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 9px; color: #fff; background: var(--leaf); }
+    .link-close { width: 31px; height: 31px; border: 0; border-radius: 50%; background: #f0f2ee; cursor: pointer; font-size: 18px; }
+    .link-step[hidden] { display: none; }
+    dialog h2 { margin: 2px 0 7px; font-size: 24px; letter-spacing: -.03em; }
+    dialog p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+    .link-search { position: relative; margin-bottom: 13px; }
+    .link-search input { margin: 0; padding-left: 40px; background: #f7f8f6; }
+    .link-search span { position: absolute; left: 14px; top: 12px; }
+    .institution-list { display: grid; gap: 9px; }
+    .institution { display: flex; align-items: center; gap: 12px; width: 100%; padding: 13px; border: 1.5px solid #e0e4dc; border-radius: 13px; background: #fff; cursor: pointer; text-align: left; }
+    .institution[hidden] { display: none; }
+    .institution:hover { border-color: var(--leaf); background: #f8fcf7; }
+    .bank-icon { display: grid; place-items: center; width: 39px; height: 39px; border-radius: 11px; background: var(--mint); font-size: 19px; }
+    .institution strong { flex: 1; }
+    .institution small { color: var(--muted); }
+    .link-footnote { margin-top: 18px; color: var(--muted); font-size: 11px; text-align: center; }
+    .consent-card { margin: 18px 0; padding: 16px; border-radius: 15px; background: #f4f7f2; }
+    .consent-card strong { display: block; margin-bottom: 9px; }
+    .scope-row { display: flex; gap: 10px; margin-top: 9px; color: var(--muted); font-size: 13px; }
+    .scope-check { color: var(--leaf); font-weight: 950; }
+    .selected-bank { display: flex; align-items: center; gap: 11px; margin: 13px 0; font-weight: 850; }
+    .modal-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
+    .secondary, .primary { padding: 11px 16px; border-radius: 12px; cursor: pointer; font-weight: 850; }
+    .secondary { border: 1px solid #d4d9d0; background: #fff; }
+    .primary { border: 1px solid var(--leaf); color: #fff; background: var(--leaf); }
+
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 10; max-width: 360px; padding: 15px 18px; border-radius: 15px; color: #fff; background: var(--leaf-dark); box-shadow: var(--shadow); transform: translateY(120px); opacity: 0; transition: .28s; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 860px) {
+      .hero { grid-template-columns: 1fr; padding: 34px; }
+      .hero-illustration { display: none; }
+      .card { grid-column: 1 / -1; }
+      .food-lab { grid-template-columns: 1fr; }
+      .connect-card { grid-template-columns: 1fr; }
+      .dining-samples { grid-template-columns: 1fr 1fr; }
+      .spend-panel { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      main { padding-inline: 15px; }
+      header { padding-inline: 17px; }
+      .hero { padding: 28px 24px; border-radius: 28px; }
+      h1 { font-size: 46px; }
+      .card { padding: 23px; }
+      .field-grid, .meals { grid-template-columns: 1fr; }
+      .dining-samples { grid-template-columns: 1fr; }
+      .submit-row { align-items: stretch; flex-direction: column; }
+      .submit { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-ribbon">Fictional prototype · no real medical or financial data</div>
+  <header>
+    <div class="brand"><span class="brand-mark"><span>🌱</span></span> Sprout</div>
+    <div class="save-state" aria-live="polite">Your garden is saved</div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Papaya’s GLP-1 check-in</p>
+        <h1 id="page-title">Small Dose, <em>Big Goals.</em></h1>
+        <p class="hero-copy">Tell your care team what changed—not just what made it into the chart. About 4 minutes, with zero waiting-room clipboards.</p>
+      </div>
+      <img class="hero-illustration" src="small-dose-big-goals.svg" alt="A cheerful tiny medicine pen rolling a giant golden goal star up a green hill" />
+    </section>
+
+    <div class="progress-wrap" aria-label="Intake progress: 72 percent">
+      <div class="progress-meta"><span>Visit garden</span><span>72% blooming</span></div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+    </div>
+
+    <form id="intake-form">
+      <div class="grid">
+        <section class="card">
+          <h2><span class="number">1</span>Your basics</h2>
+          <p class="card-intro">Pre-filled from your chart. Give anything a quick edit.</p>
+          <div class="field-grid">
+            <label>Full name<input value="Papaya Radish" autocomplete="name" /></label>
+            <label>Date of birth<input type="date" value="1988-04-18" /></label>
+            <label>Visit date<input type="date" value="2026-09-22" /></label>
+            <label>Best contact<input value="Patient portal" /></label>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><span class="number">2</span>Your weekly medicine</h2>
+          <p class="card-intro">What are you actually taking right now?</p>
+          <label>Current semaglutide dose</label>
+          <div class="dose-choice" role="radiogroup" aria-label="Current semaglutide dose">
+            <label class="chip"><input type="radio" name="dose" /><span>0.25 mg</span></label>
+            <label class="chip"><input type="radio" name="dose" checked /><span>0.5 mg</span></label>
+            <label class="chip"><input type="radio" name="dose" /><span>1.0 mg</span></label>
+            <label class="chip"><input type="radio" name="dose" /><span>Not sure</span></label>
+          </div>
+          <label>What changed?<textarea>I went back to 0.5 mg after vomiting on 1 mg. I also missed two weeks in August because of a pharmacy backorder.</textarea></label>
+          <div class="alert"><span>⚑</span><div><strong>Worth discussing at your visit</strong>Your chart still lists 1.0 mg, and the pen mailed from overseas may be a different strength.</div></div>
+        </section>
+
+        <section class="card">
+          <h2><span class="number">3</span>How your body feels</h2>
+          <p class="card-intro">Tap everything that has shown up lately.</p>
+          <div class="feeling-choice">
+            <label class="chip"><input type="checkbox" checked /><span>🙂 Nausea, mild</span></label>
+            <label class="chip"><input type="checkbox" /><span>🤢 Vomiting</span></label>
+            <label class="chip"><input type="checkbox" /><span>🎈 Bloating</span></label>
+            <label class="chip"><input type="checkbox" /><span>🐢 Constipation</span></label>
+            <label class="chip"><input type="checkbox" /><span>🔥 Belly pain</span></label>
+            <label class="chip"><input type="checkbox" checked /><span>🏃 Training for a 5K</span></label>
+          </div>
+          <label>Anything else?<textarea>Nausea is fine at 0.5 mg. I’m training for a 5K in October.</textarea></label>
+        </section>
+
+        <section class="card">
+          <h2><span class="number">4</span>Your weight trail</h2>
+          <p class="card-intro">From your connected scale, February through September.</p>
+          <svg class="weight-chart" viewBox="0 0 520 190" role="img" aria-label="Weight declined from 214 pounds in February to 192 pounds in July, then rose to 195 pounds in September">
+            <defs><linearGradient id="chartWash" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb994" stop-opacity=".62"/><stop offset="1" stop-color="#ffb994" stop-opacity="0"/></linearGradient></defs>
+            <path class="chart-area" d="M20 30 L68 44 L116 58 L164 75 L212 92 L260 111 L308 127 L356 138 L404 134 L452 121 L500 112 L500 165 L20 165 Z"/>
+            <path class="chart-line" d="M20 30 L68 44 L116 58 L164 75 L212 92 L260 111 L308 127 L356 138 L404 134 L452 121 L500 112"/>
+            <circle class="chart-point" cx="20" cy="30" r="5"/><circle class="chart-point" cx="356" cy="138" r="5"/><circle class="chart-point" cx="500" cy="112" r="5"/>
+            <text class="chart-label" x="16" y="184">FEB</text><text class="chart-label" x="342" y="184">JUL</text><text class="chart-label" x="478" y="184">SEP</text>
+            <text class="chart-label" x="28" y="24">214 lb</text><text class="chart-label" x="330" y="158">191.9</text><text class="chart-label" x="456" y="103">195.3</text>
+          </svg>
+          <div class="chart-note"><span>Overall −18.7 lb</span><span>Since July +3.4 lb</span></div>
+        </section>
+
+        <section class="card wide">
+          <h2><span class="number">5</span>Build a day on your plate</h2>
+          <p class="card-intro">Drag foods into the part of the day when you usually have them. On a phone, tap a food and then tap a meal.</p>
+          <div class="food-lab">
+            <div class="food-pantry">
+              <h3>Your food basket</h3>
+              <p class="hint">Drag as many copies as you need.</p>
+              <div class="food-items" id="pantry">
+                <div class="food" draggable="true" data-food="Oat latte" data-icon="☕" data-calories="140">☕ Oat latte</div>
+                <div class="food" draggable="true" data-food="Eggs" data-icon="🍳" data-calories="160">🍳 Eggs</div>
+                <div class="food" draggable="true" data-food="Toast" data-icon="🍞" data-calories="110">🍞 Toast</div>
+                <div class="food" draggable="true" data-food="Salad" data-icon="🥗" data-calories="320">🥗 Salad</div>
+                <div class="food" draggable="true" data-food="Rice bowl" data-icon="🍚" data-calories="540">🍚 Rice bowl</div>
+                <div class="food" draggable="true" data-food="Chicken" data-icon="🍗" data-calories="280">🍗 Chicken</div>
+                <div class="food" draggable="true" data-food="Tacos" data-icon="🌮" data-calories="420">🌮 Tacos</div>
+                <div class="food" draggable="true" data-food="Fruit" data-icon="🍎" data-calories="90">🍎 Fruit</div>
+                <div class="food" draggable="true" data-food="Yogurt" data-icon="🥣" data-calories="170">🥣 Yogurt</div>
+                <div class="food" draggable="true" data-food="Chips" data-icon="🥨" data-calories="210">🥨 Salty snack</div>
+                <div class="food" draggable="true" data-food="Water" data-icon="💧" data-calories="0">💧 Water</div>
+              </div>
+              <div class="custom-food"><input id="custom-food" aria-label="Add another food" placeholder="Something else…" /><button class="mini-button" type="button" id="add-food">Add</button></div>
+            </div>
+
+            <div class="day-board">
+              <div class="day-board-head">
+                <div><h3>One ordinary day</h3><p class="hint">This is about patterns, not perfect nutrition.</p></div>
+                <div class="calorie-counter" id="calorie-counter" aria-live="polite"><strong>~0</strong><small>rough kcal</small></div>
+              </div>
+              <div class="meals">
+                <div class="meal" data-meal="breakfast" tabindex="0"><div class="meal-title"><span>🌤 Breakfast</span><span>8am</span></div><div class="meal-items"><span class="meal-empty">Drop breakfast here</span></div></div>
+                <div class="meal" data-meal="lunch" tabindex="0"><div class="meal-title"><span>☀️ Lunch</span><span>1pm</span></div><div class="meal-items"><span class="meal-empty">Drop lunch here</span></div></div>
+                <div class="meal" data-meal="dinner" tabindex="0"><div class="meal-title"><span>🌙 Dinner</span><span>7pm</span></div><div class="meal-items"><span class="meal-empty">Drop dinner here</span></div></div>
+                <div class="meal" data-meal="snacks" tabindex="0"><div class="meal-title"><span>✨ Snacks</span><span>Anytime</span></div><div class="meal-items"><span class="meal-empty">Drop snacks here</span></div></div>
+              </div>
+              <p class="food-summary" id="food-summary" aria-live="polite">Your day is an empty plate—for now.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card wide">
+          <h2><span class="number">6</span>Medication access</h2>
+          <p class="card-intro">Optional: spot pharmacy charges and refill gaps without hunting through receipts.</p>
+          <div class="connect-card">
+            <div><strong>💳 Connect a billing statement</strong><p>In a real product, a consented, read-only connection could identify likely pharmacy purchases, copays, and gaps. This prototype only simulates that flow.</p></div>
+            <button type="button" class="connect-button" id="connect-card">Connect statement</button>
+          </div>
+          <div class="privacy-note">🔒 Only selected transaction metadata would be shared with the care team—not a full statement. No account credentials belong in this form.</div>
+          <div class="statement-insights" id="statement-insights" hidden>
+            <h3>🍽️ 7 dining experiences ingested</h3>
+            <p>Found among 24 sample statement transactions. Dining spend is estimated from restaurant-category charges.</p>
+            <div class="spend-panel">
+              <svg class="spend-chart" viewBox="0 0 560 205" role="img" aria-label="Monthly dining spending rose from 86 dollars in April to 148 dollars in September">
+                <line class="spend-grid" x1="34" y1="35" x2="540" y2="35"/><line class="spend-grid" x1="34" y1="95" x2="540" y2="95"/><line class="spend-grid" x1="34" y1="155" x2="540" y2="155"/>
+                <text class="spend-label" x="3" y="39">$160</text><text class="spend-label" x="9" y="99">$80</text><text class="spend-label" x="20" y="159">$0</text>
+                <rect class="spend-bar" x="58" y="90" width="48" height="65"/><rect class="spend-bar" x="140" y="74" width="48" height="81"/><rect class="spend-bar" x="222" y="83" width="48" height="72"/><rect class="spend-bar" x="304" y="52" width="48" height="103"/><rect class="spend-bar" x="386" y="62" width="48" height="93"/><rect class="spend-bar latest" x="468" y="44" width="48" height="111"/>
+                <text class="spend-label" x="68" y="178">APR</text><text class="spend-label" x="150" y="178">MAY</text><text class="spend-label" x="232" y="178">JUN</text><text class="spend-label" x="314" y="178">JUL</text><text class="spend-label" x="396" y="178">AUG</text><text class="spend-label" x="478" y="178">SEP</text>
+              </svg>
+              <div class="spend-stat"><strong>$148</strong><span>September dining<br>↑ 18% vs. August</span></div>
+            </div>
+            <p>Here’s a small, fictional preview of what was classified:</p>
+            <div class="dining-samples">
+              <div class="dining-sample"><span class="emoji">🥗</span><strong>Sweetgreen</strong><small>Sep 14 · $18.42</small></div>
+              <div class="dining-sample"><span class="emoji">🥐</span><strong>Tatte Bakery</strong><small>Sep 11 · $12.80</small></div>
+              <div class="dining-sample"><span class="emoji">🌮</span><strong>Taquería El Amigo</strong><small>Sep 7 · $24.16</small></div>
+              <div class="dining-sample"><span class="emoji">🍜</span><strong>Soup &amp; Noodle</strong><small>Sep 3 · $19.75</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card wide">
+          <h2><span class="number">7</span>One important future plan</h2>
+          <p class="card-intro">Some plans can change what is safe to take.</p>
+          <label>What should your care team know?<textarea>I’m planning to try for a baby in the spring and want to know when I should stop semaglutide.</textarea></label>
+          <div class="alert"><span>♥</span><div><strong>Your care team will see this at the top</strong>Pregnancy planning deserves a medication review before trying to conceive.</div></div>
+        </section>
+      </div>
+
+      <div class="submit-row">
+        <p>This is a fictional design exercise, not medical advice. A real intake would require clinical review, consent, accessibility testing, security controls, and an urgent-symptom pathway.</p>
+        <button class="submit" type="submit">Send my visit garden →</button>
+      </div>
+    </form>
+  </main>
+
+  <dialog id="billing-dialog" aria-labelledby="billing-title">
+    <div class="link-top"><div class="link-brand"><span class="link-logo">↗</span>Sprout Link</div><button class="link-close" type="button" id="cancel-connect" aria-label="Close">×</button></div>
+    <div class="modal-body link-step" id="institution-step">
+      <h2 id="billing-title">Connect your card</h2>
+      <p>Choose a sample institution. This demo never contacts a real bank or requests credentials.</p>
+      <div class="link-search"><span>⌕</span><input id="bank-search" placeholder="Search institutions" aria-label="Search institutions" /></div>
+      <div class="institution-list">
+        <button class="institution" type="button" data-bank="Demo Everyday Bank"><span class="bank-icon">🏛️</span><strong>Demo Everyday Bank</strong><small>›</small></button>
+        <button class="institution" type="button" data-bank="Acorn Credit Union"><span class="bank-icon">🌰</span><strong>Acorn Credit Union</strong><small>›</small></button>
+        <button class="institution" type="button" data-bank="Sunrise Card"><span class="bank-icon">🌅</span><strong>Sunrise Card</strong><small>›</small></button>
+      </div>
+      <div class="link-footnote">🔒 Encrypted connection · Fictional sample data only</div>
+    </div>
+    <div class="modal-body link-step" id="consent-step" hidden>
+      <h2>Share only what helps</h2>
+      <p>Sprout would receive read-only transaction details for the last six months.</p>
+      <div class="selected-bank"><span class="bank-icon">🏛️</span><span id="selected-bank">Demo Everyday Bank</span></div>
+      <div class="consent-card">
+        <strong>Sprout can access</strong>
+        <div class="scope-row"><span class="scope-check">✓</span><span>Merchant name, date, amount, and category</span></div>
+        <div class="scope-row"><span class="scope-check">✓</span><span>Potential pharmacy and dining transactions</span></div>
+        <div class="scope-row"><span class="scope-check">✓</span><span>Read-only data; no purchases or transfers</span></div>
+      </div>
+      <div class="modal-actions"><button class="secondary" type="button" id="back-to-banks">Back</button><button class="primary" type="button" id="confirm-connect">Connect sample</button></div>
+      <div class="link-footnote">You can disconnect at any time. No credentials are stored.</div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const pantry = document.querySelector('#pantry');
+    const meals = [...document.querySelectorAll('.meal')];
+    const summary = document.querySelector('#food-summary');
+    const calorieCounter = document.querySelector('#calorie-counter');
+    const toast = document.querySelector('#toast');
+    let draggedFood = null;
+    let selectedFood = null;
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    function foodData(element) {
+      return {
+        name: element.dataset.food,
+        icon: element.dataset.icon || '🍽️',
+        calories: Number(element.dataset.calories || 150)
+      };
+    }
+
+    function addFoodToMeal(meal, food) {
+      const container = meal.querySelector('.meal-items');
+      container.querySelector('.meal-empty')?.remove();
+      const item = document.createElement('div');
+      item.className = 'food';
+      item.dataset.food = food.name;
+      item.dataset.icon = food.icon;
+      item.dataset.calories = food.calories;
+      item.dataset.quantity = '1';
+      item.innerHTML = `
+        <span class="food-name">${food.icon} ${food.name}</span>
+        <span class="quantity" aria-label="Quantity of ${food.name}">
+          <button class="qty-button minus" type="button" aria-label="Decrease ${food.name} quantity">−</button>
+          <span class="qty-value">1</span>
+          <button class="qty-button plus" type="button" aria-label="Increase ${food.name} quantity">+</button>
+        </span>
+        <span class="item-calories">~${food.calories} kcal</span>`;
+
+      function changeQuantity(delta) {
+        const next = Number(item.dataset.quantity) + delta;
+        if (next < 1) {
+          item.remove();
+          if (!container.children.length) container.innerHTML = `<span class="meal-empty">Drop food here</span>`;
+          updateSummary();
+          return;
+        }
+        item.dataset.quantity = String(next);
+        item.querySelector('.qty-value').textContent = next;
+        item.querySelector('.item-calories').textContent = `~${food.calories * next} kcal`;
+        updateSummary();
+      }
+
+      item.querySelector('.minus').addEventListener('click', event => { event.stopPropagation(); changeQuantity(-1); });
+      item.querySelector('.plus').addEventListener('click', event => { event.stopPropagation(); changeQuantity(1); });
+      container.appendChild(item);
+      updateSummary();
+    }
+
+    function calorieTotal() {
+      return [...document.querySelectorAll('.meal .food')].reduce((total, item) => {
+        return total + Number(item.dataset.calories || 0) * Number(item.dataset.quantity || 1);
+      }, 0);
+    }
+
+    function updateCalories(preview = 0) {
+      calorieCounter.querySelector('strong').textContent = `~${calorieTotal() + preview}`;
+      calorieCounter.classList.toggle('preview', preview > 0);
+    }
+
+    function updateSummary() {
+      const items = [...document.querySelectorAll('.meal .food')];
+      const count = items.reduce((total, item) => total + Number(item.dataset.quantity || 1), 0);
+      const used = meals.filter(meal => meal.querySelector('.food')).length;
+      summary.textContent = count ? `${count} serving${count === 1 ? '' : 's'} across ${used} part${used === 1 ? '' : 's'} of your day. Your care team gets the pattern at a glance.` : 'Your day is an empty plate—for now.';
+      updateCalories();
+    }
+
+    pantry.addEventListener('dragstart', event => {
+      const food = event.target.closest('.food');
+      if (!food) return;
+      draggedFood = foodData(food);
+      food.classList.add('dragging');
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('text/plain', JSON.stringify(draggedFood));
+    });
+
+    pantry.addEventListener('dragend', event => {
+      event.target.closest('.food')?.classList.remove('dragging');
+      draggedFood = null;
+      updateCalories();
+    });
+
+    pantry.addEventListener('click', event => {
+      const food = event.target.closest('.food');
+      if (!food) return;
+      selectedFood = foodData(food);
+      pantry.querySelectorAll('.food').forEach(item => item.style.outline = 'none');
+      food.style.outline = '3px solid #f8d76b';
+      showToast(`Now tap breakfast, lunch, dinner, or snacks to place ${selectedFood.name}.`);
+    });
+
+    meals.forEach(meal => {
+      meal.addEventListener('dragover', event => {
+        event.preventDefault();
+        meal.classList.add('over');
+        if (draggedFood) updateCalories(draggedFood.calories);
+      });
+      meal.addEventListener('dragleave', () => { meal.classList.remove('over'); updateCalories(); });
+      meal.addEventListener('drop', event => {
+        event.preventDefault();
+        meal.classList.remove('over');
+        let food = draggedFood;
+        try { food ||= JSON.parse(event.dataTransfer.getData('text/plain')); } catch (_) {}
+        if (food) addFoodToMeal(meal, food);
+      });
+      meal.addEventListener('click', () => {
+        if (!selectedFood) return;
+        addFoodToMeal(meal, selectedFood);
+        selectedFood = null;
+        pantry.querySelectorAll('.food').forEach(item => item.style.outline = 'none');
+      });
+      meal.addEventListener('keydown', event => {
+        if ((event.key === 'Enter' || event.key === ' ') && selectedFood) {
+          event.preventDefault();
+          addFoodToMeal(meal, selectedFood);
+          selectedFood = null;
+        }
+      });
+    });
+
+    document.querySelector('#add-food').addEventListener('click', () => {
+      const input = document.querySelector('#custom-food');
+      const name = input.value.trim();
+      if (!name) return;
+      const item = document.createElement('div');
+      item.className = 'food';
+      item.draggable = true;
+      item.dataset.food = name;
+      item.dataset.icon = '🍽️';
+      item.dataset.calories = '150';
+      item.textContent = `🍽️ ${name}`;
+      pantry.appendChild(item);
+      input.value = '';
+    });
+
+    const dialog = document.querySelector('#billing-dialog');
+    const connectButton = document.querySelector('#connect-card');
+    const institutionStep = document.querySelector('#institution-step');
+    const consentStep = document.querySelector('#consent-step');
+    const institutions = [...document.querySelectorAll('.institution')];
+    connectButton.addEventListener('click', () => {
+      institutionStep.hidden = false;
+      consentStep.hidden = true;
+      document.querySelector('#bank-search').value = '';
+      institutions.forEach(bank => bank.hidden = false);
+      dialog.showModal();
+    });
+    document.querySelector('#cancel-connect').addEventListener('click', () => dialog.close());
+    institutions.forEach(bank => bank.addEventListener('click', () => {
+      document.querySelector('#selected-bank').textContent = bank.dataset.bank;
+      institutionStep.hidden = true;
+      consentStep.hidden = false;
+    }));
+    document.querySelector('#back-to-banks').addEventListener('click', () => {
+      consentStep.hidden = true;
+      institutionStep.hidden = false;
+    });
+    document.querySelector('#bank-search').addEventListener('input', event => {
+      const query = event.target.value.toLowerCase();
+      institutions.forEach(bank => bank.hidden = !bank.dataset.bank.toLowerCase().includes(query));
+    });
+    document.querySelector('#confirm-connect').addEventListener('click', () => {
+      dialog.close();
+      connectButton.textContent = '✓ Sample connected';
+      connectButton.classList.add('connected');
+      document.querySelector('#statement-insights').hidden = false;
+      showToast('7 dining experiences found in the sample statement.');
+    });
+
+    document.querySelector('#intake-form').addEventListener('submit', event => {
+      event.preventDefault();
+      showToast('Visit garden sent—in demo land! 🌱');
+    });
+  </script>
+</body>
+</html>
