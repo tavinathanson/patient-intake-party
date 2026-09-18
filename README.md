@@ -1,3 +1,11 @@
+# Team 21 — Pop In Intake Arcade
+
+Our patient intake balloon-shooter prototype. Run `npm start` and open http://localhost:4173. See [ARCADE.md](ARCADE.md) for controls, five complaint forms, difficulty modes, and tests. Run `npm run check` to verify syntax and ricochet physics.
+
+Deployment uses the existing branch workflow. The server honors `PORT` and binds to `0.0.0.0` when a deployment port is set.
+
+---
+
 ![Did I hear party?](did-i-hear-party.jpg)
 
 ## Patient Intake Party
