@@ -6,6 +6,28 @@ patient intake is usually a form ([like this one](example-intake-form.md)), but 
 
 this repo has some synthetic, LLM-generated patient examples.
 
+### Running the intake form on this branch
+
+☠ **Articles of the Ship's Surgeon** — [that form](example-intake-form.md), if the clinic were a pirate ship. Same fields, obscured behind nautical jargon, **answerable out loud**: every section has a 🎙 button that records you and dictates your answers into the fields one by one.
+
+Flask backend (`main.py`), one static page (`static/index.html`), SQLite storage.
+
+**Speaking a section:** hit 🎙, and it walks the fields in order — the one it's listening for glows red. Pause between answers; each pause moves to the next field. Say "skip" to leave one blank. Dates understand "June 2nd 1943", the grog/tobacco dropdowns match spoken words, and in *Past Voyages* you can just name your curses ("creaky bones and high blood pressure") to tick the boxes. Needs Chrome or Safari — it uses the browser's built-in `SpeechRecognition`, so no API key and no audio ever leaves the page. Every field is still typeable.
+
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+Open http://localhost:8080 and submit. Forms are saved to `intake.db` (created on first run, gitignored).
+
+| Endpoint | What it does |
+|---|---|
+| `GET /` | the form |
+| `POST /api/intake` | save a filled-out form (JSON; `name` is the only required field) |
+| `GET /api/intake` | every submission, newest first |
+| `GET /api/intake/<id>` | one submission |
+
 your mission, if you like missions: **Build something that makes patient intake better.**
 
 You don't need to know medicine. Make up whatever you need about the condition or what the care team wants. Have fun.

@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ship's Surgeon — Intake Articles</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%E2%98%A0</text></svg>">
+<style>
+  :root {
+    --wood-dark: #2e1c0f;
+    --wood: #4a2c17;
+    --parchment: #ece0c4;
+    --parchment-dim: #ded0af;
+    --ink: #2b1c0e;
+    --ink-faded: #6d5940;
+    --gold: #c08a2e;
+    --rope: #b99760;
+    --blood: #8a2b1c;
+  }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 2.5rem 1rem 5rem;
+    color: var(--ink);
+    font: 16px/1.55 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    /* deck planking */
+    background-color: var(--wood);
+    background-image:
+      repeating-linear-gradient(90deg,
+        rgba(0,0,0,.28) 0 2px, rgba(0,0,0,0) 2px 15%),
+      repeating-linear-gradient(0deg,
+        rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.13) 1px 3px, rgba(0,0,0,0) 3px 9px),
+      linear-gradient(180deg, var(--wood-dark), var(--wood) 40%, var(--wood-dark));
+  }
+
+  .display { font-family: Luminari, Papyrus, "Iowan Old Style", Georgia, serif; }
+
+  main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 2.5rem 2.25rem 2rem;
+    background-color: var(--parchment);
+    background-image:
+      radial-gradient(ellipse at 15% 10%, rgba(139,105,58,.16), transparent 55%),
+      radial-gradient(ellipse at 85% 85%, rgba(139,105,58,.2), transparent 55%),
+      radial-gradient(circle at 60% 40%, rgba(120,88,45,.09), transparent 40%);
+    border: 3px solid var(--wood-dark);
+    border-radius: 3px;
+    box-shadow: 0 0 0 6px rgba(185,151,96,.25), 0 14px 40px rgba(0,0,0,.55);
+  }
+
+  header { text-align: center; border-bottom: 3px double var(--ink-faded); padding-bottom: 1.25rem; }
+  h1 { font-size: 2.1rem; margin: 0; letter-spacing: .04em; text-transform: uppercase; }
+  .skull { font-size: 2rem; display: block; line-height: 1; }
+  .tagline { margin: .4rem 0 0; font-style: italic; color: var(--ink-faded); }
+  .warning {
+    margin: 1.25rem 0 0;
+    font-size: .82rem;
+    color: var(--blood);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+
+  fieldset {
+    border: 2px solid var(--ink-faded);
+    border-radius: 2px;
+    margin: 2rem 0 0;
+    padding: 0 1.25rem 1.25rem;
+    background: rgba(255,252,240,.35);
+  }
+  legend {
+    padding: 0 .6rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+  .sec-head {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin: .25rem 0 1.1rem;
+    padding-bottom: .6rem;
+    border-bottom: 1px dashed var(--ink-faded);
+  }
+  .sec-note { font-style: italic; color: var(--ink-faded); font-size: .85rem; flex: 1; min-width: 12ch; }
+
+  /* ---- record buttons ---- */
+  .rec {
+    font: 600 .8rem/1 "Iowan Old Style", Georgia, serif;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--parchment);
+    background: linear-gradient(180deg, #6b3f20, #45260f);
+    border: 2px solid var(--wood-dark);
+    border-radius: 2rem;
+    padding: .5rem .9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  }
+  .rec:hover { background: linear-gradient(180deg, #7d4a26, #522d13); }
+  .rec[aria-pressed="true"] {
+    background: linear-gradient(180deg, #a33124, #6f1f14);
+    animation: pulse 1.25s ease-in-out infinite;
+  }
+  .rec:disabled { opacity: .45; cursor: not-allowed; animation: none; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(163,49,36,.7); }
+    50% { box-shadow: 0 0 0 .5rem rgba(163,49,36,0); }
+  }
+  .heard {
+    flex-basis: 100%;
+    min-height: 1.3em;
+    font-size: .85rem;
+    font-style: italic;
+    color: var(--blood);
+  }
+
+  /* ---- fields ---- */
+  label { display: block; margin-bottom: 1.05rem; }
+  label > .lbl { display: block; font-weight: 700; font-size: .95rem; }
+  .plain { display: block; font-weight: 400; font-size: .78rem; font-style: italic; color: var(--ink-faded); margin-bottom: .3rem; }
+
+  input[type=text], input[type=date], input[type=tel], textarea, select {
+    width: 100%;
+    padding: .5rem .6rem;
+    font: inherit;
+    color: var(--ink);
+    background: rgba(255,253,245,.85);
+    border: 0;
+    border-bottom: 2px solid var(--ink-faded);
+    border-radius: 2px 2px 0 0;
+  }
+  textarea { min-height: 4.5rem; resize: vertical; border: 2px solid var(--ink-faded); border-radius: 2px; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+  /* field currently being dictated into */
+  .listening {
+    background: rgba(255,244,205,.95) !important;
+    outline: 3px solid var(--blood) !important;
+    outline-offset: 1px;
+  }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
+
+  .curses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: .3rem 1rem;
+    margin: 0 0 1.1rem;
+    padding: .7rem;
+    border: 2px solid var(--ink-faded);
+    border-radius: 2px;
+  }
+  .curses label { margin: 0; display: flex; align-items: center; gap: .5rem; font-size: .9rem; }
+  .curses input { accent-color: var(--blood); width: 1.05rem; height: 1.05rem; }
+
+  /* ---- plank ---- */
+  .plank-wrap { text-align: center; margin: 2.5rem 0 .5rem; }
+  .plank {
+    font-family: Luminari, Papyrus, Georgia, serif;
+    font-size: 1.2rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #f7ecd2;
+    background-color: #5a3418;
+    background-image: repeating-linear-gradient(90deg,
+      rgba(0,0,0,.22) 0 1px, rgba(255,255,255,.05) 1px 10px, rgba(0,0,0,0) 10px 30px);
+    border: 3px solid var(--wood-dark);
+    border-radius: 2px;
+    padding: 1rem 3rem;
+    cursor: pointer;
+    box-shadow: 0 6px 0 var(--wood-dark), 0 10px 18px rgba(0,0,0,.4);
+  }
+  .plank:hover { background-color: #6b4020; }
+  .plank:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--wood-dark); }
+  #status { display: block; margin-top: 1rem; min-height: 1.5em; font-weight: 700; }
+  #status.ok { color: #2f5d3a; }
+  #status.err { color: var(--blood); }
+
+  footer { max-width: 780px; margin: 1.5rem auto 0; text-align: center; font-size: .85rem; color: var(--rope); }
+  footer a { color: var(--parchment-dim); }
+  .nosupport { margin: 1rem 0 0; padding: .6rem .8rem; border: 2px dashed var(--blood); color: var(--blood); font-size: .85rem; }
+
+  @media (max-width: 580px) {
+    .row { grid-template-columns: 1fr; }
+    main { padding: 1.5rem 1.1rem; }
+    h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <span class="skull display">☠</span>
+    <h1 class="display">Articles of the Ship's Surgeon</h1>
+    <p class="tagline">Signed afore ye are hauled below deck &mdash; for the good of crew an' cargo alike</p>
+    <p class="warning">Speak true. Liars walk the plank.</p>
+    <div id="nosupport" class="nosupport" hidden>
+      Yer browser has no ears. Use Chrome or Safari to speak yer answers, or scratch 'em in by hand.
+    </div>
+  </header>
+
+  <form id="intake">
+
+    <fieldset data-section="Ship's Manifest">
+      <legend class="display">I. Ship's Manifest</legend>
+      <div class="sec-head">
+        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
+        <span class="sec-note">Who ye are, an' who to blame.</span>
+        <span class="heard" aria-live="polite"></span>
+      </div>
+
+      <label><span class="lbl">Scribe at the quill</span>
+        <span class="plain">Filled out by, if not the patient</span>
+        <input type="text" name="filled_out_by"></label>
+
+      <div class="row">
+        <label><span class="lbl">This day in the log</span>
+          <span class="plain">Today's date</span>
+          <input type="date" name="date"></label>
+        <label><span class="lbl">Name ye answer to <em>(required)</em></span>
+          <span class="plain">Patient name</span>
+          <input type="text" name="name" required></label>
+        <label><span class="lbl">Day ye were launched</span>
+          <span class="plain">Date of birth &mdash; say it like "June 2nd 1943"</span>
+          <input type="date" name="date_of_birth"></label>
+        <label><span class="lbl">How we hail ye</span>
+          <span class="plain">Phone</span>
+          <input type="tel" name="phone"></label>
+      </div>
+
+      <label><span class="lbl">Where ye drop anchor</span>
+        <span class="plain">Address</span>
+        <input type="text" name="address"></label>
+
+      <div class="row">
+        <label><span class="lbl">Colors ye fly</span>
+          <span class="plain">Insurance</span>
+          <input type="text" name="insurance"></label>
+        <label><span class="lbl">Mark upon yer papers</span>
+          <span class="plain">Member ID</span>
+          <input type="text" name="member_id"></label>
+      </div>
+
+      <label><span class="lbl">Who to notify when ye're lost at sea</span>
+        <span class="plain">Emergency contact &mdash; name, relationship, phone</span>
+        <input type="text" name="emergency_contact"></label>
+    </fieldset>
+
+    <fieldset data-section="The Affliction">
+      <legend class="display">II. The Affliction</legend>
+      <div class="sec-head">
+        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
+        <span class="sec-note">What drove ye to the surgeon's quarters.</span>
+        <span class="heard" aria-live="polite"></span>
+      </div>
+
+      <label><span class="lbl">What ails ye</span>
+        <span class="plain">Reason for visit</span>
+        <textarea name="reason_for_visit"></textarea></label>
+
+      <label><span class="lbl">Potions, tonics an' tinctures ye swallow</span>
+        <span class="plain">Current medications &mdash; include over-the-counter, vitamins, eye drops, inhalers</span>
+        <textarea name="current_medications"></textarea></label>
+
+      <label><span class="lbl">What makes ye break out in barnacles</span>
+        <span class="plain">Allergies &mdash; say "none" if none</span>
+        <input type="text" name="allergies"></label>
+    </fieldset>
+
+    <fieldset data-section="Past Voyages">
+      <legend class="display">III. Past Voyages &amp; Scars</legend>
+      <div class="sec-head">
+        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
+        <span class="sec-note">Name the curses aloud an' they'll be ticked for ye.</span>
+        <span class="heard" aria-live="polite"></span>
+      </div>
+
+      <label><span class="lbl">Curses ye've carried</span>
+        <span class="plain">Past conditions &mdash; tick all that apply, or just say them</span></label>
+      <div class="curses" id="curses" data-voice-group="past_conditions"></div>
+
+      <label><span class="lbl">Times the surgeon has cut ye open</span>
+        <span class="plain">Past surgeries &mdash; procedure and year</span>
+        <textarea name="past_surgeries"></textarea></label>
+
+      <label><span class="lbl">Afflictions runnin' in yer bloodline</span>
+        <span class="plain">Family history &mdash; parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma</span>
+        <textarea name="family_history"></textarea></label>
+    </fieldset>
+
+    <fieldset data-section="Vices">
+      <legend class="display">IV. Vices &amp; Grog</legend>
+      <div class="sec-head">
+        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
+        <span class="sec-note">No judgement. The surgeon's seen worse.</span>
+        <span class="heard" aria-live="polite"></span>
+      </div>
+
+      <div class="row">
+        <label><span class="lbl">Pipe smoke</span>
+          <span class="plain">Tobacco &mdash; never, former, or current</span>
+          <select name="tobacco">
+            <option value="">—</option>
+            <option>Never</option>
+            <option>Former</option>
+            <option>Current</option>
+          </select></label>
+        <label><span class="lbl">Grog</span>
+          <span class="plain">Alcohol &mdash; none, occasional, or daily</span>
+          <select name="alcohol">
+            <option value="">—</option>
+            <option>None</option>
+            <option>Occasional</option>
+            <option>Daily</option>
+          </select></label>
+        <label><span class="lbl">Other mischief</span>
+          <span class="plain">Recreational drugs &mdash; no or yes</span>
+          <select name="drugs">
+            <option value="">—</option>
+            <option>No</option>
+            <option>Yes</option>
+          </select></label>
+      </div>
+    </fieldset>
+
+    <fieldset data-section="Yer Mark">
+      <legend class="display">V. Make Yer Mark</legend>
+      <div class="sec-head">
+        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
+        <span class="sec-note">An X will do, if ye cannot write.</span>
+        <span class="heard" aria-live="polite"></span>
+      </div>
+
+      <label><span class="lbl">Yer mark</span>
+        <span class="plain">Signature &mdash; type or say your name; if not the patient, add your relationship</span>
+        <input type="text" name="signature"></label>
+    </fieldset>
+
+    <div class="plank-wrap">
+      <button type="submit" class="plank">Walk the Plank ⚓</button>
+      <span id="status" aria-live="polite"></span>
+    </div>
+  </form>
+</main>
+
+<footer>
+  ☠ All souls aboard: <a href="/api/intake">/api/intake</a> ☠
+</footer>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * The curses (past conditions) — real names, so the data stays usable
+ * ------------------------------------------------------------------ */
+const CONDITIONS = [
+  "Arthritis", "Diabetes", "Kidney disease",
+  "Asthma", "Glaucoma", "Seizures",
+  "Cancer", "Heart disease", "Stroke",
+  "COPD / emphysema", "High blood pressure", "Thyroid disease",
+  "Depression / anxiety", "High cholesterol",
+];
+
+/* Extra words a pirate might say for each condition, for voice matching. */
+const CONDITION_ALIASES = {
+  "COPD / emphysema": ["copd", "emphysema", "black lung"],
+  "High blood pressure": ["blood pressure", "hypertension"],
+  "High cholesterol": ["cholesterol"],
+  "Depression / anxiety": ["depression", "anxiety", "melancholy"],
+  "Heart disease": ["heart"],
+  "Kidney disease": ["kidney"],
+  "Thyroid disease": ["thyroid"],
+  "Diabetes": ["diabetes", "sugar"],
+  "Arthritis": ["arthritis", "creaky bones"],
+  "Glaucoma": ["glaucoma", "eye pressure"],
+  "Seizures": ["seizure", "fits"],
+  "Cancer": ["cancer"],
+  "Stroke": ["stroke"],
+  "Asthma": ["asthma"],
+};
+
+const cursesBox = document.getElementById("curses");
+for (const condition of CONDITIONS) {
+  const label = document.createElement("label");
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = "past_conditions";
+  input.value = condition;
+  const span = document.createElement("span");
+  span.textContent = condition;
+  label.append(input, span);
+  cursesBox.appendChild(label);
+}
+
+const form = document.getElementById("intake");
+const status = document.getElementById("status");
+const today = () => new Date().toISOString().slice(0, 10);
+form.date.value = today();
+
+/* ------------------------------------------------------------------ *
+ * Voice dictation, one section at a time (Web Speech API)
+ * ------------------------------------------------------------------ */
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// Sequence of dictation targets inside a section, in document order.
+// The curses grid counts as a single target that ticks boxes.
+function targetsIn(section) {
+  return [...section.querySelectorAll(
+    "input:not([type=checkbox]), textarea, select, [data-voice-group]"
+  )];
+}
+
+function describe(target) {
+  if (target.dataset.voiceGroup) return "Curses ye've carried";
+  const label = target.closest("label");
+  const text = label && label.querySelector(".lbl") ? label.querySelector(".lbl").textContent : target.name;
+  return text.replace(/\s*\(required\)\s*/i, "").trim();
+}
+
+function normalize(text) {
+  return text.toLowerCase().replace(/[.,!?;:]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Put a spoken phrase into a target. Returns a short note for the crew.
+function fill(target, phrase) {
+  const spoken = phrase.trim();
+  if (!spoken) return "nothing heard";
+
+  if (target.dataset.voiceGroup) {
+    const said = normalize(spoken);
+    const ticked = [];
+    for (const box of target.querySelectorAll("input[type=checkbox]")) {
+      const needles = [normalize(box.value), ...(CONDITION_ALIASES[box.value] || [])];
+      if (needles.some((needle) => needle && said.includes(normalize(needle)))) {
+        box.checked = true;
+        ticked.push(box.value);
+      }
+    }
+    return ticked.length ? `ticked ${ticked.join(", ")}` : `no curse matched "${spoken}"`;
+  }
+
+  if (target.tagName === "SELECT") {
+    const said = normalize(spoken);
+    const match = [...target.options].find(
+      (option) => option.value && (said.includes(normalize(option.value)) || normalize(option.value).includes(said))
+    );
+    if (match) { target.value = match.value; return `set to ${match.value}`; }
+    return `couldn't match "${spoken}" — pick by hand`;
+  }
+
+  if (target.type === "date") {
+    // "June 2nd 1943" -> 1943-06-02
+    const cleaned = spoken.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
+    const parsed = new Date(cleaned);
+    if (!isNaN(parsed.getTime())) {
+      target.value = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000)
+        .toISOString().slice(0, 10);
+      return `logged ${target.value}`;
+    }
+    return `couldn't read "${spoken}" as a date`;
+  }
+
+  // Text inputs and textareas: append, so several breaths add up.
+  target.value = target.value ? `${target.value.trim()} ${spoken}` : spoken;
+  return "written down";
+}
+
+class SectionDictation {
+  constructor() { this.recognition = null; this.section = null; }
+
+  get active() { return this.recognition !== null; }
+
+  start(section) {
+    this.stop();
+    const targets = targetsIn(section);
+    if (!targets.length) return;
+
+    this.section = section;
+    this.targets = targets;
+    this.index = 0;
+    this.stopping = false;
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.lang = "en-US";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    this.recognition = recognition;
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const said = result[0].transcript;
+        if (!result.isFinal) { interim += said; continue; }
+
+        const target = this.targets[this.index];
+        if (!target) continue;
+
+        const trimmed = said.trim().toLowerCase().replace(/[.!?]$/, "");
+        if (trimmed === "skip" || trimmed === "next") {
+          this.note(`skipped ${describe(target)}`);
+        } else {
+          this.note(`${describe(target)}: ${fill(target, said)}`);
+        }
+        this.advance();
+      }
+      if (interim) this.note(`…${interim}`, true);
+    };
+
+    recognition.onerror = (event) => {
+      const messages = {
+        "not-allowed": "Ye must let the ship listen — allow the microphone.",
+        "service-not-allowed": "Ye must let the ship listen — allow the microphone.",
+        "no-speech": "Heard naught but wind. Try again.",
+        "audio-capture": "No microphone found aboard.",
+      };
+      this.note(messages[event.error] || `Trouble hearin' ye: ${event.error}`);
+      // keepNote, else stop() wipes the message the crew needs to read
+      if (event.error !== "no-speech") this.stop(true);
+    };
+
+    // Chrome cuts the stream on silence — pick it back up until told to stop.
+    recognition.onend = () => {
+      if (this.stopping || !this.recognition) return;
+      try { this.recognition.start(); } catch { this.stop(); }
+    };
+
+    try { recognition.start(); } catch { this.note("Couldn't open yer microphone."); this.stop(true); return; }
+
+    section.querySelector(".rec").setAttribute("aria-pressed", "true");
+    section.querySelector(".rec").textContent = "■ Belay that";
+    this.focusTarget();
+    this.note(`Listening — speak yer "${describe(targets[0])}"`);
+  }
+
+  advance() {
+    this.clearHighlight();
+    this.index++;
+    if (this.index >= this.targets.length) {
+      this.note("That's the whole section. Belayed.");
+      this.stop(true);
+      return;
+    }
+    this.focusTarget();
+  }
+
+  focusTarget() {
+    const target = this.targets[this.index];
+    if (!target) return;
+    this.clearHighlight();
+    target.classList.add("listening");
+    if (target.focus && !target.dataset.voiceGroup) target.focus({ preventScroll: false });
+  }
+
+  clearHighlight() {
+    if (this.section) {
+      for (const el of this.section.querySelectorAll(".listening")) el.classList.remove("listening");
+    }
+  }
+
+  note(message, interim = false) {
+    if (!this.section) return;
+    const slot = this.section.querySelector(".heard");
+    slot.textContent = message;
+    slot.style.opacity = interim ? ".7" : "1";
+  }
+
+  stop(keepNote = false) {
+    if (!this.recognition) { return; }
+    this.stopping = true;
+    try { this.recognition.stop(); } catch { /* already closed */ }
+    this.recognition = null;
+
+    if (this.section) {
+      this.clearHighlight();
+      const button = this.section.querySelector(".rec");
+      button.setAttribute("aria-pressed", "false");
+      button.textContent = "🎙 Speak this section";
+      if (!keepNote) this.note("");
+    }
+    this.section = null;
+  }
+}
+
+const dictation = new SectionDictation();
+
+for (const button of document.querySelectorAll(".rec")) {
+  const section = button.closest("fieldset");
+  if (!SpeechRecognitionAPI) {
+    button.disabled = true;
+    button.title = "This browser has no speech recognition";
+    continue;
+  }
+  button.addEventListener("click", () => {
+    if (dictation.active && dictation.section === section) dictation.stop();
+    else dictation.start(section);
+  });
+}
+
+if (!SpeechRecognitionAPI) document.getElementById("nosupport").hidden = false;
+
+/* ------------------------------------------------------------------ *
+ * Walk the plank
+ * ------------------------------------------------------------------ */
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  dictation.stop();
+  status.className = "";
+  status.textContent = "Rowin' it over…";
+
+  const data = Object.fromEntries(new FormData(form).entries());
+  data.past_conditions = [...form.querySelectorAll("input[name=past_conditions]:checked")]
+    .map((input) => input.value);
+
+  try {
+    const response = await fetch("/api/intake", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error === "name is required"
+      ? "We'll not treat a soul with no name."
+      : (result.error || "The sea swallowed it. Try again."));
+
+    status.className = "ok";
+    status.textContent = `Aye, ${result.name} — logged as soul #${result.id}. Below deck with ye.`;
+    form.reset();
+    form.date.value = today();
+  } catch (error) {
+    status.className = "err";
+    status.textContent = error.message;
+  }
+});
+</script>
+</body>
+</html>
