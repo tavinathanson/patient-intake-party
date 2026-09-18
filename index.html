@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Larder, food-first weight care</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F5F1;
+  --sand:#EDE8E0;
+  --sand-2:#E3DCD1;
+  --card:#FFFFFF;
+  --ink:#1A1814;
+  --ink-2:#55504A;
+  --ink-3:#7D766D;
+  --line:#E2DCD3;
+  --line-2:#D3CBBF;
+  --brand:#3F5B21;
+  --brand-deep:#33491A;
+  --brand-soft:#E8EDDE;
+  --brand-line:#C4D0AE;
+  --amber:#9A5B08;
+  --amber-soft:#FBF1E0;
+  --amber-line:#E8CFA4;
+  --good:#2F6B41;
+  --good-soft:#E6EFE7;
+  --series-1:#2a78d6;
+  --series-2:#eb6834;
+  --series-3:#1baf7a;
+  --sans:"Satoshi","Figtree",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --r-l:20px;
+  --r-m:13px;
+  --r-s:9px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);font-family:var(--sans);
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px;border-radius:5px}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.money{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+
+h1,h2,h3,h4{margin:0;font-weight:500;letter-spacing:-.028em;line-height:1.08}
+h1{font-size:clamp(2.15rem,3.4vw,3.05rem)}
+h2{font-size:clamp(1.5rem,2.1vw,1.95rem);line-height:1.12}
+h3{font-size:1.12rem;letter-spacing:-.018em;line-height:1.25}
+p{margin:0}
+.lede{font-size:1.06rem;color:var(--ink-2);line-height:1.55}
+.small{font-size:.92rem;color:var(--ink-2);line-height:1.5}
+.tiny{font-size:.79rem;color:var(--ink-3);line-height:1.5}
+
+/* ================= shell ================= */
+.app{display:grid;grid-template-columns:minmax(340px,36%) minmax(0,1fr);min-height:100vh}
+.rail{
+  background:var(--sand);border-right:1px solid var(--line-2);
+  padding:36px clamp(26px,2.6vw,44px) 30px;
+  display:flex;flex-direction:column;gap:30px;
+  position:sticky;top:0;align-self:start;height:100vh;overflow:auto;
+}
+.brand{display:flex;align-items:center;gap:11px}
+.brandMark{width:32px;height:32px;flex:none;display:block}
+.brandName{font-size:1.32rem;font-weight:700;letter-spacing:-.045em}
+.brandTag{font-size:.82rem;color:var(--ink-3);margin-top:1px}
+.railBody{flex:1;min-height:0}
+.railFoot{font-size:.76rem;color:var(--ink-3);line-height:1.55}
+
+.viewswitch{display:inline-flex;background:var(--paper);border:1px solid var(--line-2);border-radius:999px;padding:3px;align-self:flex-start}
+.viewswitch button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:.84rem;font-weight:500;color:var(--ink-2)}
+.viewswitch button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.switchWrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.switchWrap .tiny{margin:0}
+
+/* rail: pitch state */
+.pitch h1{margin-bottom:16px}
+.pitch .lede{max-width:34ch}
+.pitchList{margin-top:26px;border-top:1px solid var(--line-2)}
+.pitchList div{padding:13px 0;border-bottom:1px solid var(--line-2);font-size:.95rem;color:var(--ink-2);display:flex;gap:11px}
+.pitchList b{font-weight:500;color:var(--ink)}
+.pitchList i{color:var(--brand);font-style:normal;font-weight:500;font-variant-numeric:tabular-nums}
+
+/* rail: live state */
+.railLive h3{margin-bottom:3px}
+.liveNote{font-size:.8rem;color:var(--ink-3);margin-bottom:16px}
+.stat{padding:12px 0;border-top:1px solid var(--line-2);display:flex;align-items:baseline;justify-content:space-between;gap:14px}
+.stat:last-of-type{border-bottom:1px solid var(--line-2)}
+.stat .sl{font-size:.88rem;color:var(--ink-2)}
+.stat .sv{font-size:1.05rem;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.qlist{margin-top:22px;display:flex;flex-direction:column;gap:2px}
+.qi{display:flex;align-items:center;gap:10px;font-size:.88rem;color:var(--ink-3);padding:4px 0}
+.qi .dot{
+  width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line-2);flex:none;
+  display:grid;place-items:center;font-size:.62rem;color:var(--ink-3);font-variant-numeric:tabular-nums;
+}
+.qi.done{color:var(--ink)}
+.qi.done .dot{background:var(--brand);border-color:var(--brand);color:#fff}
+.qi.now .dot{border-color:var(--brand);color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.qi.now{color:var(--ink);font-weight:500}
+
+/* ================= flow column ================= */
+.flowCol{display:flex;flex-direction:column;min-width:0}
+.flowHead{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding:20px clamp(18px,3vw,44px) 16px;
+  width:100%;max-width:760px;margin-inline:auto;
+}
+.who{font-size:.9rem;color:var(--ink-2)}
+.who b{font-weight:500;color:var(--ink)}
+.qcount{font-size:.82rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.progress{height:2px;background:var(--line);margin:0}
+.progress span{display:block;height:100%;width:0;background:var(--brand);transition:width .5s cubic-bezier(.2,.7,.3,1)}
+.flowBody{padding:34px clamp(18px,3vw,44px) 90px;width:100%;max-width:760px;margin-inline:auto}
+.feed{display:flex;flex-direction:column;gap:20px;max-width:620px}
+
+/* ================= controls ================= */
+.btn{
+  border:0;border-radius:11px;padding:15px 22px;font-weight:500;font-size:1rem;
+  background:var(--brand);color:#FBFCF8;transition:background .16s ease,transform .16s ease;
+}
+.btn:hover{background:var(--brand-deep)}
+.btn:active{transform:translateY(1px)}
+.btn-quiet{background:transparent;color:var(--ink-2);border:1px solid var(--line-2)}
+.btn-quiet:hover{background:var(--sand);color:var(--ink)}
+.btn-row{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.btn-row .btn{flex:1 1 auto;min-width:200px}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+.chip{
+  border:1px solid var(--line-2);background:var(--card);border-radius:10px;
+  padding:12px 16px;font-size:.98rem;color:var(--ink);text-align:left;
+  transition:border-color .14s ease,background .14s ease;
+}
+.chip:hover{border-color:var(--brand);background:var(--brand-soft)}
+.chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#FBFCF8}
+.chips-stack{flex-direction:column;align-items:flex-start}
+.chips-stack .chip{width:100%;max-width:440px}
+
+/* ================= blocks ================= */
+.block{animation:rise .42s cubic-bezier(.2,.7,.3,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.qblock .qlabel{font-size:.78rem;color:var(--brand);font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.qblock .qlabel::before{content:"";width:16px;height:1.5px;background:var(--brand);display:block}
+.qblock h3{margin-bottom:5px;font-size:1.28rem}
+.answered{opacity:.5}
+.answered .chip{pointer-events:none}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);padding:20px}
+.card.attention{background:var(--amber-soft);border-color:var(--amber-line)}
+.card.good{background:var(--good-soft);border-color:#C6DACB}
+.card h3{margin-bottom:7px}
+.readout{display:flex;align-items:baseline;gap:12px;margin:14px 0 2px}
+.readout .fig{font-size:2.6rem;font-weight:500;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums}
+.readout .unit{font-size:.9rem;color:var(--ink-2);max-width:190px;line-height:1.35}
+
+.rows{border-top:1px solid var(--line);margin-top:14px}
+.row{display:grid;grid-template-columns:1fr auto;gap:3px 14px;padding:10px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.row .m{font-size:.95rem}
+.row .d{font-family:var(--mono);font-size:.72rem;color:var(--ink-3);grid-column:1}
+.row .a{font-family:var(--mono);font-size:.87rem;grid-column:2;grid-row:1/3;align-self:center;justify-self:end;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row.muted .m,.row.muted .a{color:var(--ink-3)}
+.row.missing{background:repeating-linear-gradient(135deg,transparent,transparent 6px,rgba(154,91,8,.08) 6px,rgba(154,91,8,.08) 12px)}
+.row.missing .m{color:var(--amber);font-style:italic}
+
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:500;padding:3px 9px;border-radius:999px;border:1px solid var(--line-2);color:var(--ink-2);background:var(--card);white-space:nowrap}
+.tag.card-src{border-color:#BFD3EC;color:#1C5CAB;background:#EDF3FB}
+.tag.said{border-color:var(--brand-line);color:var(--brand);background:var(--brand-soft)}
+.tag.flag{border-color:var(--amber-line);color:var(--amber);background:#FDF6E9}
+
+/* ================= plaid ================= */
+.overlay{position:fixed;inset:0;z-index:60;background:rgba(26,24,20,.42);display:flex;align-items:flex-end;justify-content:center}
+.overlay[hidden]{display:none}
+.plaid{
+  width:100%;max-width:460px;background:#fff;border-radius:18px 18px 0 0;
+  box-shadow:0 -10px 46px rgba(26,24,20,.28);display:flex;flex-direction:column;max-height:94vh;
+  animation:slideup .36s cubic-bezier(.2,.7,.3,1) both;
+}
+@keyframes slideup{from{transform:translateY(34px);opacity:.4}to{transform:none;opacity:1}}
+@media (min-width:700px){
+  .overlay{align-items:center}
+  .plaid{border-radius:16px;max-height:88vh;animation-name:popin}
+}
+@keyframes popin{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.plaidHead{padding:15px 20px;border-bottom:1px solid #EDEEF0;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.plaidLogo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:1rem;color:#111;letter-spacing:-.03em}
+.simchip{font-size:.66rem;font-weight:500;color:#5A6472;background:#F1F3F6;border-radius:999px;padding:4px 9px}
+.plaidBody{padding:22px 20px 24px;overflow:auto}
+.plaidBody h4{font-size:1.24rem;margin:0 0 6px;color:#111;letter-spacing:-.025em}
+.plaidBody p{font-size:.88rem;color:#5A6472}
+.bank{width:100%;display:flex;align-items:center;gap:12px;padding:13px 12px;margin-top:9px;border:1px solid #E4E7EB;border-radius:11px;background:#fff;text-align:left}
+.bank:hover{border-color:#0A85EA;background:#F6FAFE}
+.bankMark{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:.8rem;color:#fff;flex:none}
+.bank .bn{font-size:.94rem;font-weight:500;color:#111;display:block}
+.bank .bt{font-size:.78rem;color:#7A828E}
+.field{margin-top:13px}
+.field label{display:block;font-size:.78rem;font-weight:500;color:#3D4452;margin-bottom:5px}
+.field .fake{border:1px solid #E4E7EB;border-radius:9px;padding:12px;font-size:.9rem;background:#FAFBFC;color:#111;font-family:var(--mono)}
+.plaidBtn{width:100%;margin-top:17px;background:#0A85EA;color:#fff;border:0;border-radius:10px;padding:14px;font-weight:500;font-size:.98rem}
+.plaidBtn:hover{background:#0870C7}
+.plaidBtn[disabled]{background:#A9CDEA;cursor:progress}
+.plaidNote{font-size:.74rem;color:#7A828E;margin-top:13px;line-height:1.5}
+.tickmark{width:48px;height:48px;margin:22px auto 12px;display:block}
+.tickmark circle{fill:var(--good-soft)}
+.tickmark path{fill:none;stroke:var(--good);stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){
+  .tickmark path{stroke-dasharray:32;stroke-dashoffset:32;animation:draw .45s .1s ease forwards}
+}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* ================= scan ================= */
+.scanFeed{height:210px;overflow:hidden;position:relative;margin-top:18px;mask-image:linear-gradient(180deg,transparent,#000 14%,#000 72%,transparent)}
+.scanFeed .row{animation:rise .3s ease both}
+.catbar{display:flex;gap:3px;margin-top:20px;height:9px;border-radius:999px;overflow:hidden;background:var(--line)}
+.catbar i{display:block;height:100%;width:0;transition:width .7s cubic-bezier(.2,.7,.3,1)}
+.catkey{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px}
+.catkey span{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;color:var(--ink-2)}
+.catkey i{width:9px;height:9px;border-radius:3px;display:block}
+
+/* ================= charts ================= */
+.viz{position:relative}
+.viz svg{display:block;width:100%;height:auto;overflow:visible}
+.gridline{stroke:var(--line);stroke-width:1}
+.axislab{font-family:var(--sans);font-size:10.5px;fill:var(--ink-3)}
+.axislab.strong{fill:var(--ink-2);font-weight:500}
+.evt{font-family:var(--sans);font-size:10.5px;fill:var(--ink-2);font-weight:500}
+.vizTip{position:absolute;pointer-events:none;background:var(--ink);color:var(--paper);border-radius:9px;padding:10px 12px;font-size:.76rem;line-height:1.45;opacity:0;transition:opacity .12s ease;z-index:6;min-width:140px;box-shadow:0 8px 22px rgba(26,24,20,.26)}
+.vizTip[data-on="1"]{opacity:1}
+.vizTip b{font-weight:500;display:block;margin-bottom:5px}
+.vizTip .tr{display:flex;justify-content:space-between;gap:16px;font-variant-numeric:tabular-nums}
+.vizTip .tr i{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:6px}
+
+/* ================= review ================= */
+.review{border-top:1px solid var(--line);margin-top:18px}
+.rev{display:grid;grid-template-columns:1fr auto;gap:7px 16px;padding:15px 0;border-bottom:1px solid var(--line);align-items:start}
+.rev .rt{font-size:.98rem;line-height:1.45}
+.rev .rm{grid-column:1;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.rev.off .rt{color:var(--ink-3);text-decoration:line-through}
+.toggle{border:1px solid var(--line-2);background:var(--card);border-radius:999px;width:48px;height:27px;padding:2px;position:relative;grid-column:2;grid-row:1/3;align-self:center;justify-self:end}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:21px;height:21px;border-radius:50%;background:var(--ink-3);transition:transform .16s ease,background .16s ease}
+.toggle[aria-pressed="true"]{background:var(--brand);border-color:var(--brand)}
+.toggle[aria-pressed="true"]::after{transform:translateX(21px);background:#fff}
+textarea{width:100%;max-width:620px;border:1px solid var(--line-2);border-radius:11px;padding:13px;font-family:inherit;font-size:.98rem;color:var(--ink);background:var(--card);resize:vertical;min-height:88px;margin-top:11px}
+textarea::placeholder{color:var(--ink-3)}
+.photo{display:flex;gap:13px;align-items:center;margin-top:13px;padding:12px;border:1px dashed var(--amber-line);border-radius:11px;background:#FDF6E9}
+.photo img{width:56px;height:56px;object-fit:cover;border-radius:8px;display:block;background:var(--line)}
+.photo .pt{font-size:.88rem;color:var(--ink-2);line-height:1.45}
+
+/* ================= clinic ================= */
+.clinic{display:none;padding:26px clamp(16px,3vw,40px) 70px}
+.clinic[data-on="1"]{display:block}
+.clinicTop{max-width:1240px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.chart-locked{text-align:center;padding:64px 24px;color:var(--ink-3);font-size:.95rem;border:1px dashed var(--line-2);border-radius:var(--r-m);max-width:540px;margin:0 auto;background:var(--card)}
+.sheet{background:var(--card);border:1px solid var(--line-2);border-radius:var(--r-l);overflow:hidden;max-width:1240px;margin:0 auto}
+.sheetHead{padding:26px clamp(20px,3vw,34px);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;justify-content:space-between;background:var(--sand)}
+.pt-name{font-size:1.85rem;font-weight:500;letter-spacing:-.032em;line-height:1.05}
+.pt-meta{font-size:.9rem;color:var(--ink-2);margin-top:5px}
+.sheetGrid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.col{padding:26px clamp(20px,3vw,34px) 30px;min-width:0}
+.col+.col{border-left:1px solid var(--line)}
+.secLabel{font-size:1rem;font-weight:500;letter-spacing:-.02em;margin:0 0 3px}
+.secNote{font-size:.8rem;color:var(--ink-3);margin-bottom:16px}
+.ask{display:flex;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.ask:first-of-type{border-top:0;padding-top:4px}
+.askNum{font-size:.76rem;color:var(--brand);border:1px solid var(--brand-line);background:var(--brand-soft);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;flex:none;margin-top:2px;font-variant-numeric:tabular-nums}
+.ask .at{font-size:1.04rem;font-weight:500;line-height:1.35;letter-spacing:-.015em}
+.ask .ab{font-size:.9rem;color:var(--ink-2);line-height:1.55;margin-top:5px}
+.ask .src{margin-top:9px;display:flex;gap:7px;flex-wrap:wrap}
+.metrics{border-top:1px solid var(--line)}
+.metric{display:grid;grid-template-columns:1fr auto;gap:2px 16px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.metric .mn{font-size:.92rem}
+.metric .mv{font-size:1rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.metric .mc{grid-column:1;font-size:.76rem;color:var(--ink-3)}
+.quote{border-left:2.5px solid var(--brand);padding:3px 0 3px 15px;font-size:.98rem;line-height:1.55;color:var(--ink-2);margin-top:6px}
+
+/* ================= responsive ================= */
+@media (max-width:1000px){
+  .app{display:block}
+  .rail{
+    position:static;height:auto;overflow:visible;border-right:0;
+    border-bottom:1px solid var(--line-2);
+    padding:22px clamp(18px,4vw,30px) 24px;gap:22px;
+  }
+  .railFoot{display:none}
+  .pitch h1{font-size:clamp(1.95rem,7vw,2.5rem)}
+  .pitch .lede{max-width:none}
+  .qlist{flex-direction:row;flex-wrap:wrap;gap:7px;margin-top:18px}
+  .qi{gap:7px;padding:0}
+  .qi .qtext{display:none}
+  .stat{padding:10px 0}
+  .flowBody{padding-bottom:64px}
+}
+@media (max-width:880px){
+  .sheetGrid{grid-template-columns:1fr}
+  .col+.col{border-left:0;border-top:1px solid var(--line)}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .readout .fig{font-size:2.15rem}
+  .btn-row .btn{min-width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="patientView">
+  <aside class="rail">
+    <div>
+      <div class="brand">
+        <svg class="brandMark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect x="1.1" y="1.1" width="29.8" height="29.8" rx="8.4" fill="#3F5B21"/>
+          <path d="M6.6 14.4h18.8M6.6 22h18.8" stroke="#EDE8E0" stroke-width="1.9" stroke-linecap="round"/>
+          <rect x="9.2" y="8.3" width="5.8" height="6.1" rx="2" fill="#C4D0AE"/>
+          <rect x="17.4" y="10.2" width="4.6" height="4.2" rx="1.5" fill="#EDE8E0"/>
+          <circle cx="12.1" cy="19.8" r="2.2" fill="#EDE8E0"/>
+        </svg>
+        <div>
+          <div class="brandName">Larder</div>
+          <div class="brandTag">Food-first weight care</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="railBody" id="rail"></div>
+
+    <div>
+      <div class="switchWrap">
+        <span class="tiny">Viewing as</span>
+        <div class="viewswitch" role="group" aria-label="Choose a view">
+          <button id="tab-patient" aria-pressed="true">Papaya</button>
+          <button id="tab-clinic" aria-pressed="false">Care team</button>
+        </div>
+      </div>
+      <p class="railFoot" style="margin-top:16px">
+        Mockup on the synthetic GLP-1 patient in <code>patients/glp1</code>. Papaya, her bank, her pharmacy
+        and every transaction are invented. Nothing here is medical advice.
+      </p>
+    </div>
+  </aside>
+
+  <main class="flowCol">
+    <div class="flowHead">
+      <div class="who">Intake for <b>Papaya Radish</b>, visit Thursday Sep 24</div>
+      <div class="qcount" id="qcount"></div>
+    </div>
+    <div class="progress"><span id="progressBar"></span></div>
+    <div class="flowBody"><div class="feed" id="feed"></div></div>
+  </main>
+</div>
+
+<section id="clinicView" class="clinic" aria-live="polite"></section>
+<div class="overlay" id="overlay" hidden></div>
+<script>
+/* ============================================================
+   1. Synthetic transaction ledger
+   Six months of card activity for Papaya, shaped by her story:
+   appetite falls Feb-Jun on semaglutide, returns Jul onward after
+   she drops back to 0.5 mg, and the August semaglutide fill never
+   happens because the pharmacy was out.
+   ============================================================ */
+let _seed = 20260918;
+const rnd = () => (_seed = (_seed * 1664525 + 1013904223) % 4294967296) / 4294967296;
+const pick = a => a[Math.floor(rnd() * a.length)];
+const between = (lo, hi) => lo + rnd() * (hi - lo);
+
+const MONTHS = [
+  { key:'2026-02', label:'Feb', days:28, targets:{ groceries:640, fastfood:215, delivery:240, restaurant:185, coffee:88, convenience:58 }, lateShare:.18 },
+  { key:'2026-03', label:'Mar', days:31, targets:{ groceries:600, fastfood:155, delivery:175, restaurant:145, coffee:72, convenience:46 }, lateShare:.15 },
+  { key:'2026-04', label:'Apr', days:30, targets:{ groceries:545, fastfood:98,  delivery:125, restaurant:112, coffee:58, convenience:34 }, lateShare:.10 },
+  { key:'2026-05', label:'May', days:31, targets:{ groceries:505, fastfood:72,  delivery:92,  restaurant:96,  coffee:46, convenience:26 }, lateShare:.05 },
+  { key:'2026-06', label:'Jun', days:30, targets:{ groceries:455, fastfood:48,  delivery:62,  restaurant:70,  coffee:36, convenience:18 }, lateShare:.03 },
+  { key:'2026-07', label:'Jul', days:31, targets:{ groceries:500, fastfood:95,  delivery:118, restaurant:102, coffee:48, convenience:30 }, lateShare:.22 },
+  { key:'2026-08', label:'Aug', days:31, targets:{ groceries:545, fastfood:142, delivery:205, restaurant:128, coffee:64, convenience:52 }, lateShare:.60 },
+  { key:'2026-09', label:'Sep', days:18, targets:{ groceries:300, fastfood:105, delivery:175, restaurant:78,  coffee:42, convenience:36 }, lateShare:.70, partial:true }
+];
+
+const MERCHANTS = {
+  groceries:   [['Safeway #1187',58,112],['Trader Joe\'s',34,68],['H Mart Sunnyvale',41,86],['Costco Wholesale',118,186]],
+  fastfood:    [['Chipotle',13,19],['Taco Bell',9,15],['Chick-fil-A',11,17],['Panda Express',12,16],['McDonald\'s',8,13]],
+  delivery:    [['DoorDash',24,47],['Uber Eats',22,44],['Grubhub',26,41]],
+  restaurant:  [['Little Fox Diner',31,57],['Sushi Kappo',44,79],['Nido Cantina',27,53]],
+  coffee:      [['Philz Coffee',6,10],['Starbucks',5,9]],
+  convenience: [['7-Eleven',4,12],['Chevron ExtraMile',6,15]]
+};
+const CATS = {
+  groceries:{ name:'Groceries', color:'var(--series-1)', hex:'#2a78d6' },
+  eatingout:{ name:'Eating out', color:'var(--series-2)', hex:'#eb6834' },
+  delivery: { name:'Delivery apps', color:'var(--series-3)', hex:'#1baf7a' }
+};
+const LATE_CATS = ['delivery','fastfood','convenience'];
+const bucketOf = c => c === 'groceries' ? 'groceries' : c === 'delivery' ? 'delivery' : 'eatingout';
+
+function hourFor(cat, lateShare){
+  if (cat === 'delivery') return rnd() < lateShare ? Math.floor(between(21,24)) : Math.floor(between(17,21));
+  if (cat === 'fastfood') return rnd() < lateShare * .5 ? Math.floor(between(21,24)) : Math.floor(between(11,21));
+  if (cat === 'convenience') return rnd() < lateShare * .65 ? Math.floor(between(21,24)) : Math.floor(between(8,20));
+  if (cat === 'coffee') return Math.floor(between(7,11));
+  if (cat === 'restaurant') return Math.floor(between(18,21));
+  return Math.floor(between(9,20));
+}
+
+const txns = [];
+for (const m of MONTHS){
+  for (const [cat, target] of Object.entries(m.targets)){
+    let left = target;
+    const list = MERCHANTS[cat];
+    const avg = list.reduce((s,x)=>s+(x[1]+x[2])/2,0)/list.length;
+    while (left > avg * 0.55){
+      const [name, lo, hi] = pick(list);
+      let amt = between(lo, hi);
+      if (amt > left * 1.3) amt = left;
+      amt = Math.round(amt * 100) / 100;
+      const day = Math.max(1, Math.min(m.days, Math.ceil(rnd() * m.days)));
+      txns.push({ month:m.key, ml:m.label, day, hour:hourFor(cat, m.lateShare), cat, bucket:bucketOf(cat), name, amt });
+      left -= amt;
+    }
+  }
+  // pharmacy: the semaglutide copay lands every month except August
+  const phDay = Math.min(m.days, 3 + Math.floor(rnd()*6));
+  if (m.key !== '2026-08'){
+    txns.push({ month:m.key, ml:m.label, day:phDay, hour:15, cat:'pharmacy', bucket:'pharmacy', name:'CVS Pharmacy #4412', amt:25.00, note:'specialty copay' });
+  }
+  txns.push({ month:m.key, ml:m.label, day:Math.min(m.days, phDay+9), hour:16, cat:'pharmacy', bucket:'pharmacy', name:'CVS Pharmacy #4412', amt:m.key==='2026-08' ? 9.00 : 12.00, note:'generic copay' });
+}
+txns.sort((a,b)=> a.month === b.month ? a.day - b.day : a.month < b.month ? -1 : 1);
+
+const NONFOOD_COUNT = 902;              // rent, gas, utilities - scanned, never shown
+const food = txns.filter(t => t.bucket !== 'pharmacy');
+const sum = arr => arr.reduce((s,t)=>s+t.amt,0);
+const money = n => '$' + n.toLocaleString('en-US',{ maximumFractionDigits:0 });
+const money2 = n => '$' + n.toFixed(2);
+
+const byMonth = MONTHS.map(m => {
+  const mt = food.filter(t => t.month === m.key);
+  return {
+    label:m.label, key:m.key, partial:!!m.partial,
+    groceries:sum(mt.filter(t=>t.bucket==='groceries')),
+    eatingout:sum(mt.filter(t=>t.bucket==='eatingout')),
+    delivery:sum(mt.filter(t=>t.bucket==='delivery')),
+    total:sum(mt),
+    orders:mt.filter(t=>t.cat==='fastfood'||t.cat==='delivery').length,
+    late:mt.filter(t=>LATE_CATS.includes(t.cat)&&t.hour>=21).length,
+    trips:mt.filter(t=>t.bucket==='groceries').length,
+    weeks:m.days/7
+  };
+});
+const M = Object.fromEntries(byMonth.map(m=>[m.label,m]));
+
+const FOOD_TOTAL   = sum(food);
+const GROC_TOTAL   = sum(food.filter(t=>t.bucket==='groceries'));
+const OUT_TOTAL    = sum(food.filter(t=>t.bucket==='eatingout'));
+const DEL_TOTAL    = sum(food.filter(t=>t.bucket==='delivery'));
+const AWAY_SHARE   = Math.round((OUT_TOTAL + DEL_TOTAL) / FOOD_TOTAL * 100);
+const SCANNED      = txns.length + NONFOOD_COUNT;
+const ORDERS_NOW   = (M.Aug.orders + M.Sep.orders) / (M.Aug.weeks + M.Sep.weeks);
+const ORDERS_JUN   = M.Jun.orders / M.Jun.weeks;
+const ORDERS_FEB   = M.Feb.orders / M.Feb.weeks;
+const SPEND_DROP   = Math.round((1 - M.Jun.total / M.Feb.total) * 100);
+const SEP_PACE     = M.Sep.total / 18 * 30;
+const SPEND_REBOUND= Math.round((SEP_PACE / M.Jun.total - 1) * 100);
+const LATE_NOW     = M.Aug.late + M.Sep.late;
+const LATE_THEN    = M.May.late + M.Jun.late;
+const GROC_WEEKLY  = GROC_TOTAL / MONTHS.reduce((s,m)=>s+m.days/7,0);
+
+const WEIGHT = [
+  ['2026-02-03',214.0],['2026-02-17',212.6],['2026-03-03',210.1],['2026-03-17',207.8],
+  ['2026-04-07',204.5],['2026-04-21',202.2],['2026-05-05',199.6],['2026-05-19',197.4],
+  ['2026-06-02',195.8],['2026-06-16',193.7],['2026-07-07',192.5],['2026-07-21',191.9],
+  ['2026-08-04',192.4],['2026-08-18',194.1],['2026-09-01',195.3]
+];
+</script>
+
+<script>
+/* ============================================================
+   2. Helpers + charts
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const feed = $('#feed');
+const overlay = $('#overlay');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function node(html){
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+function addBlock(html, cls = ''){
+  const b = node(`<div class="block ${cls}">${html}</div>`);
+  const first = feed.children.length === 0;
+  feed.appendChild(b);
+  // the first block of a screen must not scroll the hero or the rail out of view
+  if (!first) requestAnimationFrame(() => b.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block:'nearest' }));
+  return b;
+}
+const wait = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms,120) : ms));
+
+/* ---- stacked monthly food spend ---- */
+function renderStack(host, opts = {}){
+  const w = Math.max(280, host.clientWidth);
+  const h = opts.height || 190;
+  const padL = 34, padR = 8, padT = 14, padB = opts.events ? 40 : 22;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const max = 1500;
+  const y = v => padT + plotH - (v / max) * plotH;
+  const band = plotW / byMonth.length;
+  const bw = Math.min(30, band * 0.58);
+  const order = [['groceries', CATS.groceries.hex], ['eatingout', CATS.eatingout.hex], ['delivery', CATS.delivery.hex]];
+
+  let g = '';
+  for (const t of [0, 500, 1000, 1500]){
+    g += `<line class="gridline" x1="${padL}" x2="${w-padR}" y1="${y(t)}" y2="${y(t)}"/>`;
+    g += `<text class="axislab" x="${padL-7}" y="${y(t)+3.5}" text-anchor="end">$${t/1000 >= 1 ? (t/1000)+'k' : t}</text>`;
+  }
+  byMonth.forEach((m, i) => {
+    const cx = padL + band * i + band / 2;
+    let base = 0;
+    order.forEach(([k, hex]) => {
+      const v = m[k];
+      const y0 = y(base), y1 = y(base + v);
+      const hgt = Math.max(1.5, y0 - y1 - 2);
+      g += `<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${hgt}" rx="2.5" fill="${hex}"/>`;
+      base += v;
+    });
+    g += `<text class="axislab${m.label==='Jun'||m.label==='Sep'?' strong':''}" x="${cx}" y="${padT+plotH+15}" text-anchor="middle">${m.label}</text>`;
+    g += `<rect class="hit" data-i="${i}" x="${padL+band*i}" y="${padT}" width="${band}" height="${plotH}" fill="transparent"/>`;
+  });
+  if (opts.events){
+    const ev = [['Jun','dose lowered'],['Aug','no refill']];
+    ev.forEach(([lab, txt]) => {
+      const i = byMonth.findIndex(m => m.label === lab);
+      const cx = padL + band * i + band / 2;
+      g += `<line x1="${cx}" x2="${cx}" y1="${padT+plotH+19}" y2="${padT+plotH+25}" stroke="#8F5410" stroke-width="1.5"/>`;
+      g += `<text class="evt" x="${cx}" y="${padT+plotH+36}" text-anchor="middle">${txt}</text>`;
+    });
+  }
+  host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Monthly food spending, February to September, split by groceries, eating out and delivery apps">${g}</svg>
+    <div class="vizTip"></div>`;
+  wireTip(host, i => {
+    const m = byMonth[i];
+    return `<b>${m.label} 2026${m.partial ? ' (to the 18th)' : ''}</b>
+      <div class="tr"><span><i style="background:${CATS.groceries.hex}"></i>Groceries</span><span>${money(m.groceries)}</span></div>
+      <div class="tr"><span><i style="background:${CATS.eatingout.hex}"></i>Eating out</span><span>${money(m.eatingout)}</span></div>
+      <div class="tr"><span><i style="background:${CATS.delivery.hex}"></i>Delivery</span><span>${money(m.delivery)}</span></div>
+      <div class="tr" style="border-top:1px solid rgba(255,255,255,.22);margin-top:5px;padding-top:5px"><span>Total</span><span>${money(m.total)}</span></div>`;
+  });
+}
+
+/* ---- weight, its own panel: never a second axis on the spend chart ---- */
+function renderWeight(host){
+  const w = Math.max(280, host.clientWidth);
+  const h = 130, padL = 34, padR = 8, padT = 12, padB = 22;
+  const plotW = w - padL - padR, plotH = h - padT - padB;
+  const lo = 188, hi = 216;
+  const t0 = new Date(WEIGHT[0][0]).getTime(), t1 = new Date('2026-09-18').getTime();
+  const x = d => padL + (new Date(d).getTime() - t0) / (t1 - t0) * plotW;
+  const y = v => padT + plotH - (v - lo) / (hi - lo) * plotH;
+  let g = '';
+  for (const t of [190, 200, 210]){
+    g += `<line class="gridline" x1="${padL}" x2="${w-padR}" y1="${y(t)}" y2="${y(t)}"/>`;
+    g += `<text class="axislab" x="${padL-7}" y="${y(t)+3.5}" text-anchor="end">${t}</text>`;
+  }
+  g += `<path d="${WEIGHT.map((p,i)=>`${i?'L':'M'}${x(p[0]).toFixed(1)} ${y(p[1]).toFixed(1)}`).join(' ')}" fill="none" stroke="#4E1F43" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const trough = WEIGHT[11], last = WEIGHT[14];
+  for (const [d, v, lab, dy] of [[trough[0], trough[1], `${trough[1]} lb`, 17], [last[0], last[1], `${last[1]} lb`, -9]]){
+    g += `<circle cx="${x(d)}" cy="${y(v)}" r="4.5" fill="#4E1F43" stroke="#FCFCFA" stroke-width="2"/>`;
+    g += `<text class="axislab strong" x="${x(d)}" y="${y(v)+dy}" text-anchor="${lab===`${last[1]} lb`?'end':'middle'}">${lab}</text>`;
+  }
+  byMonth.forEach(m => {
+    g += `<text class="axislab" x="${x(m.key+'-15')}" y="${padT+plotH+15}" text-anchor="middle">${m.label}</text>`;
+  });
+  WEIGHT.forEach((p, i) => {
+    g += `<rect class="hit" data-i="${i}" x="${x(p[0])-10}" y="${padT}" width="20" height="${plotH}" fill="transparent"/>`;
+  });
+  host.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Connected-scale weight, February to September 2026, falling from 214 to 191.9 pounds then rising to 195.3">${g}</svg><div class="vizTip"></div>`;
+  wireTip(host, i => `<b>${new Date(WEIGHT[i][0]).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</b><div class="tr"><span>Scale</span><span>${WEIGHT[i][1]} lb</span></div>`);
+}
+
+function wireTip(host, html){
+  const tip = host.querySelector('.vizTip');
+  host.querySelectorAll('.hit').forEach(r => {
+    r.addEventListener('pointerenter', e => {
+      tip.innerHTML = html(+r.dataset.i);
+      tip.dataset.on = '1';
+      const b = host.getBoundingClientRect(), t = r.getBoundingClientRect();
+      const left = t.left - b.left + t.width / 2;
+      tip.style.left = Math.max(4, Math.min(left - tip.offsetWidth / 2, b.width - tip.offsetWidth - 4)) + 'px';
+      tip.style.top = '6px';
+    });
+    r.addEventListener('pointerleave', () => tip.dataset.on = '0');
+  });
+}
+/* legend and table in one: the contrast check obliges visible values next to
+   the two lighter hues, so the legend carries the numbers rather than repeating them */
+const legendHTML = () => {
+  const tot = { groceries:GROC_TOTAL, eatingout:OUT_TOTAL, delivery:DEL_TOTAL };
+  return `<div class="rows" style="margin-top:12px">${Object.entries(CATS).map(([k,c]) => `
+    <div class="row"><span class="m"><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c.hex};margin-right:8px"></i>${c.name}</span>
+      <span class="d" style="padding-left:18px">${Math.round(tot[k]/FOOD_TOTAL*100)}% of food dollars</span>
+      <span class="a">${money(tot[k])}</span></div>`).join('')}</div>`;
+};
+</script>
+
+<script>
+/* ============================================================
+   3. The patient flow
+   ============================================================ */
+const state = {
+  household:2, sharedCard:null, freeMeals:null, cash:null,
+  appetite:null, doseChange:null, doseWho:null,
+  augGap:null, augDose:null, augSource:null, penSame:null, photo:false,
+  notes:'', hidden:new Set(), sent:false
+};
+let answered = 0;
+const qcount = $('#qcount'), bar = $('#progressBar');
+
+function bumpQ(){
+  answered = Math.min(6, answered + 1);
+  bar.style.width = (answered / 6 * 100) + '%';
+  const left = 6 - answered;
+  qcount.textContent = left ? `${left} question${left === 1 ? '' : 's'} left` : 'that was all six';
+  updateRail();
+}
+function ask({ label, title, body, options, stack, counted = true }){
+  return new Promise(resolve => {
+    const b = addBlock(`<div class="qblock">
+      <div class="qlabel">${label}</div>
+      <h3>${title}</h3>
+      ${body ? `<p class="small" style="margin-top:4px">${body}</p>` : ''}
+      <div class="chips ${stack ? 'chips-stack' : ''}">
+        ${options.map((o, i) => `<button class="chip" data-i="${i}">${o.label || o}</button>`).join('')}
+      </div></div>`);
+    b.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+      c.setAttribute('aria-pressed', 'true');
+      b.classList.add('answered');
+      if (counted) bumpQ();
+      const o = options[+c.dataset.i];
+      resolve(typeof o === 'string' ? { label:o } : o);
+    }));
+  });
+}
+function cont(text = 'Continue'){
+  return new Promise(r => {
+    const b = addBlock(`<button class="btn">${text}</button>`);
+    b.querySelector('button').addEventListener('click', () => { b.remove(); r(); });
+  });
+}
+function clearFeed(){ feed.innerHTML = ''; }
+
+/* ---------- the rail: hero first, then a live read of her picture ---------- */
+const rail = $('#rail');
+const QLABELS = ['Household size','Shared card','Meals off the card','Cash and other cards','Appetite since June','The August gap'];
+
+function renderRailPitch(){
+  rail.innerHTML = `<div class="pitch">
+    <h1>Your statement already knows how you have been eating.</h1>
+    <p class="lede">Six months of groceries, takeout and pharmacy pickups. Larder reads the food line,
+      you answer six questions, and Dr. Pepper has the picture before Thursday.</p>
+    <div class="pitchList">
+      <div><i>6</i><span>questions, and everything else comes from the card</span></div>
+      <div><i>8</i><span>months of statements, February 3 to September 18</span></div>
+      <div><i>0</i><span>food diaries, recalled meals or guessed portions</span></div>
+    </div>
+  </div>`;
+}
+
+function renderRailLive(){
+  rail.innerHTML = `<div class="railLive">
+    <h3>Your picture so far</h3>
+    <p class="liveNote">Built from the card, updated as you answer.</p>
+    <div id="railStats"></div>
+    <div class="qlist" id="railQs"></div>
+  </div>`;
+  updateRail();
+}
+
+function updateRail(){
+  const stats = document.querySelector('#railStats');
+  if (!stats) return;
+  const rows = [
+    ['Food since February', money(FOOD_TOTAL)],
+    ['Eaten away from home', AWAY_SHARE + '%'],
+    ['Groceries per person, a week', state.household ? money2(perPersonNow()) : '\u2014'],
+    ['Orders a week, now', ORDERS_NOW.toFixed(1)]
+  ];
+  stats.innerHTML = rows.map(([l, v]) => `<div class="stat"><span class="sl">${l}</span><span class="sv">${v}</span></div>`).join('');
+  const qs = document.querySelector('#railQs');
+  qs.innerHTML = QLABELS.map((l, i) => {
+    const cls = i < answered ? 'done' : i === answered ? 'now' : '';
+    return `<div class="qi ${cls}"><span class="dot">${i < answered ? '\u2713' : i + 1}</span><span class="qtext">${l}</span></div>`;
+  }).join('');
+}
+
+/* ---------- intro ---------- */
+function intro(){
+  clearFeed();
+  qcount.textContent = '6 questions';
+  bar.style.width = '0%';
+  renderRailPitch();
+  const b = addBlock(`
+    <h2>Connect the card you buy food with.</h2>
+    <p class="lede" style="margin-top:10px;max-width:52ch">It takes about twenty seconds through Plaid, and it is
+      read-only. Larder never sees your card number and cannot move money.</p>
+    <div class="card" style="margin-top:22px">
+      <h3>What Larder reads</h3>
+      <div class="rows">
+        <div class="row"><span class="m">Where you bought food, when, and how much</span><span class="d">Feb 3 &ndash; Sep 18</span><span class="a">reads</span></div>
+        <div class="row muted"><span class="m">Your card number, PIN, or balance</span><span class="d">not requested, not stored</span><span class="a">never</span></div>
+        <div class="row muted"><span class="m">Everything you bought that isn't food or pharmacy</span><span class="d">scanned, then dropped</span><span class="a">never</span></div>
+      </div>
+      <p class="tiny" style="margin-top:14px">You see every line before it reaches your care team, and you can drop any of it.</p>
+    </div>
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn" id="go-plaid">Connect my card</button>
+      <button class="btn btn-quiet" id="go-skip">I'd rather just answer questions</button>
+    </div>`);
+  b.querySelector('#go-plaid').addEventListener('click', plaidFlow);
+  b.querySelector('#go-skip').addEventListener('click', declined);
+}
+
+function declined(){
+  clearFeed();
+  const b = addBlock(`
+    <h2>That's a real option.</h2>
+    <p class="lede" style="margin-top:10px">Your care team gets the short form instead: eight questions about a
+      typical week, answered from memory. It takes about four minutes and it's what every clinic used before this.</p>
+    <div class="card" style="margin-top:18px">
+      <h3>What they lose</h3>
+      <p class="small" style="margin-top:6px">The month-by-month shape of your eating, and the pharmacy gap in August
+        that nobody has asked you about yet.</p>
+    </div>
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn" id="back">Show me the card version instead</button>
+    </div>`);
+  b.querySelector('#back').addEventListener('click', intro);
+}
+
+/* ---------- Plaid ---------- */
+const PLAID_LOGO = `<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6 6.3 4.5 4.6 10.7.9 12l3.7 1.3 1.7 6.2 5.7 2.9 5.7-2.9 1.7-6.2L23.1 12l-3.7-1.3-1.7-6.2z" fill="#111"/></svg>`;
+const banks = [
+  ['Alder Bank', '#1F3A5F', 'AB'],
+  ['Coastline Credit Union', '#0E7C86', 'CC'],
+  ['Harborline Financial', '#8A2E3B', 'HF'],
+  ['Nine Peaks Savings', '#3B3A6B', 'NP']
+];
+function plaidShell(inner){
+  overlay.hidden = false;
+  overlay.innerHTML = `<div class="plaid">
+    <div class="plaidHead">
+      <span class="plaidLogo">${PLAID_LOGO} Plaid</span>
+      <span class="simchip">Simulated, no bank is contacted</span>
+    </div>
+    <div class="plaidBody">${inner}</div>
+  </div>`;
+}
+async function plaidFlow(){
+  plaidShell(`<h4>Select your bank</h4>
+    <p>Larder uses Plaid to connect your account.</p>
+    ${banks.map((b, i) => `<button class="bank" data-i="${i}">
+      <span class="bankMark" style="background:${b[1]}">${b[2]}</span>
+      <span><span class="bn" style="display:block">${b[0]}</span><span class="bt">Checking, savings, credit</span></span>
+    </button>`).join('')}
+    <p class="plaidNote">By continuing you agree Plaid may share your transaction history with Larder Metabolic Health. You can disconnect at any time.</p>`);
+  const chosen = await new Promise(r => overlay.querySelectorAll('.bank').forEach(b =>
+    b.addEventListener('click', () => r(banks[+b.dataset.i]))));
+
+  plaidShell(`<h4>Sign in to ${chosen[0]}</h4>
+    <p>Your credentials go to ${chosen[0]}, not to Larder.</p>
+    <div class="field"><label>Username</label><div class="fake">papaya.radish</div></div>
+    <div class="field"><label>Password</label><div class="fake">&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</div></div>
+    <button class="plaidBtn" id="pw">Sign in</button>
+    <p class="plaidNote">Read-only access. Plaid cannot move money out of this account.</p>`);
+  await new Promise(r => overlay.querySelector('#pw').addEventListener('click', e => {
+    e.target.disabled = true; e.target.textContent = 'Signing in…'; r();
+  }));
+  await wait(1100);
+
+  plaidShell(`<h4>Choose accounts</h4>
+    <p>Larder only reads the accounts you pick.</p>
+    <button class="bank" data-i="0"><span class="bankMark" style="background:${chosen[1]}">&check;</span>
+      <span><span class="bn" style="display:block">Cash Rewards Card &bull;&bull;4417</span><span class="bt">Everyday spending, recommended</span></span></button>
+    <button class="bank" data-i="1"><span class="bankMark" style="background:#C6CBD2">&nbsp;</span>
+      <span><span class="bn" style="display:block">Everyday Checking &bull;&bull;3391</span><span class="bt">Rent, bills, transfers</span></span></button>
+    <button class="plaidBtn" id="pa">Connect 1 account</button>
+    <p class="plaidNote">Most food lands on the card, so that's the one we ask for.</p>`);
+  await new Promise(r => overlay.querySelector('#pa').addEventListener('click', e => {
+    e.target.disabled = true; e.target.textContent = 'Connecting…'; r();
+  }));
+  await wait(1200);
+
+  plaidShell(`<svg class="tickmark" viewBox="0 0 48 48"><circle cx="24" cy="24" r="23"/><path d="M14 24.5 21 31.5 34 18"/></svg>
+    <h4 style="text-align:center">${chosen[0]} connected</h4>
+    <p style="text-align:center">Cash Rewards Card &bull;&bull;4417</p>
+    <button class="plaidBtn" id="pd">Back to Larder</button>`);
+  await new Promise(r => overlay.querySelector('#pd').addEventListener('click', r));
+  overlay.hidden = true; overlay.innerHTML = '';
+  scan();
+}
+</script>
+
+<script>
+/* ---------- scan ---------- */
+async function scan(){
+  clearFeed();
+  qcount.textContent = 'reading';
+  const b = addBlock(`
+    <h2>Sorting your statement</h2>
+    <p class="lede" style="margin-top:8px">This happens on your phone. Nothing has been sent anywhere.</p>
+    <div class="readout" style="margin-top:20px"><span class="fig" id="sc">0</span><span class="unit">transactions read since February</span></div>
+    <div class="catbar">
+      <i id="cb-g" style="background:${CATS.groceries.hex}"></i>
+      <i id="cb-e" style="background:${CATS.eatingout.hex}"></i>
+      <i id="cb-d" style="background:${CATS.delivery.hex}"></i>
+      <i id="cb-o" style="background:var(--line-strong)"></i>
+    </div>
+    <div class="catkey">
+      <span><i style="background:${CATS.groceries.hex}"></i>Groceries</span>
+      <span><i style="background:${CATS.eatingout.hex}"></i>Eating out</span>
+      <span><i style="background:${CATS.delivery.hex}"></i>Delivery</span>
+      <span><i style="background:var(--line-strong)"></i>Not food</span>
+    </div>
+    <div class="scanFeed" id="sf"></div>`);
+
+  const counter = b.querySelector('#sc'), sf = b.querySelector('#sf');
+  const dur = reduced ? 300 : 2400, t0 = performance.now();
+  // read the clock inside the frame: the rAF timestamp argument is not always
+  // on the same footing as performance.now() and can run the counter negative
+  const sample = food.filter((_, i) => i % 3 === 0);
+  let shown = 0;
+  const setBars = f => {
+    b.querySelector('#cb-g').style.width = (GROC_TOTAL / FOOD_TOTAL * 26 * f) + '%';
+    b.querySelector('#cb-e').style.width = (OUT_TOTAL / FOOD_TOTAL * 26 * f) + '%';
+    b.querySelector('#cb-d').style.width = (DEL_TOTAL / FOOD_TOTAL * 26 * f) + '%';
+    b.querySelector('#cb-o').style.width = (74 * f) + '%';
+  };
+  await new Promise(done => {
+    let finished = false;
+    // rAF gets throttled in a background tab. Without this fallback the scan
+    // never completes and the patient is stranded on a counter.
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      counter.textContent = SCANNED.toLocaleString();
+      setBars(1);
+      done();
+    };
+    (function step(){
+      if (finished) return;
+      const p = Math.min(1, Math.max(0, (performance.now() - t0) / dur)), e = 1 - Math.pow(1 - p, 3);
+      counter.textContent = Math.round(e * SCANNED).toLocaleString();
+      const want = Math.floor(e * sample.length);
+      while (shown < want && shown < sample.length){
+        const t = sample[shown++];
+        sf.appendChild(node(`<div class="row"><span class="m">${t.name}</span>
+          <span class="d">${t.ml} ${t.day} &middot; ${String(t.hour).padStart(2,'0')}:00</span>
+          <span class="a">${money2(t.amt)}</span></div>`));
+        while (sf.children.length > 9) sf.firstElementChild.remove();
+      }
+      setBars(p);
+      p < 1 ? requestAnimationFrame(step) : finish();
+    })();
+    setTimeout(finish, dur + 1200);
+  });
+  await wait(320);
+  findings();
+}
+
+/* ---------- findings + the six questions ---------- */
+function ordersStrip(){
+  const max = Math.max(...byMonth.map(m => m.orders / m.weeks));
+  return `<div style="display:flex;align-items:flex-end;gap:5px;height:72px;margin-top:14px">
+    ${byMonth.map(m => {
+      const v = m.orders / m.weeks, h = Math.max(4, v / max * 62);
+      const key = ['Feb','Jun','Sep'].includes(m.label);
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px" title="${m.label}: ${v.toFixed(1)} orders a week">
+        ${key ? `<span class="tiny" style="color:var(--ink);font-family:var(--mono)">${v.toFixed(1)}</span>` : '<span class="tiny">&nbsp;</span>'}
+        <div style="width:100%;height:${h}px;border-radius:3px 3px 1px 1px;background:${key ? 'var(--plum)' : '#C9B7C3'}"></div>
+        <span class="tiny">${m.label}</span></div>`;
+    }).join('')}</div>`;
+}
+
+async function findings(){
+  clearFeed();
+  qcount.textContent = '6 questions';
+  renderRailLive();
+
+  /* --- 1. the shape of six months --- */
+  const b1 = addBlock(`
+    <h2>Here is your food, by month.</h2>
+    <p class="lede" style="margin-top:8px">${money(FOOD_TOTAL)} across ${food.length} purchases since February.
+      ${AWAY_SHARE}% of it was eaten away from home.</p>
+    <div class="card" style="margin-top:16px">
+      <div class="viz" id="v1"></div>
+      ${legendHTML()}
+      <p class="tiny" style="margin-top:9px">September covers the 1st to the 18th, so its bar is short by design.</p>
+    </div>`);
+  renderStack(b1.querySelector('#v1'));
+  await cont();
+
+  /* --- Q1 + Q2: who is this food actually for --- */
+  const hh = await ask({
+    label:'Question 1 of 6',
+    title:'How many people eat the groceries you buy?',
+    body:'Including you. A statement can see the total but not the table.',
+    options:[{label:'Just me',v:1},{label:'2',v:2},{label:'3',v:3},{label:'4',v:4},{label:'5 or more',v:5}]
+  });
+  state.household = hh.v;
+  updateRail();
+
+  const sc = await ask({
+    label:'Question 2 of 6',
+    title:'Does anyone else buy food on this card?',
+    options:[{label:'No, it\'s only mine',v:'sole'},{label:'My partner uses it too',v:'partner'},{label:'The whole household uses it',v:'household'}]
+  });
+  state.sharedCard = sc;
+
+  const perPerson = GROC_WEEKLY / state.household;
+  const tripsPerMonth = byMonth.reduce((s,m)=>s+m.trips,0) / 7.6;
+  const b2 = addBlock(`
+    <div class="card">
+      <h3>So the grocery number is really this</h3>
+      <div class="readout"><span class="fig">${money2(perPerson)}</span>
+        <span class="unit">of groceries per person, per week, across ${state.household === 1 ? 'you alone' : state.household + ' people'}</span></div>
+      <p class="small" style="margin-top:10px">${money(GROC_TOTAL)} of groceries over 32 weeks, about
+        ${tripsPerMonth.toFixed(1)} shopping trips a month${state.sharedCard.v === 'sole' ? '' : ', some of it bought by someone else'}.</p>
+    </div>`);
+  await cont();
+
+  /* --- Q3 + Q4: what the statement cannot see --- */
+  const fm = await ask({
+    label:'Question 3 of 6',
+    title:'In a normal week, how many meals do you eat that never touch this card?',
+    body:'Food at work, a parent\'s kitchen, a friend paying.',
+    options:[{label:'None',v:0},{label:'1 or 2',v:1.5},{label:'3 to 5',v:4},{label:'6 or more',v:7}]
+  });
+  state.freeMeals = fm;
+
+  const cash = await ask({
+    label:'Question 4 of 6',
+    title:'Do you buy food with cash or another card?',
+    options:[{label:'Almost never',v:'rare'},{label:'A few times a month',v:'some'},{label:'Most weeks',v:'often'}]
+  });
+  state.cash = cash;
+
+  const conf = cash.v === 'rare' ? 'high' : cash.v === 'some' ? 'good' : 'partial';
+  addBlock(`<div class="card ${conf === 'high' ? 'good' : ''}">
+    <h3>Confidence: ${conf}</h3>
+    <p class="small" style="margin-top:6px">${
+      conf === 'high' ? 'Almost everything you eat passes through this card, so the picture below is close to complete.'
+      : conf === 'good' ? 'A few meals a month happen off this card. Your care team will see the estimate marked that way.'
+      : 'A meaningful share of your food is invisible to this card. Worth saying out loud at the visit.'
+    }${fm.v ? ` You also eat about ${fm.label.toLowerCase()} meals a week that someone else pays for.` : ' You said every meal goes through this card.'}</p>
+  </div>`);
+  await cont();
+
+  /* --- 2. the curve that matters --- */
+  const b3 = addBlock(`
+    <h2>Eating out went quiet, then came back.</h2>
+    <div class="card" style="margin-top:14px">
+      <h3>Fast food and delivery orders a week</h3>
+      ${ordersStrip()}
+      <div class="rows" style="margin-top:14px">
+        <div class="row"><span class="m">February, the month you started</span><span class="a">${ORDERS_FEB.toFixed(1)}/wk</span></div>
+        <div class="row"><span class="m">June, the quietest month</span><span class="a">${ORDERS_JUN.toFixed(1)}/wk</span></div>
+        <div class="row"><span class="m">August and September</span><span class="a">${ORDERS_NOW.toFixed(1)}/wk</span></div>
+      </div>
+      <p class="small" style="margin-top:12px">Food spending fell ${SPEND_DROP}% between February and June,
+        then rose ${SPEND_REBOUND}% back off that floor.</p>
+    </div>`);
+  await cont();
+
+  const app = await ask({
+    label:'Question 5 of 6',
+    title:'Since June, has your appetite changed?',
+    options:[{label:'I\'m hungrier than I was',v:'more'},{label:'About the same',v:'same'},{label:'Less hungry',v:'less'},{label:'Hard to say',v:'unsure'}]
+  });
+  state.appetite = app;
+
+  if (app.v !== 'less'){
+    const dc = await ask({
+      label:'One more, because of that answer',
+      counted:false, stack:true,
+      title:'Did anything change with your semaglutide around then?',
+      options:[{label:'I lowered my dose',v:'lowered'},{label:'I missed some weeks',v:'missed'},{label:'Nothing changed',v:'none'},{label:'I\'m not sure',v:'unsure'}]
+    });
+    state.doseChange = dc;
+    if (dc.v === 'lowered'){
+      state.doseWho = await ask({
+        label:'Last one on this',
+        counted:false,
+        title:'Who decided to lower it?',
+        options:[{label:'I did, on my own',v:'self'},{label:'My care team told me to',v:'team'}]
+      });
+      addBlock(`<div class="card ${state.doseWho.v === 'self' ? 'attention' : ''}">
+        <p class="small">${state.doseWho.v === 'self'
+          ? 'Noted. Your chart still lists 1.0 mg, so Dr. Pepper will want to hear the reason from you before the visit ends.'
+          : 'Noted. Your chart still lists 1.0 mg, so we will get that corrected.'}</p></div>`);
+      await cont();
+    }
+  }
+
+  /* --- 3. the hour of the day --- */
+  addBlock(`<div class="card">
+    <h3>Late orders</h3>
+    <div class="readout"><span class="fig">${LATE_NOW}</span>
+      <span class="unit">food orders placed after 9pm in August and September</span></div>
+    <p class="small" style="margin-top:10px">Across May and June together there ${LATE_THEN === 1 ? 'was 1' : 'were ' + LATE_THEN}.
+      Nobody is going to tell you off about this. It is the clearest sign in your data of when the evenings got hungry again.</p>
+  </div>`);
+  await cont();
+
+  /* --- 4. the gap --- */
+  addBlock(`
+    <div class="card attention">
+      <h3>One thing is missing</h3>
+      <p class="small" style="margin-top:6px">A ${money2(25)} pharmacy copay lands every month from February to July, and again in September.
+        August has a ${money2(9)} pickup and nothing else.</p>
+      <div class="rows">
+        ${MONTHS.map(m => m.key === '2026-08'
+          ? `<div class="row missing"><span class="m">no specialty copay</span><span class="d">Aug</span><span class="a">&mdash;</span></div>`
+          : `<div class="row"><span class="m">CVS Pharmacy #4412</span><span class="d">${m.label}</span><span class="a">${money2(25)}</span></div>`
+        ).join('')}
+      </div>
+    </div>`);
+
+  const gap = await ask({
+    label:'Question 6 of 6',
+    title:'What happened in August?',
+    stack:true,
+    options:[
+      {label:'The pharmacy was out of it',v:'backorder'},
+      {label:'I couldn\'t afford it that month',v:'cost'},
+      {label:'I decided to take a break',v:'break'},
+      {label:'I got it somewhere else',v:'elsewhere'},
+      {label:'I don\'t remember',v:'unsure'}
+    ]
+  });
+  state.augGap = gap;
+  await pharmacyBranch(gap);
+  review();
+}
+
+async function pharmacyBranch(gap){
+  if (gap.v === 'cost'){
+    addBlock(`<div class="card"><p class="small">Thank you for saying so. Larder has a pharmacy team that handles
+      exactly this, and they will reach out before your visit.</p></div>`);
+    await cont(); return;
+  }
+  if (gap.v === 'break'){
+    state.augDose = { label:'Chose to pause', v:'none' };
+    addBlock(`<div class="card"><p class="small">Noted, and worth ten seconds at the visit: a pause changes what
+      the scale has been doing since.</p></div>`);
+    await cont(); return;
+  }
+  if (gap.v === 'unsure'){ await cont('Keep going'); return; }
+
+  let source = null;
+  if (gap.v === 'backorder'){
+    const took = await ask({
+      label:'Because of that answer', counted:false,
+      title:'Did you take a dose during those weeks?',
+      options:[{label:'Yes, from somewhere else',v:'other'},{label:'No, I missed them',v:'none'},{label:'Some weeks yes',v:'partial'}]
+    });
+    state.augDose = took;
+    if (took.v === 'none'){
+      addBlock(`<div class="card"><p class="small">Two missed weeks in a row is the kind of detail that explains a lot
+        about what the scale did afterwards. It's on the summary now.</p></div>`);
+      await cont(); return;
+    }
+    source = true;
+  } else {
+    state.augDose = { label:'Took it, from another source', v:'other' };
+    source = true;
+  }
+
+  if (source){
+    state.augSource = await ask({
+      label:'Where it came from', counted:false, stack:true,
+      title:'Where did that dose come from?',
+      options:[
+        {label:'A family member or friend gave it to me',v:'family'},
+        {label:'A different pharmacy',v:'pharmacy'},
+        {label:'I ordered it online',v:'online'},
+        {label:'Someone brought it from another country',v:'abroad'}
+      ]
+    });
+    if (state.augSource.v === 'pharmacy'){
+      addBlock(`<div class="card"><p class="small">Good. Tell the front desk which pharmacy so your records line up.</p></div>`);
+      await cont(); return;
+    }
+    state.penSame = await ask({
+      label:'Last question, honestly', counted:false,
+      title:'Is it the same pen you normally use?',
+      options:[{label:'Yes, same one',v:'yes'},{label:'No, it looks different',v:'no'},{label:'I\'m not sure',v:'unsure'}]
+    });
+    if (state.penSame.v !== 'yes'){
+      const pb = addBlock(`<div class="card attention">
+        <h3>Add a photo of the pen</h3>
+        <p class="small" style="margin-top:6px">Dr. Pepper can read the dose off the label in two seconds.
+          Without it, the visit starts with a guess.</p>
+        <div id="photoSlot"><button class="btn" style="margin-top:14px" id="addPhoto">Add a photo</button></div>
+      </div>`);
+      await new Promise(r => pb.querySelector('#addPhoto').addEventListener('click', () => {
+        state.photo = true;
+        pb.querySelector('#photoSlot').innerHTML = `<div class="photo">
+          <img src="patients/glp1/pen-photo.jpg" alt="Photo of an injection pen" onerror="this.style.visibility='hidden'">
+          <span class="pt"><b>pen-photo.jpg</b> attached.<br>Label is not in English, so it is flagged for your care team.</span></div>`;
+        r();
+      }));
+      await cont();
+    }
+  }
+}
+</script>
+
+<script>
+/* ============================================================
+   4. Review, consent, and the care-team sheet
+   ============================================================ */
+function perPersonNow(){ return GROC_WEEKLY / state.household; }
+
+function buildFindings(){
+  const f = [];
+  const push = (id, text, src, flag) => f.push({ id, text, src, flag });
+  push('spend', `${money(FOOD_TOTAL)} of food since February, ${AWAY_SHARE}% of it away from home.`, 'card');
+  push('groc', `${money2(perPersonNow())} of groceries per person per week, across ${state.household === 1 ? '1 person' : state.household + ' people'}.`, 'both');
+  push('orders', `Fast food and delivery: ${ORDERS_FEB.toFixed(1)} orders a week in February, ${ORDERS_JUN.toFixed(1)} in June, ${ORDERS_NOW.toFixed(1)} now.`, 'card');
+  push('late', `${LATE_NOW} orders after 9pm in the last six weeks, against ${LATE_THEN} across May and June.`, 'card');
+  if (state.appetite) push('appetite', `Appetite since June: \u201c${state.appetite.label}.\u201d`, 'said');
+  if (state.freeMeals) push('offcard', `${state.freeMeals.v === 0 ? 'Every meal goes through this card' : `About ${state.freeMeals.label.toLowerCase()} meals a week never touch this card`}. Cash or another card: ${state.cash.label.toLowerCase()}.`, 'said');
+  if (state.doseChange && state.doseChange.v !== 'none'){
+    const who = state.doseWho ? (state.doseWho.v === 'self' ? ' Decided without the care team.' : ' On care-team advice.') : '';
+    push('dose', `Something changed around June: \u201c${state.doseChange.label}.\u201d${who}`, 'said', state.doseWho && state.doseWho.v === 'self');
+  }
+  if (state.augGap) push('gap', `No specialty copay in August. Answer: \u201c${state.augGap.label}.\u201d`, 'both', ['backorder','elsewhere','cost'].includes(state.augGap.v));
+  if (state.augSource) push('source', `Where the August dose came from: \u201c${state.augSource.label}.\u201d Same pen as usual: \u201c${state.penSame ? state.penSame.label : 'not asked'}.\u201d`, 'said', ['family','abroad','online'].includes(state.augSource.v));
+  if (state.photo) push('photo', 'Photo of the pen attached.', 'said', true);
+  if (state.augDose && state.augDose.v === 'none') push('missed', 'Took no dose during the August gap.', 'said', true);
+  return f;
+}
+
+function review(){
+  clearFeed();
+  qcount.textContent = 'your call';
+  const items = buildFindings();
+  const b = addBlock(`
+    <h2>You decide what goes over.</h2>
+    <p class="lede" style="margin-top:8px">Nothing has left your phone yet. Switch off anything you would rather
+      say in person, or not at all.</p>
+    <div class="review">
+      ${items.map(i => `<div class="rev" data-id="${i.id}">
+        <span class="rt">${i.text}</span>
+        <span class="rm">
+          <span class="tag ${i.src === 'card' ? 'card-src' : i.src === 'said' ? 'said' : ''}">${i.src === 'card' ? 'from your card' : i.src === 'said' ? 'you told us' : 'card + your answer'}</span>
+          ${i.flag ? '<span class="tag flag">care team will ask</span>' : ''}
+        </span>
+        <button class="toggle" aria-pressed="true" aria-label="Share this with the care team"></button>
+      </div>`).join('')}
+    </div>
+    <h3 style="margin-top:22px">Anything the card got wrong?</h3>
+    <textarea id="notes" placeholder="Optional. Two lines is plenty."></textarea>
+    <div class="btn-row" style="margin-top:16px">
+      <button class="btn" id="send">Send to my care team</button>
+    </div>
+    <p class="tiny" style="margin-top:12px">Larder keeps the connection read-only and you can disconnect the card
+      from your account page at any time.</p>`);
+
+  b.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', () => {
+    const on = t.getAttribute('aria-pressed') === 'true';
+    t.setAttribute('aria-pressed', String(!on));
+    t.closest('.rev').classList.toggle('off', on);
+    const id = t.closest('.rev').dataset.id;
+    on ? state.hidden.add(id) : state.hidden.delete(id);
+  }));
+  b.querySelector('#send').addEventListener('click', () => {
+    state.notes = b.querySelector('#notes').value.trim();
+    state.sent = true;
+    sent();
+  });
+}
+
+function sent(){
+  clearFeed();
+  bar.style.width = '100%';
+  qcount.textContent = 'sent';
+  const hid = state.hidden.size;
+  const b = addBlock(`
+    <svg class="tickmark" viewBox="0 0 48 48" style="margin-left:0"><circle cx="24" cy="24" r="23"/><path d="M14 24.5 21 31.5 34 18"/></svg>
+    <h2 style="margin-top:14px">Dr. Pepper has it.</h2>
+    <p class="lede" style="margin-top:10px">Six questions, eight months of statements, and the two things
+      nobody had asked you about. ${hid ? `${hid} line${hid === 1 ? '' : 's'} stayed with you.` : ''}</p>
+    <div class="card" style="margin-top:18px">
+      <h3>Before Thursday</h3>
+      <p class="small" style="margin-top:6px">${state.photo
+        ? 'Someone will look at the pen photo and message you if the dose does not match your chart.'
+        : 'Your visit summary is ready. Bring the pen with you if you can.'}</p>
+    </div>
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-quiet" id="peek">See exactly what they see</button>
+    </div>`);
+  b.querySelector('#peek').addEventListener('click', () => switchView('clinic'));
+  renderClinic();
+}
+
+/* ---------- care team ---------- */
+function asks(){
+  const out = [];
+  if (state.augSource && ['family','abroad','online'].includes(state.augSource.v)){
+    const SRC = { family:'A family member or friend gave it to her', online:'She ordered it online', abroad:'Someone brought it from another country' };
+    const PEN = { yes:'she says it is the same pen she normally uses', no:'she says it looks different from her usual pen', unsure:'she is not sure it is the same pen' };
+    out.push({
+      t:'She is injecting from a pen that did not come from a pharmacy.',
+      b:`${SRC[state.augSource.v]}, and ${PEN[state.penSame ? state.penSame.v : 'unsure']}${state.photo ? '. The photo is attached' : ', with no photo'}. The concentration printed on the label is the first thing to check.`,
+      tags:['she told us', state.photo ? 'photo attached' : 'no photo']
+    });
+  }
+  if (state.doseWho && state.doseWho.v === 'self'){
+    out.push({
+      t:'The chart says 1.0 mg. She says she lowered it herself in June.',
+      b:'Spend data cannot see a dose change: her copay stayed at $25 either way. It only came up because the appetite question was asked.',
+      tags:['she told us','chart disagrees']
+    });
+  }
+  if (state.augDose && state.augDose.v === 'none'){
+    out.push({
+      t:'No dose at all during the August gap.',
+      b:`The missing $25 copay is the only trace of it. Weight turned upward in the same window: ${WEIGHT[11][1]} lb on Jul 21, ${WEIGHT[14][1]} lb on Sep 1.`,
+      tags:['from her card','she told us']
+    });
+  }
+  out.push({
+    t:'Appetite is back, and the card saw it before the scale did.',
+    b:`Food spending bottomed in June at ${money(M.Jun.total)} and is pacing ${money(SEP_PACE)} this month, up ${SPEND_REBOUND}%. Orders after 9pm went from ${LATE_THEN} across May and June to ${LATE_NOW} in the last six weeks. Weight followed about three weeks later.`,
+    tags:['from her card', state.appetite ? `she says: ${({more:'hungrier',same:'unchanged',less:'less hungry',unsure:'hard to say'})[state.appetite.v]}` : '']
+  });
+  if (state.augGap && state.augGap.v === 'cost'){
+    out.unshift({ t:'Cost is the reason she skipped August.', b:'Route to the pharmacy team before the visit.', tags:['she told us'] });
+  }
+  return out.slice(0, 3);
+}
+
+const CLINIC_TOP = `<div class="clinicTop">
+  <div class="brand">
+    <svg class="brandMark" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="1.1" y="1.1" width="29.8" height="29.8" rx="8.4" fill="#3F5B21"/>
+      <path d="M6.6 14.4h18.8M6.6 22h18.8" stroke="#EDE8E0" stroke-width="1.9" stroke-linecap="round"/>
+      <rect x="9.2" y="8.3" width="5.8" height="6.1" rx="2" fill="#C4D0AE"/>
+      <rect x="17.4" y="10.2" width="4.6" height="4.2" rx="1.5" fill="#EDE8E0"/>
+      <circle cx="12.1" cy="19.8" r="2.2" fill="#EDE8E0"/>
+    </svg>
+    <div><div class="brandName">Larder</div><div class="brandTag">Care team view</div></div>
+  </div>
+  <button class="btn btn-quiet" id="backToPatient" style="padding:10px 16px">Back to Papaya's screen</button>
+</div>`;
+
+function wireClinicTop(){
+  const b = document.querySelector('#backToPatient');
+  if (b) b.addEventListener('click', () => switchView('patient'));
+}
+
+function renderClinic(){
+  const host = $('#clinicView');
+  if (!state.sent){
+    host.innerHTML = CLINIC_TOP + `<div class="chart-locked">Papaya has not sent her intake yet.<br>
+      Run the patient side first. This sheet is built from what she chooses to share.</div>`;
+    wireClinicTop();
+    return;
+  }
+  const items = buildFindings().filter(i => !state.hidden.has(i.id));
+  const hiddenCount = state.hidden.size;
+  host.innerHTML = CLINIC_TOP + `
+  <div class="sheet">
+    <div class="sheetHead">
+      <div>
+        <div class="pt-name">Papaya Radish</div>
+        <div class="pt-meta">38 F, here for a semaglutide 6-month follow-up.<br>Thursday Sep 24 at 9:20am with Dr. Pepper.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="tag card-src">card linked Sep 18</span>
+        <span class="tag">6 questions answered</span>
+        ${hiddenCount ? `<span class="tag">${hiddenCount} line${hiddenCount===1?'':'s'} withheld</span>` : ''}
+      </div>
+    </div>
+    <div class="sheetGrid">
+      <div class="col">
+        <h3 class="secLabel">Ask about these first</h3>
+        <p class="secNote">Ordered by what the chart does not already know.</p>
+        ${asks().map((a, i) => `<div class="ask">
+          <span class="askNum">${i + 1}</span>
+          <div><div class="at">${a.t}</div><div class="ab">${a.b}</div>
+            <div class="src">${a.tags.filter(Boolean).map(t => `<span class="tag ${t.startsWith('from her card') ? 'card-src' : (t === 'chart disagrees' || t === 'no photo') ? 'flag' : 'said'}">${t}</span>`).join('')}</div>
+          </div></div>`).join('')}
+        ${state.photo ? `<div class="photo" style="margin-top:16px">
+          <img src="patients/glp1/pen-photo.jpg" alt="Injection pen photographed by the patient" onerror="this.style.visibility='hidden'">
+          <span class="pt"><b>Pen photographed by the patient, Sep 18.</b><br>Attached to this intake.</span></div>` : ''}
+        ${state.notes ? `<h3 class="secLabel" style="margin-top:22px">In her words</h3><div class="quote">${state.notes.replace(/</g,'&lt;')}</div>` : ''}
+        <h3 class="secLabel" style="margin-top:22px">What she shared</h3>
+        <div class="metrics">
+          ${items.map(i => `<div class="metric"><span class="mn">${i.text}</span>
+            <span class="mv" style="font-size:11px;font-family:var(--sans);color:var(--ink-3)">${i.src === 'card' ? 'card' : i.src === 'said' ? 'said' : 'both'}</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="col">
+        <h3 class="secLabel">Food spending by month</h3>
+        <p class="secNote">Card transactions, February 3 to September 18.</p>
+        <div class="viz" id="cv1"></div>
+        ${legendHTML()}
+        <h3 class="secLabel" style="margin-top:26px">Connected scale</h3>
+        <p class="secNote">Same window, separate panel on purpose: two measures, two axes, never stacked on one chart.</p>
+        <div class="viz" id="cv2"></div>
+        <h3 class="secLabel" style="margin-top:26px">Derived</h3>
+        <div class="metrics">
+          <div class="metric"><span class="mn">Food spend, June floor &rarr; September pace</span><span class="mv">${money(M.Jun.total)} &rarr; ${money(SEP_PACE)}</span><span class="mc">card, 8 months</span></div>
+          <div class="metric"><span class="mn">Away-from-home share of food dollars</span><span class="mv">${AWAY_SHARE}%</span><span class="mc">card</span></div>
+          <div class="metric"><span class="mn">Fast food and delivery, orders a week</span><span class="mv">${ORDERS_JUN.toFixed(1)} &rarr; ${ORDERS_NOW.toFixed(1)}</span><span class="mc">card, June vs now</span></div>
+          <div class="metric"><span class="mn">Orders after 9pm, last six weeks</span><span class="mv">${LATE_NOW}</span><span class="mc">card</span></div>
+          <div class="metric"><span class="mn">Groceries per person per week</span><span class="mv">${money2(perPersonNow())}</span><span class="mc">card &divide; household of ${state.household}, she answered</span></div>
+          <div class="metric"><span class="mn">Weight, July floor &rarr; latest</span><span class="mv">${WEIGHT[11][1]} &rarr; ${WEIGHT[14][1]} lb</span><span class="mc">connected scale</span></div>
+          <div class="metric"><span class="mn">Meals off this card</span><span class="mv" style="font-size:13px">${state.freeMeals ? (state.freeMeals.v === 0 ? 'none' : state.freeMeals.label.toLowerCase() + ' a week') : 'not asked'}</span><span class="mc">she answered, so the estimate above runs low by this much</span></div>
+        </div>
+        <p class="tiny" style="margin-top:16px;line-height:1.6">Spending shows where food came from, not what was in the bag.
+          Protein, portion size and what she actually cooked are still a conversation, not a data feed.</p>
+      </div>
+    </div>
+  </div>`;
+  wireClinicTop();
+  renderStack($('#cv1'), { height:210, events:true });
+  renderWeight($('#cv2'));
+}
+
+/* ---------- views ---------- */
+function switchView(which){
+  const patient = which === 'patient';
+  $('#patientView').hidden = !patient;
+  $('#clinicView').dataset.on = patient ? '0' : '1';
+  $('#tab-patient').setAttribute('aria-pressed', String(patient));
+  $('#tab-clinic').setAttribute('aria-pressed', String(!patient));
+  if (!patient) renderClinic();
+  window.scrollTo({ top:0, behavior:reduced ? 'auto' : 'smooth' });
+}
+$('#tab-patient').addEventListener('click', () => switchView('patient'));
+$('#tab-clinic').addEventListener('click', () => switchView('clinic'));
+
+let rt;
+addEventListener('resize', () => {
+  clearTimeout(rt);
+  rt = setTimeout(() => {
+    const v1 = document.querySelector('#v1'); if (v1) renderStack(v1);
+    if ($('#clinicView').dataset.on === '1' && state.sent) renderClinic();
+  }, 160);
+});
+
+intro();
+</script>
+</body>
+</html>
