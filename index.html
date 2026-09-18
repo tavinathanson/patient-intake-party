@@ -214,6 +214,17 @@
 
   .anchored-list { text-align: center; margin: 6px 0 0; color: var(--rope); font-size: .9rem; min-height: 1.2em; }
 
+  .tilt-row { text-align: center; margin: 6px 0 0; }
+  .tilt-toggle {
+    font: 700 .85rem "Atkinson Hyperlegible", sans-serif;
+    background: transparent; color: var(--rope);
+    border: 2px solid var(--rope); border-radius: 999px;
+    padding: 5px 14px; cursor: pointer;
+  }
+  .tilt-toggle:hover { color: var(--paper); border-color: var(--paper); }
+  .tilt-toggle.on { background: var(--brass); color: var(--plank-dark); border-color: var(--paper); }
+  .tilt-hint { display: block; margin-top: 4px; color: var(--rope); font-size: .82rem; min-height: 1em; font-family: "IM Fell English", serif; }
+
   /* ---- Surgeon's log ---- */
   .log {
     background: var(--paper);
@@ -543,7 +554,11 @@
   // ---- Rendering ----
   let helm = null;
 
+  // ---- Tilt-to-steer state (opt-in; needs a device with an orientation sensor) ----
+  let tiltEnabled = false, tiltGamma = 0, tiltRAF = null, tiltGotEvent = false, tiltLastSel = -1;
+
   function renderStage() {
+    stopTilt(); // end any tilt session from the previous leg before re-rendering
     // Progress band
     legLabel.textContent = state.current >= N ? "Voyage complete" : `Leg ${state.current + 1} of ${N}`;
     pips.innerHTML = QUESTIONS.map((_, i) => {
@@ -571,6 +586,10 @@
       </div>
       <div class="readout"><span>⚓ Heading: </span><span class="head" id="headLabel"></span></div>
       <p class="anchored-list" id="anchored"></p>
+      <div class="tilt-row">
+        <button class="tilt-toggle" id="tiltBtn" type="button" aria-pressed="false">🧭 Tilt to Steer</button>
+        <span class="tilt-hint" id="tiltHint"></span>
+      </div>
       <div class="controls" id="controls"></div>
     `;
 
@@ -578,6 +597,7 @@
     spinEl = document.getElementById("wheelSpin");
     wireHelm(q);
     renderControls(q);
+    wireTilt(q);
     applyAngle(true);
     refreshSelectionUI(q);
   }
@@ -685,7 +705,95 @@
     });
   }
 
+  // ---- Tilt to steer: proportional rotation from device roll (gamma) ----
+  const TILT_DEADZONE = 8;   // degrees of roll ignored so a level hold doesn't drift
+  const TILT_MAX = 45;       // roll at which we spin fastest
+  const TILT_SPEED = 220;    // max degrees/sec of wheel rotation
+
+  function onDeviceOrientation(ev) {
+    if (ev.gamma == null) return;
+    tiltGotEvent = true;
+    tiltGamma = ev.gamma; // left/right roll in degrees
+    setTiltHint("");
+  }
+
+  function tiltLoop(q, prev) {
+    if (!tiltEnabled) return;
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - prev) / 1000); // clamp so a hidden tab can't lurch
+    const mag = Math.abs(tiltGamma) - TILT_DEADZONE;
+    if (mag > 0) {
+      const norm2 = Math.min(1, mag / (TILT_MAX - TILT_DEADZONE));
+      const dir = Math.sign(tiltGamma);
+      state.angle += dir * norm2 * TILT_SPEED * dt;
+      if (spinEl) spinEl.style.transform = `rotate(${state.angle}deg)`;
+      const sel = selectedIndex(q);
+      if (sel !== tiltLastSel) { tiltLastSel = sel; refreshSelectionUI(q); }
+    }
+    tiltRAF = requestAnimationFrame(() => tiltLoop(q, now));
+  }
+
+  function setTiltHint(msg) { const h = document.getElementById("tiltHint"); if (h) h.textContent = msg; }
+
+  function stopTilt() {
+    tiltEnabled = false;
+    if (tiltRAF) { cancelAnimationFrame(tiltRAF); tiltRAF = null; }
+    window.removeEventListener("deviceorientation", onDeviceOrientation);
+  }
+
+  async function startTilt(q, btn) {
+    // iOS 13+ gates the sensor behind an explicit permission call that must
+    // come from a user gesture (this click).
+    try {
+      const DOE = window.DeviceOrientationEvent;
+      if (DOE && typeof DOE.requestPermission === "function") {
+        const res = await DOE.requestPermission();
+        if (res !== "granted") { setTiltHint("Permission denied — steer with the wheel instead."); return false; }
+      }
+    } catch {
+      setTiltHint("Couldn't reach the compass — steer with the wheel instead."); return false;
+    }
+    if (!("DeviceOrientationEvent" in window)) {
+      setTiltHint("No compass aboard this vessel — steer with the wheel instead."); return false;
+    }
+    tiltEnabled = true;
+    tiltGotEvent = false;
+    tiltLastSel = selectedIndex(q);
+    window.addEventListener("deviceorientation", onDeviceOrientation);
+    tiltRAF = requestAnimationFrame(() => tiltLoop(q, performance.now()));
+    setTiltHint("Tilt the ship to steer. Level her out to settle on a heading.");
+    // If no orientation events arrive shortly, this device has no sensor (e.g. a desktop).
+    setTimeout(() => {
+      if (tiltEnabled && !tiltGotEvent) setTiltHint("No tilt detected — this be a landlubber's desktop. Use the wheel.");
+    }, 1200);
+    return true;
+  }
+
+  function wireTilt(q) {
+    const btn = document.getElementById("tiltBtn");
+    if (!btn) return;
+    // Reset any tilt session carried over from the previous leg's render.
+    stopTilt();
+    btn.classList.remove("on");
+    btn.setAttribute("aria-pressed", "false");
+    btn.onclick = async () => {
+      if (tiltEnabled) {
+        stopTilt();
+        state.angle = selectedIndex(q) * stepFor(q); // snap to nearest on release
+        applyAngle(true);
+        refreshSelectionUI(q);
+        btn.classList.remove("on");
+        btn.setAttribute("aria-pressed", "false");
+        setTiltHint("");
+        return;
+      }
+      const ok = await startTilt(q, btn);
+      if (ok) { btn.classList.add("on"); btn.setAttribute("aria-pressed", "true"); }
+    };
+  }
+
   function setCourse(q) {
+    if (tiltEnabled) state.angle = selectedIndex(q) * stepFor(q); // settle before committing
     state.answers[q.id] = q.options[selectedIndex(q)].label;
     advance();
   }
