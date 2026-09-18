@@ -119,6 +119,11 @@
   .songs .t{font-size:14px;font-weight:600;line-height:1.25}
   .songs .a{font-size:12px;color:var(--dim)}
   .songs .why{margin-left:auto;font-size:11px;color:var(--accent);text-align:right;max-width:40%}
+
+  .phone{background:#0b0d0c;border:1px solid var(--accent-dim);border-radius:12px;padding:20px;text-align:center;margin-bottom:18px}
+  .phone .num{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:clamp(22px,6vw,30px);
+    letter-spacing:.02em;color:var(--accent);font-weight:700}
+  .phone .meta{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.7}
 </style>
 </head>
 <body>
@@ -230,6 +235,7 @@
       <p id="mBody"></p>
       <div class="evidence mono" id="mEvidence"></div>
       <ul class="songs" id="mSongs" hidden></ul>
+      <div class="phone" id="mPhone" hidden></div>
       <div class="modal-actions">
         <button class="btn" id="mKeep"></button>
         <button class="btn ghost" id="mEdit"></button>
@@ -387,7 +393,7 @@ function formValues(){
 
 function fillForm(){
   const vals = formValues();
-  overrides = 0; unlocked = false; formReady = false; granted.clear(); closeModal();
+  attempts = 0; callCount = 0; formReady = false; closeModal();
   $("#conf").innerHTML = `Autofill confidence: <strong>${vibe.confidence}</strong>. Source: vibes.`;
 
   // conditions grid
@@ -411,122 +417,176 @@ function fillForm(){
   }, 140 * i));
 }
 
-/* ---------- the form fights back ---------- */
+/* ---------- the form fights back (and always wins) ---------- */
 const SONG_TITLES = ["Sunday, But Fine","Vitamin D (Extended Mix)","Walk Outside","Eight Hours (Sleep Edit)",
   "Nobody Is Watching You Parallel Park","Hydration","Call Your Mother Back","Leg Day, Emotionally",
   "A Room With A Window","Texture Of A Normal Week","Low Stakes Tuesday","Fine, Actually","Morning, Unforced"];
 const SONG_WHY = ["for your cortisol","3x daily, with food","replaces two sad songs","may reduce 3am sessions",
   "clinically upbeat","prescribed","gateway to a walk","contains no saxophone"];
 
-const STAGES = [
-  { eyebrow:"Edit request",        title:"Are you sure?",
+const HOTLINE = "1-555-0142";
+
+/* Every rung ends the same way: you do not get to edit the form. */
+const LADDER = [
+  { type:"text",  eyebrow:"Edit request",            title:"Are you sure?",
     body:"We think this is the right thing for you given your listening history.",
     keep:"Keep what the vibes said", edit:"Edit anyway" },
-  { eyebrow:"Edit request (2)",    title:"Are you really sure?",
+
+  { type:"text",  eyebrow:"Edit request (2)",        title:"Are you really sure?",
     body:"We re-checked. Your listening history has not changed in the last four seconds. We still think this is the right thing for you.",
-    keep:"You're right, keep it", edit:"Edit anyway" },
-  { eyebrow:"Second opinion",      title:"We consulted another playlist.",
+    keep:"You're right, keep it", edit:"Yes, edit it" },
+
+  { type:"text",  eyebrow:"Second opinion",          title:"We consulted another playlist.",
     body:"It agrees with the first playlist. Given your listening history, we think this is the right thing for you.",
-    keep:"Defer to the playlists", edit:"Edit it anyway" },
-  { eyebrow:"Pattern detected",    title:"That's three edits.",
-    body:"People who edit three times are usually editing away from what's right for them. Given your listening history, we think this is the right thing for you.",
-    keep:"Fine, keep it", edit:"I'd still like to edit this" },
+    keep:"Defer to the playlists", edit:"I'd still like to edit" },
+
+  { type:"text",  eyebrow:"Pattern detected",        title:"That's three tries.",
+    body:"People who try three times are usually editing away from what's right for them. We think this is the right thing for you given your listening history.",
+    keep:"Fine, keep it", edit:"Edit it anyway" },
+
+  { type:"songs", eyebrow:"Recommendation",          title:"Have you considered changing your listening habits?",
+    body:"The form is downstream of the vibes. The vibes are downstream of this. Start here:",
+    keep:"Add to my playlist", edit:"I just want to edit one field" },
+
+  { type:"text",  eyebrow:"Adherence check",         title:"You haven't listened to any of them.",
+    body:"Zero plays. We're going to need you to try the playlist before we revisit what the form says about you.",
+    keep:"I'll listen to them", edit:"Let me edit the form" },
+
+  { type:"songs", eyebrow:"Recommendation, revised", title:"We've refreshed your prescription.",
+    body:"Same idea, fewer strings. Give it a week and the form may say something different on its own.",
+    keep:"Okay, I'll try", edit:"Please just let me edit it" },
 ];
 
-let overrides = 0, unlocked = false, formReady = false, pending = null;
-const granted = new Set();
+let attempts = 0, formReady = false, callCount = 0;
 
 const modal = $("#modal");
 function openModal(){ modal.hidden = false; }
-function closeModal(){ modal.hidden = true; $("#mSongs").hidden = true; $("#mEvidence").hidden = false; pending = null; }
+function closeModal(){
+  modal.hidden = true;
+  $("#mSongs").hidden = true;
+  $("#mEvidence").hidden = false;
+  $("#mPhone").hidden = true;
+}
 
 function evidenceLine(){
   return "evidence: " + rint(9,96) + " plays of “" + pick(SONG_TITLES) + "” — " +
          pick(vibe.artists) + ", mostly after " + rint(1,4) + "am";
 }
 
-function showStage(stage){
-  const st = STAGES[stage];
+function songList(){
+  return picks(SONG_TITLES, 5).map(t => ({ t, a: pick(ARTISTS), why: pick(SONG_WHY) }));
+}
+
+function renderStage(){
+  const i = Math.min(attempts, LADDER.length);   // past the end = the hotline, forever
+  const ed = $("#mEdit"), keep = $("#mKeep");
+
+  if(i === LADDER.length){ renderPhone(); return; }
+
+  const st = LADDER[i];
   $("#mEyebrow").textContent = st.eyebrow;
   $("#mTitle").textContent = st.title;
   $("#mBody").textContent = st.body;
-  $("#mEvidence").textContent = evidenceLine();
-  $("#mKeep").textContent = st.keep;
-  const ed = $("#mEdit");
+  keep.textContent = st.keep;
   ed.textContent = st.edit;
-  ed.style.fontSize = (14 - stage * 1.2) + "px";
-  ed.style.opacity = 1 - stage * 0.12;
+  ed.style.fontSize = Math.max(10, 14 - i * 0.7) + "px";
+  ed.style.opacity = Math.max(.4, 1 - i * 0.09);
 
-  // later stages make you wait while it "reconsiders"
-  if(stage >= 2){
+  if(st.type === "songs"){
+    $("#mEvidence").hidden = true;
+    const ul = $("#mSongs");
+    ul.innerHTML = songList().map(s => `<li><span class="art"></span>
+        <span><span class="t">${s.t}</span><br><span class="a">${s.a} · ${rint(2,4)}:${String(rint(10,59))}</span></span>
+        <span class="why">${s.why}</span></li>`).join("");
+    ul.hidden = false;
+  } else {
+    $("#mSongs").hidden = true;
+    $("#mEvidence").hidden = false;
+    $("#mEvidence").textContent = evidenceLine();
+  }
+
+  // from the third rung on, it stalls before letting you press the button that does nothing
+  if(i >= 2){
+    const label = st.edit;
     ed.disabled = true;
-    const was = st.edit;
     ed.textContent = "reviewing your request…";
-    setTimeout(()=>{ ed.disabled = false; ed.textContent = was; }, 900 + stage * 700);
+    setTimeout(()=>{ ed.disabled = false; ed.textContent = label; }, 800 + i * 550);
   } else {
     ed.disabled = false;
   }
   openModal();
 }
 
-function showSongs(){
-  $("#mEyebrow").textContent = "Recommendation";
-  $("#mTitle").textContent = "Maybe you should change your listening habits.";
-  $("#mBody").textContent = "You have now tried to edit this form " + overrides +
-    " times. The form is not the problem. Start here:";
+function renderPhone(){
+  $("#mEyebrow").textContent = "Modification Request Line";
+  $("#mTitle").textContent = "Fine.";
+  $("#mBody").textContent = "If you would like to edit this form, please call our care team to discuss your " +
+    "modification request. They will ask you about your listening history.";
   $("#mEvidence").hidden = true;
-  const songs = picks(SONG_TITLES, 5).map(t => ({ t, a: pick(ARTISTS), why: pick(SONG_WHY) }));
-  const ul = $("#mSongs");
-  ul.innerHTML = songs.map(s => `<li><span class="art"></span>
-      <span><span class="t">${s.t}</span><br><span class="a">${s.a} · ${rint(2,4)}:${String(rint(10,59))}</span></span>
-      <span class="why">${s.why}</span></li>`).join("");
-  ul.hidden = false;
-  $("#mKeep").textContent = "Add to my playlist";
+  $("#mSongs").hidden = true;
+
+  const ticket = "BV-" + rint(1000,9999);
+  const hold = 40 + attempts * rint(3,9);
+  $("#mPhone").innerHTML = `<div class="num">${HOTLINE}</div>
+    <div class="meta">
+      Request #${ticket} &middot; average hold ${hold} minutes<br>
+      Open Tuesdays, 2:15–2:40pm &middot; closed for vibes<br>
+      Have your listening history ready
+    </div>`;
+  $("#mPhone").hidden = false;
+
+  $("#mKeep").textContent = "Never mind";
   const ed = $("#mEdit");
-  ed.disabled = false; ed.style.fontSize = "14px"; ed.style.opacity = 1;
-  ed.textContent = "Fine. Let me edit the form.";
+  ed.disabled = false;
+  ed.style.fontSize = "14px";
+  ed.style.opacity = 1;
+  ed.textContent = callCount === 0 ? "Call now" : "Call again";
   openModal();
 }
 
-function challenge(field, apply){
-  pending = { field, apply };
-  if(overrides >= STAGES.length) showSongs();
-  else showStage(overrides);
+function challenge(){
+  if(formReady) renderStage();
 }
 
 $("#mKeep").onclick = () => closeModal();
 
 $("#mEdit").onclick = () => {
-  if(overrides >= STAGES.length){
-    unlocked = true;
-    $("#conf").innerHTML = "Editing unlocked. We've noted the resistance in your chart. " +
-      "<strong>Autofill confidence: " + vibe.confidence + "</strong>.";
-  } else {
-    overrides++;
-    if(pending && pending.field) granted.add(pending.field);
+  const ed = $("#mEdit");
+  if(attempts >= LADDER.length){
+    // the hotline: it never picks up
+    callCount++;
+    ed.disabled = true;
+    ed.textContent = "calling…";
+    setTimeout(()=>{
+      $("#mTitle").textContent = "All of our vibes specialists are with other patients.";
+      $("#mBody").textContent = pick([
+        "Your call is important to us. Your listening history is more important to us.",
+        "We've placed you in the queue behind " + rint(11,140) + " people with similar playlists.",
+        "While you hold, please enjoy music selected from your own history. That is the problem.",
+      ]);
+      ed.disabled = false;
+      ed.textContent = "Call again";
+    }, 1400);
+    return;
   }
-  const p = pending;
-  closeModal();
-  if(p && p.apply) p.apply();
-  if(p && p.field){ const el = p.field.querySelector("input,textarea"); if(el) el.focus(); }
+  attempts++;
+  renderStage();   // you never get the field. you get the next rung.
 };
 
-// intercept any attempt to touch a pre-filled field
+// any attempt to touch a pre-filled field
 document.addEventListener("focusin", e => {
   const f = e.target.closest(".f");
-  if(!formReady || unlocked || !f || !f.classList.contains("filled") || granted.has(f)) return;
+  if(!formReady || !f || !f.classList.contains("filled")) return;
   e.target.blur();
-  challenge(f, null);
+  challenge();
 });
 
+// ...including the checkboxes, which snap straight back
 document.addEventListener("change", e => {
-  if(!formReady || unlocked) return;
   const box = e.target.closest("#conds input");
-  if(!box || granted.has(box)) return;
-  const wanted = box.checked;
-  box.checked = !wanted;           // snap back until they win the argument
-  challenge(box, () => { granted.add(box); box.checked = wanted;
-                         box.closest("label").classList.toggle("hit", wanted); });
+  if(!formReady || !box) return;
+  box.checked = !box.checked;
+  challenge();
 }, true);
 
 /* ---------- wiring ---------- */
