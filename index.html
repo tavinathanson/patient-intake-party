@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bad Vibes Intake</title>
+<style>
+  :root{
+    --bg:#0b0d0c; --panel:#141816; --line:#262d29; --text:#eaf0ec; --dim:#8d9a93;
+    --accent:#3ddc84; --accent-dim:#1d6b43; --warn:#ffcc5c;
+    --paper:#fffef9; --ink:#1c1f1d; --rule:#cfd4cf;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:720px;margin:0 auto;padding:48px 20px 80px}
+  .screen{display:none;animation:fade .45s ease both}
+  .screen.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;font-size:15px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  h1{font-size:clamp(30px,6vw,46px);line-height:1.08;letter-spacing:-.03em;margin:28px 0 12px}
+  .lede{color:var(--dim);font-size:18px;max-width:34em;margin:0 0 32px}
+  .fine{color:var(--dim);font-size:13px;line-height:1.5}
+
+  button{font:inherit;cursor:pointer;border:0}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#07130c;
+    font-weight:700;padding:15px 26px;border-radius:999px;transition:transform .12s ease,filter .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.07)}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);font-weight:600}
+  .btn.ghost:hover{border-color:var(--dim)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
+
+  /* scanning */
+  .bar{height:5px;background:var(--line);border-radius:999px;overflow:hidden;margin:26px 0 18px}
+  .bar > i{display:block;height:100%;width:0;background:var(--accent);transition:width .35s ease}
+  .log{min-height:132px}
+  .log div{color:var(--dim);opacity:0;animation:fade .3s ease forwards}
+  .log div .ok{color:var(--accent)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat b{display:block;font-size:24px;letter-spacing:-.02em}
+  .stat span{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.09em}
+
+  /* vibes */
+  .vibe-name{font-size:clamp(26px,5.5vw,38px);letter-spacing:-.03em;margin:6px 0 6px;color:var(--accent)}
+  .meter{margin:16px 0}
+  .meter .row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+  .meter .row span:last-child{color:var(--dim);font-variant-numeric:tabular-nums}
+  .track{height:8px;background:#0b0d0c;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+  .track > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent-dim),var(--accent));transition:width 1s cubic-bezier(.2,.8,.2,1)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{background:#0b0d0c;border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:13px;color:var(--dim)}
+  h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin:26px 0 10px;font-weight:700}
+
+  /* form */
+  .paper{background:var(--paper);color:var(--ink);border-radius:14px;padding:34px 30px 30px;box-shadow:0 24px 70px rgba(0,0,0,.5)}
+  .paper h2{margin:0 0 4px;font-size:25px;letter-spacing:-.02em}
+  .paper .sub{color:#6c716d;font-size:13px;margin:0 0 20px}
+  .banner{background:#fff4d6;border:1px solid #e8cf8a;color:#6b5314;border-radius:10px;padding:11px 14px;font-size:13px;margin-bottom:22px}
+  .f{margin-bottom:15px}
+  .f label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.055em;color:#5d635e;margin-bottom:5px}
+  .f input,.f textarea{
+    width:100%;font:inherit;color:var(--ink);background:#fff;border:1px solid var(--rule);
+    border-radius:8px;padding:10px 12px;transition:background .5s ease,border-color .3s ease;
+  }
+  .f textarea{min-height:64px;resize:vertical}
+  .f.filled input,.f.filled textarea{background:#eefaf1;border-color:#9cd9b4}
+  .tag{
+    font-size:10px;letter-spacing:.05em;background:#e4f6ea;color:#1c6b40;border:1px solid #b6e3c7;
+    border-radius:999px;padding:2px 8px;opacity:0;transition:opacity .4s ease;white-space:nowrap;cursor:help;
+  }
+  .f.filled .tag{opacity:1}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+  .conds{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;font-size:14px;margin-top:4px}
+  .conds label{display:flex;gap:7px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:13.5px;font-weight:400;color:var(--ink)}
+  .conds input{width:auto}
+  .conds label.hit{background:#eefaf1;border-radius:6px;padding:2px 5px;margin:-2px -5px;font-weight:600}
+  .paper hr{border:0;border-top:1px solid var(--rule);margin:22px 0}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+  .actions .btn.ghost{color:var(--ink);border-color:var(--rule)}
+  .actions .btn.ghost:hover{border-color:#999}
+  .foot{margin-top:26px;text-align:center}
+  @media (max-width:620px){
+    .conds{grid-template-columns:1fr 1fr}
+    .two{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 1. CONNECT -->
+  <section class="screen on" id="s-connect">
+    <div class="brand"><span class="dot"></span> Bad Vibes Intake</div>
+    <h1>Nobody wants to fill out<br>a clipboard.</h1>
+    <p class="lede">So don't. Connect your music and we'll infer your entire medical history from what you've been listening to at 3am. Clinically unsound. Emotionally accurate.</p>
+    <button class="btn" id="go">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="12"/><path d="M6.4 9.6c3.5-1 7.6-.8 10.9 1.1M7 12.6c2.9-.8 6.2-.6 8.9.9M7.6 15.4c2.3-.6 4.9-.5 7.1.7" stroke="#07130c" stroke-width="1.6" stroke-linecap="round" fill="none"/></svg>
+      Continue with Spotify
+    </button>
+    <p class="fine" style="margin-top:20px;max-width:32em">
+      <strong style="color:var(--warn)">Mock demo.</strong> This button is a prop. There is no Spotify connection, no login, no password field, and nothing leaves this page. Every result below is randomly generated nonsense.
+    </p>
+  </section>
+
+  <!-- 2. SCANNING -->
+  <section class="screen" id="s-scan">
+    <div class="brand"><span class="dot"></span> Bad Vibes Intake</div>
+    <h1 style="font-size:28px;margin-top:26px">Reading your listening history…</h1>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="log mono" id="log"></div>
+    <div class="stats">
+      <div class="stat"><b id="n1">0</b><span>tracks ingested</span></div>
+      <div class="stat"><b id="n2">0</b><span>sad playlists</span></div>
+      <div class="stat"><b id="n3">0</b><span>3am sessions</span></div>
+    </div>
+  </section>
+
+  <!-- 3. VIBES -->
+  <section class="screen" id="s-vibes">
+    <div class="brand"><span class="dot"></span> Bad Vibes Intake</div>
+    <h1 style="font-size:26px;margin:26px 0 0">Your vibes are the following:</h1>
+    <div class="vibe-name" id="vibeName">—</div>
+    <p class="lede" id="vibeTag" style="margin-bottom:26px">—</p>
+    <div class="card">
+      <div id="meters"></div>
+      <h3>Top artists this season</h3>
+      <div class="chips" id="artists"></div>
+      <h3>Playlists of concern</h3>
+      <div class="chips" id="playlists"></div>
+    </div>
+    <div class="card" style="margin-top:14px;border-color:var(--accent-dim)">
+      <h3 style="margin-top:0">What we're going to tell your doctor</h3>
+      <p id="verdict" style="margin:0"></p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="toForm">Pre-fill my intake form →</button>
+      <button class="btn ghost" id="reroll">Re-read my vibes</button>
+    </div>
+  </section>
+
+  <!-- 4. FORM -->
+  <section class="screen" id="s-form">
+    <div class="paper">
+      <h2>New Patient Intake Form</h2>
+      <p class="sub">Auto-completed from your listening history. Please correct anything we got wrong. We got most of it wrong.</p>
+      <div class="banner" id="conf">Autofill confidence: <strong>—</strong>. Source: vibes.</div>
+
+      <div class="two">
+        <div class="f" data-k="name"><label>Name <span class="tag"></span></label><input></div>
+        <div class="f" data-k="dob"><label>Date of birth <span class="tag"></span></label><input></div>
+      </div>
+      <div class="two">
+        <div class="f" data-k="address"><label>Address <span class="tag"></span></label><input></div>
+        <div class="f" data-k="phone"><label>Phone <span class="tag"></span></label><input></div>
+      </div>
+      <div class="two">
+        <div class="f" data-k="insurance"><label>Insurance <span class="tag"></span></label><input></div>
+        <div class="f" data-k="member"><label>Member ID <span class="tag"></span></label><input></div>
+      </div>
+      <div class="f" data-k="emergency"><label>Emergency contact <span class="tag"></span></label><input></div>
+
+      <hr>
+
+      <div class="f" data-k="reason"><label>Reason for visit <span class="tag"></span></label><textarea></textarea></div>
+      <div class="f" data-k="meds"><label>Current medications <span class="tag"></span></label><textarea></textarea></div>
+      <div class="f" data-k="allergies"><label>Allergies <span class="tag"></span></label><input></div>
+
+      <h3 style="color:#5d635e;margin:22px 0 6px">Past conditions <span class="fine" style="text-transform:none;letter-spacing:0">(checked by the algorithm)</span></h3>
+      <div class="conds" id="conds"></div>
+
+      <hr>
+
+      <div class="f" data-k="surgeries"><label>Past surgeries <span class="tag"></span></label><input></div>
+      <div class="f" data-k="family"><label>Family history <span class="tag"></span></label><input></div>
+      <div class="two">
+        <div class="f" data-k="tobacco"><label>Tobacco <span class="tag"></span></label><input></div>
+        <div class="f" data-k="alcohol"><label>Alcohol <span class="tag"></span></label><input></div>
+      </div>
+      <div class="f" data-k="signature"><label>Signature <span class="tag"></span></label><input></div>
+
+      <div class="actions">
+        <button class="btn" id="submit">Submit to the care team</button>
+        <button class="btn ghost" id="again">Start over</button>
+      </div>
+    </div>
+    <p class="fine foot">Every value above is randomly generated. Nothing here is real, stored, or sent anywhere.</p>
+  </section>
+
+</div>
+
+<script>
+/* ---------- mock data ---------- */
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const picks = (a,n) => a.slice().sort(()=>Math.random()-.5).slice(0,n);
+const rint = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+const FIRST = ["Fig","Plum","Cherry","Quince","Endive","Radish","Sorrel","Damson","Kumquat","Fennel","Chard","Persimmon"];
+const LAST  = ["Kohlrabi","Bramble","Quickthorn","Marrow","Thistlewaite","Sorrel","Underbough","Pemberton"];
+
+const ARTISTS = ["Wet Cardigan","The Sunday Scaries","Doom Fern","Lukewarm Bath","Basement Cousins","Glass Ankle",
+  "Two Sad Dads","Ambient Dentist","Sincerely Nobody","Fleetwood Mock","Parking Garage Choir","Soft Launch",
+  "Emotional Support Bassoon","The Unread Messages"];
+
+const PLAYLISTS = ["crying in the car (2019)","songs for staring at a wall","gym but sad","3am thoughts",
+  "dishes & dread","walking to the pharmacy","clean girl morning (abandoned)","focus (did not focus)",
+  "songs my ex liked, unfortunately","white noise for the dog"];
+
+const VIBES = [
+  { name:"Dissociative Autumn Core", tag:"You have played the same four minutes of a song 61 times and called it a personality.",
+    reason:"Patient reports a general 'ugh'. Onset: roughly the first cold morning.",
+    meds:"One (1) multivitamin, taken triumphantly, twice this year.",
+    conds:["Depression / anxiety"] },
+  { name:"Aggressively Fine", tag:"Upbeat music at unwell volumes. The algorithm is not convinced.",
+    reason:"Says they're fine. Playlist says otherwise. Recommend asking twice.",
+    meds:"Caffeine (continuous infusion, oral, since 2016).",
+    conds:["High blood pressure"] },
+  { name:"Nocturnal Yearning, Stage II", tag:"92% of your listening happens after the hour a doctor would approve of.",
+    reason:"Sleep hygiene described by patient as 'a rumor'.",
+    meds:"Melatonin (gummy, expired), an app they no longer open.",
+    conds:["Depression / anxiety","Thyroid disease"] },
+  { name:"Shuffle-Induced Melancholy", tag:"You did not choose this song. It chose you. You let it happen.",
+    reason:"Vague sense that something is off, sourced entirely from a saxophone.",
+    meds:"Ibuprofen, as needed, need is constant.",
+    conds:["Arthritis"] },
+  { name:"Gym Playlist, Hollow Interior", tag:"Enormous energy scores. Zero recorded steps. We have questions.",
+    reason:"Wants a physical. Mostly wants to be told they are doing great.",
+    meds:"Pre-workout, creatine, and a protein powder they describe as 'fine'.",
+    conds:["High cholesterol"] },
+];
+
+const METRICS = ["Valence (joy proxy)","Energy","Danceability","Nocturnal listening","Ballad dependence","Skip rate (distress)"];
+
+const SOURCES = [
+  "from 47 plays of one sad song","inferred from your 2019 playlist","from a podcast you paused forever",
+  "from your Tuesday listening","from a song you skipped 12 times","from one acoustic cover","from your shuffle habits",
+  "from a live album at 4am","from your top artist's whole deal","from the saxophone incident"
+];
+
+const LOG_LINES = [
+  "connecting to vibes.spotify.mock",
+  "ingesting saved tracks",
+  "detecting emotional support ballads",
+  "cross-referencing playlist titles with DSM-5",
+  "measuring 3am listening density",
+  "estimating sleep from skip patterns",
+  "flagging one (1) concerning acoustic cover",
+  "consulting the saxophone",
+  "generating unfounded medical conclusions",
+];
+
+const CONDITIONS = ["Arthritis","Diabetes","Kidney disease","Asthma","Glaucoma","Seizures","Cancer","Heart disease",
+  "Stroke","COPD / emphysema","High blood pressure","Thyroid disease","Depression / anxiety","High cholesterol"];
+
+/* ---------- screens ---------- */
+const $ = s => document.querySelector(s);
+const show = id => document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
+let vibe;
+
+function buildVibe(){
+  vibe = pick(VIBES);
+  vibe.artists = picks(ARTISTS,4);
+  vibe.playlists = picks(PLAYLISTS,3);
+  vibe.metrics = METRICS.map(m => ({ name:m, v:rint(8,97) }));
+  vibe.confidence = rint(4,31) + "%";
+}
+
+function renderVibes(){
+  $("#vibeName").textContent = vibe.name;
+  $("#vibeTag").textContent = vibe.tag;
+  $("#meters").innerHTML = vibe.metrics.map(m =>
+    `<div class="meter"><div class="row"><span>${m.name}</span><span>${m.v}</span></div>
+     <div class="track"><i data-v="${m.v}"></i></div></div>`).join("");
+  $("#artists").innerHTML = vibe.artists.map(a => `<span class="chip">${a}</span>`).join("");
+  $("#playlists").innerHTML = vibe.playlists.map(p => `<span class="chip">${p}</span>`).join("");
+  $("#verdict").textContent = vibe.reason + " " + pick([
+    "We have taken the liberty of checking some boxes.",
+    "We are confident. We should not be.",
+    "This has been filed under 'probably nothing'.",
+  ]);
+  setTimeout(()=> document.querySelectorAll(".track > i").forEach(i => i.style.width = i.dataset.v + "%"), 60);
+}
+
+function runScan(){
+  show("s-scan");
+  const log = $("#log"); log.innerHTML = "";
+  const lines = picks(LOG_LINES, 6);
+  let i = 0;
+  const t = setInterval(()=>{
+    if(i >= lines.length){
+      clearInterval(t);
+      $("#prog").style.width = "100%";
+      setTimeout(()=>{ renderVibes(); show("s-vibes"); }, 650);
+      return;
+    }
+    const d = document.createElement("div");
+    d.innerHTML = `<span class="ok">✓</span> ${lines[i]}…`;
+    log.appendChild(d);
+    log.scrollTop = 1e6;
+    $("#prog").style.width = Math.round((i+1)/lines.length*92) + "%";
+    i++;
+  }, 520);
+
+  // counters
+  const targets = [rint(900,4200), rint(3,9), rint(11,140)];
+  ["#n1","#n2","#n3"].forEach((sel,k)=>{
+    let v = 0; const step = targets[k]/28;
+    const c = setInterval(()=>{
+      v += step;
+      if(v >= targets[k]){ v = targets[k]; clearInterval(c); }
+      $(sel).textContent = Math.round(v).toLocaleString();
+    }, 95);
+  });
+}
+
+/* ---------- form fill ---------- */
+function formValues(){
+  const name = pick(FIRST) + " " + pick(LAST);
+  return {
+    name:      name,
+    dob:       `${rint(1,12)}/${rint(1,28)}/19${rint(40,99)} (approx., based on when your music peaked)`,
+    address:   `${rint(2,180)} ${pick(["Orchard Lane","Bramble Way","Vinyl Street","Quiet Court"])}`,
+    phone:     `555-0${rint(100,199)}`,
+    insurance: pick(["Unclear","Blue Something","Probably their parents'","Medicare","'the good one'"]),
+    member:    pick(["UNKNOWN-" + rint(1000,9999), "not provided", "written on a napkin"]),
+    emergency: pick(FIRST) + " " + pick(LAST) + ", " + pick(["sibling","roommate","ex, still listed","mother"]) + ", 555-0" + rint(100,199),
+    reason:    vibe.reason,
+    meds:      vibe.meds,
+    allergies: pick(["None reported","Pollen, and small talk","Penicillin (per one playlist title)","Dust, allegedly"]),
+    surgeries: pick(["None","Wisdom teeth, year unknown","Knee, 'a while ago'","Declined to elaborate"]),
+    family:    pick(["Everyone's fine, allegedly","Doesn't know","Heart disease (father)","'a lot of stuff, honestly'"]),
+    tobacco:   pick(["Never","Former (quit, unconvincingly)","Socially, which means yes"]),
+    alcohol:   pick(["Occasional","None","'weekends'","Depends on the playlist"]),
+    signature: name + " (typed, under mild protest)",
+  };
+}
+
+function fillForm(){
+  const vals = formValues();
+  $("#conf").innerHTML = `Autofill confidence: <strong>${vibe.confidence}</strong>. Source: vibes.`;
+
+  // conditions grid
+  $("#conds").innerHTML = CONDITIONS.map(c => {
+    const hit = vibe.conds.includes(c);
+    return `<label class="${hit?'hit':''}"><input type="checkbox" ${hit?'checked':''}> ${c}</label>`;
+  }).join("");
+
+  const fields = [...document.querySelectorAll(".f")];
+  fields.forEach(f => { f.classList.remove("filled"); f.querySelector("input,textarea").value = ""; });
+
+  fields.forEach((f, i) => setTimeout(() => {
+    const k = f.dataset.k;
+    f.querySelector("input,textarea").value = vals[k] ?? "";
+    const src = pick(SOURCES);
+    const tag = f.querySelector(".tag");
+    tag.textContent = "✦ vibes";
+    tag.title = src;
+    f.classList.add("filled");
+  }, 140 * i));
+}
+
+/* ---------- wiring ---------- */
+$("#go").onclick = () => { buildVibe(); runScan(); };
+$("#reroll").onclick = () => { buildVibe(); runScan(); };
+$("#toForm").onclick = () => { show("s-form"); window.scrollTo(0,0); fillForm(); };
+$("#again").onclick = () => { show("s-connect"); window.scrollTo(0,0); };
+$("#submit").onclick = e => {
+  e.target.textContent = "Sent. Your doctor has 3 seconds to read this ✓";
+  e.target.style.background = "#1c6b40"; e.target.style.color = "#eafff2";
+};
+</script>
+</body>
+</html>
