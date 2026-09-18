@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Walk-Up Song Builder — Patient Intake Party</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+  :root {
+    --bg: #0f1220;
+    --panel: #171a2b;
+    --panel2: #1f2338;
+    --grid: #2a2f4a;
+    --accent: #ff6b6b;
+    --accent2: #4ecdc4;
+    --accent3: #ffd166;
+    --mystery: #b23aee;
+    --text: #eef0fb;
+    --muted: #8d92b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(circle at top, #1a1e35, var(--bg));
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  header p { color: var(--muted); margin: 0; font-size: 0.95rem; }
+  .badge-row { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .badge {
+    display: inline-block; background: var(--panel2); border: 1px solid var(--grid);
+    color: var(--muted); font-size: 0.75rem; padding: 3px 10px; border-radius: 999px;
+  }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--grid); border-radius: 16px;
+    padding: 18px; margin-top: 22px;
+  }
+
+  .controls { display: flex; flex-direction: column; gap: 14px; margin-bottom: 18px; }
+  .control-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .control-row label.rowlabel { color: var(--muted); font-size: 0.8rem; width: 110px; flex: none; }
+
+  button, .toggle {
+    font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid var(--grid);
+    background: var(--panel2); color: var(--text); padding: 9px 14px; font-weight: 600;
+    transition: transform .08s ease, background .15s ease;
+  }
+  button:hover, .toggle:hover { background: #262b47; }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #walkInBtn { background: linear-gradient(135deg, var(--accent), #ff9068); border: none; color: #1a0f0f; }
+
+  .toggle.active { background: var(--accent2); border-color: var(--accent2); color: #06201d; }
+  .name-input, .title-input {
+    font: inherit; background: #12142250; border: 1px solid var(--grid); color: var(--text);
+    border-radius: 8px; padding: 6px 8px;
+  }
+  .name-input { width: 220px; }
+
+  input[type="range"] { accent-color: var(--accent2); flex: 1; min-width: 140px; }
+  .rangeval { color: var(--text); font-size: 0.82rem; width: 130px; flex: none; }
+
+  .grid-scroll { overflow-x: auto; }
+  .seq { display: grid; gap: 6px; }
+  .measure-head {
+    padding: 6px; border-radius: 10px; background: var(--panel2); text-align: center;
+    display: flex; flex-direction: column; gap: 4px; align-items: center;
+  }
+  .measure-head .title-input { width: 100%; text-align: center; font-size: 0.82rem; font-weight: 600; }
+  .measure-head .sub { font-size: 0.65rem; color: var(--muted); line-height: 1.25; }
+  .measure-head .del { font-size: 0.65rem; color: var(--muted); background: none; border: none; padding: 2px 6px; }
+  .measure-head .del:hover { color: var(--accent); }
+
+  .row-label {
+    display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--muted);
+    padding: 4px 6px;
+  }
+  .row-label .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+  .cellgroup { display: grid; gap: 3px; }
+  .cell {
+    height: 34px; border-radius: 7px; border: 1px solid var(--grid);
+    background: #12142250; cursor: pointer; position: relative;
+    transition: background .12s ease, transform .08s ease;
+  }
+  .cell:hover { transform: translateY(-1px); }
+
+  .cell.activity.on { background: var(--accent3); border-color: var(--accent3); }
+  .cell.activity.locked { cursor: not-allowed; }
+  .cell.activity.ghost.on { background: #6b6f99; border-color: #6b6f99; opacity: .7; }
+  .cell.activity.accent.on { background: var(--accent); border-color: var(--accent); }
+
+  .cell.pain.s1 { background: #2e6f68; border-color: var(--accent2); }
+  .cell.pain.s2 { background: var(--accent2); border-color: var(--accent2); }
+
+  .cell.feeling.s1 { background: #6a5a1f; border-color: var(--accent3); }
+  .cell.feeling.s2 { background: #8a6f22; border-color: var(--accent3); }
+  .cell.feeling.s3 { background: var(--accent3); border-color: var(--accent3); }
+
+  .cell.mystery { cursor: not-allowed; background: repeating-linear-gradient(45deg, #26203a, #26203a 4px, #2e2650 4px, #2e2650 8px); }
+  .cell.mystery.on { background: var(--mystery); border-color: var(--mystery); box-shadow: 0 0 10px var(--mystery); }
+  .cell.mystery::after { content: "🔒"; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; opacity: 0.55; }
+  .cell.mystery.on.revealed::after { content: "🚩"; opacity: 1; }
+
+  .cell.playing { box-shadow: 0 0 0 2px #ffffffaa inset; }
+
+  .footer-note {
+    margin-top: 20px; font-size: 0.82rem; color: var(--muted); line-height: 1.5;
+    border-top: 1px dashed var(--grid); padding-top: 14px;
+  }
+  .footer-note b { color: var(--text); }
+  #revealBtn.active { background: var(--mystery); color: white; border-color: var(--mystery); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🎸 Walk-Up Song Builder</h1>
+    <p>Start from a blank page, name each measure, compose Pain and Feeling yourself. Load an example to see how a real patient's data plays.</p>
+    <div class="badge-row" id="badgeRow"></div>
+  </header>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="control-row">
+        <label class="rowlabel" for="patientName">Patient</label>
+        <input class="name-input" id="patientName" type="text" placeholder="Untitled" />
+        <div style="flex:1"></div>
+        <button id="freshBtn">🗒 Start Fresh</button>
+        <button id="loadKiwiBtn">📂 Load Example: Kiwi (strained back)</button>
+      </div>
+
+      <div class="control-row">
+        <label class="rowlabel" for="ageRange">Age → Tempo</label>
+        <input type="range" id="ageRange" min="0" max="100" value="30" />
+        <span class="rangeval" id="ageVal">30 yrs → 130 bpm</span>
+      </div>
+
+      <div class="control-row">
+        <label class="rowlabel">Time signature</label>
+        <div id="meterButtons" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+      </div>
+
+      <div class="control-row">
+        <label class="rowlabel">Measures</label>
+        <button id="addMeasureBtn">➕ Add Measure</button>
+        <span class="rangeval" id="measureCount">1 / 10</span>
+        <div style="flex:1"></div>
+        <button id="walkInBtn">▶ Play Walk-Up Song</button>
+        <button id="stopBtn">■ Stop</button>
+        <button id="randomizeBtn">🎲 Randomize</button>
+        <button id="revealBtn" style="display:none;">👁 Reveal Mystery Track</button>
+      </div>
+    </div>
+
+    <div class="grid-scroll">
+      <div class="seq" id="headRow"></div>
+      <div class="seq" id="rows" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <div class="footer-note" id="footerNote">
+    Click any <b>Activity</b>, <b>Pain</b>, or <b>Feeling</b> cell to cycle through off / soft / loud — build the song measure by measure, up to 10.
+    <b>Age</b> sets the tempo instead of a plain BPM slider — older, slower. <b>Time signature</b> is yours to pick, not tied to anything about the patient.
+    Load the Kiwi example to see a locked <b>Mystery</b> track: a real detail from the record that never made it onto a form.
+  </div>
+</div>
+
+<script>
+// ---------- State ----------
+const METERS = { "4/4": 4, "3/4": 3, "6/8": 6, "5/4": 5, "7/8": 7 };
+const MAX_MEASURES = 10;
+let measureUid = 0;
+
+function makeMeasure(title, steps) {
+  return {
+    id: ++measureUid,
+    title: title || `Measure ${measureUid}`,
+    sub: "",
+    drumType: "normal",
+    activityLocked: false,
+    activity: new Array(steps).fill(false),
+    pain: new Array(steps).fill(0),
+    feeling: new Array(steps).fill(0),
+  };
+}
+
+function freshState() {
+  const steps = METERS["4/4"];
+  return {
+    patientName: "",
+    age: 30,
+    meterKey: "4/4",
+    measures: [makeMeasure("Measure 1", steps)],
+    mystery: null, // { measureIndex, stepIndex, label }
+  };
+}
+
+let state = freshState();
+
+function currentSteps() { return METERS[state.meterKey]; }
+function totalSteps() { return state.measures.length * currentSteps(); }
+function ageToBpm(age) { return Math.round(Math.min(160, Math.max(60, 160 - age))); }
+
+function resizeMeasureArrays(measure, newSteps) {
+  ["activity", "pain", "feeling"].forEach(key => {
+    const old = measure[key];
+    const filled = new Array(newSteps).fill(key === "activity" ? false : 0);
+    for (let i = 0; i < Math.min(old.length, newSteps); i++) filled[i] = old[i];
+    measure[key] = filled;
+  });
+}
+
+function setMeter(key) {
+  state.meterKey = key;
+  const steps = METERS[key];
+  state.measures.forEach(m => resizeMeasureArrays(m, steps));
+  if (state.mystery && state.mystery.stepIndex >= steps) state.mystery = null;
+  renderAll();
+}
+
+function addMeasure() {
+  if (state.measures.length >= MAX_MEASURES) return;
+  state.measures.push(makeMeasure(`Measure ${state.measures.length + 1}`, currentSteps()));
+  renderAll();
+}
+
+function removeMeasure(idx) {
+  if (state.measures.length <= 1) return;
+  state.measures.splice(idx, 1);
+  if (state.mystery && state.mystery.measureIndex === idx) state.mystery = null;
+  else if (state.mystery && state.mystery.measureIndex > idx) state.mystery.measureIndex -= 1;
+  renderAll();
+}
+
+function loadKiwiExample() {
+  const steps = 4;
+  const m = (title, sub, activity, drumType) => {
+    const meas = makeMeasure(title, steps);
+    meas.sub = sub;
+    meas.activity = activity;
+    meas.activityLocked = true;
+    meas.drumType = drumType;
+    return meas;
+  };
+  state = {
+    patientName: "Kiwi",
+    age: 44,
+    meterKey: "4/4",
+    measures: [
+      m("Pre-Injury Week", "8/22–8/28 · ~11,100 steps/day, running", [true, true, true, false], "normal"),
+      m("2021 (Echo)", "Same thing happened once before", [true, false, false, false], "ghost"),
+      m("Sat 8/29", "Moved his sister's couch. Lower right side.", [true, false, true, false], "accent"),
+      m("Week Since", "Ibuprofen a few times a day", [true, false, false, false], "normal"),
+      m("Today", "Walk-in visit — wants a PT referral", [true, false, true, false], "normal"),
+    ],
+    mystery: { measureIndex: 4, stepIndex: 2, label: "Right foot, tingly since Tuesday — never mentioned." },
+  };
+  renderAll();
+}
+
+// ---------- DOM refs ----------
+const headRow = document.getElementById("headRow");
+const rowsEl = document.getElementById("rows");
+const badgeRow = document.getElementById("badgeRow");
+const ageRange = document.getElementById("ageRange");
+const ageVal = document.getElementById("ageVal");
+const meterButtons = document.getElementById("meterButtons");
+const measureCountEl = document.getElementById("measureCount");
+const patientNameInput = document.getElementById("patientName");
+const revealBtn = document.getElementById("revealBtn");
+const footerNote = document.getElementById("footerNote");
+
+let mysteryRevealed = false;
+let activityCells = [], painCells = [], feelingCells = [], mysteryCells = [];
+
+function makeRowLabel(dotColor, icon, name) {
+  const d = document.createElement("div");
+  d.className = "row-label";
+  d.innerHTML = `<span class="dot" style="background:${dotColor}"></span>${icon} ${name}`;
+  return d;
+}
+function makeCellGroup() {
+  const div = document.createElement("div");
+  div.className = "cellgroup";
+  div.style.gridTemplateColumns = `repeat(${currentSteps()}, 1fr)`;
+  return div;
+}
+
+function renderAll() {
+  const steps = currentSteps();
+  const cols = state.measures.length;
+  const seqCols = `150px repeat(${cols}, minmax(90px, 1fr))`;
+  const seqMinWidth = Math.max(560, 150 + cols * 110);
+  headRow.style.gridTemplateColumns = seqCols;
+  headRow.style.minWidth = `${seqMinWidth}px`;
+  rowsEl.style.gridTemplateColumns = seqCols;
+  rowsEl.style.minWidth = `${seqMinWidth}px`;
+
+  // badges
+  badgeRow.innerHTML = "";
+  const bpm = ageToBpm(state.age);
+  [
+    `patient-intake-party`,
+    `Time signature: ${state.meterKey}`,
+    `Age: ${state.age} → ${bpm} bpm`,
+  ].forEach(t => {
+    const b = document.createElement("div");
+    b.className = "badge";
+    b.textContent = t;
+    badgeRow.appendChild(b);
+  });
+
+  ageRange.value = state.age;
+  ageVal.textContent = `${state.age} yrs → ${bpm} bpm`;
+  patientNameInput.value = state.patientName;
+  measureCountEl.textContent = `${state.measures.length} / ${MAX_MEASURES}`;
+  document.getElementById("addMeasureBtn").disabled = state.measures.length >= MAX_MEASURES;
+
+  // meter buttons
+  meterButtons.innerHTML = "";
+  Object.keys(METERS).forEach(key => {
+    const b = document.createElement("button");
+    b.className = "toggle" + (key === state.meterKey ? " active" : "");
+    b.textContent = key;
+    b.addEventListener("click", () => setMeter(key));
+    meterButtons.appendChild(b);
+  });
+
+  // head row
+  headRow.innerHTML = "";
+  headRow.appendChild(document.createElement("div"));
+  state.measures.forEach((m, idx) => {
+    const head = document.createElement("div");
+    head.className = "measure-head";
+    const input = document.createElement("input");
+    input.className = "title-input";
+    input.value = m.title;
+    input.addEventListener("input", (e) => { m.title = e.target.value; });
+    head.appendChild(input);
+    if (m.sub) {
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.textContent = m.sub;
+      head.appendChild(sub);
+    }
+    if (state.measures.length > 1) {
+      const del = document.createElement("button");
+      del.className = "del";
+      del.textContent = "✕ remove";
+      del.addEventListener("click", () => removeMeasure(idx));
+      head.appendChild(del);
+    }
+    headRow.appendChild(head);
+  });
+
+  // rows
+  rowsEl.innerHTML = "";
+  activityCells = []; painCells = []; feelingCells = []; mysteryCells = [];
+
+  rowsEl.appendChild(makeRowLabel("var(--accent3)", "🥁", "Activity"));
+  state.measures.forEach(m => {
+    const group = makeCellGroup();
+    for (let s = 0; s < steps; s++) {
+      const cell = document.createElement("div");
+      const on = m.activity[s];
+      cell.className = `cell activity ${m.drumType}${on ? " on" : ""}${m.activityLocked ? " locked" : ""}`;
+      if (!m.activityLocked) {
+        cell.addEventListener("click", () => {
+          m.activity[s] = !m.activity[s];
+          cell.classList.toggle("on", m.activity[s]);
+        });
+      }
+      group.appendChild(cell);
+      activityCells.push(cell);
+    }
+    rowsEl.appendChild(group);
+  });
+
+  const paintCycle = (arr, s, cell, classes) => {
+    arr[s] = (arr[s] + 1) % classes.length;
+    cell.className = `cell pain${classes[arr[s]] ? " " + classes[arr[s]] : ""}`;
+  };
+
+  rowsEl.appendChild(makeRowLabel("var(--accent2)", "🎵", "Pain"));
+  state.measures.forEach(m => {
+    const group = makeCellGroup();
+    for (let s = 0; s < steps; s++) {
+      const cell = document.createElement("div");
+      cell.className = "cell pain";
+      cell.addEventListener("click", () => paintCycle(m.pain, s, cell, [null, "s1", "s2"]));
+      group.appendChild(cell);
+      painCells.push(cell);
+    }
+    rowsEl.appendChild(group);
+  });
+
+  rowsEl.appendChild(makeRowLabel("var(--accent3)", "🎤", "Feeling"));
+  state.measures.forEach(m => {
+    const group = makeCellGroup();
+    for (let s = 0; s < steps; s++) {
+      const cell = document.createElement("div");
+      cell.className = "cell feeling";
+      cell.addEventListener("click", () => {
+        m.feeling[s] = (m.feeling[s] + 1) % 4;
+        const classes = [null, "s1", "s2", "s3"];
+        cell.className = `cell feeling${classes[m.feeling[s]] ? " " + classes[m.feeling[s]] : ""}`;
+      });
+      group.appendChild(cell);
+      feelingCells.push(cell);
+    }
+    rowsEl.appendChild(group);
+  });
+
+  if (state.mystery) {
+    revealBtn.style.display = "";
+    rowsEl.appendChild(makeRowLabel("var(--mystery)", "🔒", "Mystery"));
+    state.measures.forEach((m, mi) => {
+      const group = makeCellGroup();
+      for (let s = 0; s < steps; s++) {
+        const isLock = state.mystery.measureIndex === mi && state.mystery.stepIndex === s;
+        const cell = document.createElement("div");
+        cell.className = "cell mystery" + (isLock ? " on" + (mysteryRevealed ? " revealed" : "") : "");
+        group.appendChild(cell);
+        mysteryCells.push(cell);
+      }
+      rowsEl.appendChild(group);
+    });
+  } else {
+    revealBtn.style.display = "none";
+  }
+
+  // re-apply values to freshly built cells (activity already applied above; pain/feeling need class sync)
+  let flatIdx = 0;
+  state.measures.forEach(m => {
+    for (let s = 0; s < steps; s++) {
+      const pClasses = [null, "s1", "s2"];
+      if (m.pain[s]) painCells[flatIdx].classList.add(pClasses[m.pain[s]]);
+      const fClasses = [null, "s1", "s2", "s3"];
+      if (m.feeling[s]) feelingCells[flatIdx].classList.add(fClasses[m.feeling[s]]);
+      flatIdx++;
+    }
+  });
+}
+
+// ---------- Audio ----------
+const drumSynth = new Tone.MembraneSynth({ pitchDecay: 0.03, octaves: 4 }).toDestination();
+const ghostSynth = new Tone.Synth({
+  oscillator: { type: "sine" },
+  envelope: { attack: 0.02, decay: 0.4, sustain: 0, release: 1.2 },
+  volume: -18,
+}).connect(new Tone.Reverb({ decay: 3, wet: 0.6 }).toDestination());
+const painSynth = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.4 } }).toDestination();
+const feelingSynth = new Tone.PluckSynth({ attackNoise: 0.6, dampening: 3500, resonance: 0.85 }).toDestination();
+const mysterySynth = new Tone.PolySynth(Tone.FMSynth, {
+  harmonicity: 1.02, modulationIndex: 8,
+  envelope: { attack: 0.01, decay: 0.6, sustain: 0.1, release: 1.5 },
+  volume: -2,
+}).toDestination();
+
+const PAIN_NOTES = [null, "C2", "E2"];
+const FEELING_NOTES = [null, "C4", "E4", "G4"];
+
+let seq = null;
+
+function clearPlayingHighlight() {
+  document.querySelectorAll(".cell.playing").forEach(c => c.classList.remove("playing"));
+}
+function highlightStep(i) {
+  clearPlayingHighlight();
+  if (activityCells[i]) activityCells[i].classList.add("playing");
+  if (painCells[i]) painCells[i].classList.add("playing");
+  if (feelingCells[i]) feelingCells[i].classList.add("playing");
+  if (mysteryCells[i]) mysteryCells[i].classList.add("playing");
+}
+
+function buildSequence() {
+  if (seq) seq.dispose();
+  const steps = currentSteps();
+  const total = totalSteps();
+  const mysteryFlatIndex = state.mystery ? state.mystery.measureIndex * steps + state.mystery.stepIndex : -1;
+
+  seq = new Tone.Sequence((time, i) => {
+    const measureIdx = Math.floor(i / steps);
+    const m = state.measures[measureIdx];
+    const stepInMeasure = i % steps;
+
+    if (m.activity[stepInMeasure]) {
+      if (m.drumType === "ghost") {
+        ghostSynth.triggerAttackRelease("A3", "2n", time);
+      } else if (m.drumType === "accent" && stepInMeasure === 0) {
+        drumSynth.triggerAttackRelease("C1", "8n", time, 1);
+      } else {
+        drumSynth.triggerAttackRelease("C2", "16n", time, 0.7);
+      }
+    }
+
+    const pNote = PAIN_NOTES[m.pain[stepInMeasure]];
+    if (pNote) painSynth.triggerAttackRelease(pNote, "8n", time, m.pain[stepInMeasure] === 2 ? 0.9 : 0.5);
+
+    const fNote = FEELING_NOTES[m.feeling[stepInMeasure]];
+    if (fNote) feelingSynth.triggerAttackRelease(fNote, "8n", time);
+
+    if (i === mysteryFlatIndex) {
+      mysterySynth.triggerAttackRelease(["C4", "F#4"], "2n", time, 0.55);
+    }
+
+    Tone.Draw.schedule(() => highlightStep(i), time);
+  }, [...Array(total).keys()], "8n");
+}
+
+async function play() {
+  await Tone.start();
+  buildSequence();
+  Tone.Transport.bpm.value = ageToBpm(state.age);
+  seq.start(0);
+  Tone.Transport.start();
+}
+function stop() {
+  Tone.Transport.stop();
+  Tone.Transport.cancel(0);
+  Tone.Draw.cancel(0);
+  if (seq) seq.stop();
+  clearPlayingHighlight();
+}
+
+// ---------- Wiring ----------
+document.getElementById("walkInBtn").addEventListener("click", () => { stop(); setTimeout(play, 60); });
+document.getElementById("stopBtn").addEventListener("click", stop);
+document.getElementById("addMeasureBtn").addEventListener("click", addMeasure);
+document.getElementById("freshBtn").addEventListener("click", () => { state = freshState(); resetMysteryUI(); renderAll(); });
+document.getElementById("loadKiwiBtn").addEventListener("click", () => { loadKiwiExample(); resetMysteryUI(); });
+patientNameInput.addEventListener("input", (e) => { state.patientName = e.target.value; });
+
+ageRange.addEventListener("input", (e) => {
+  state.age = Number(e.target.value);
+  const bpm = ageToBpm(state.age);
+  ageVal.textContent = `${state.age} yrs → ${bpm} bpm`;
+  badgeRow.children[2].textContent = `Age: ${state.age} → ${bpm} bpm`;
+  Tone.Transport.bpm.value = bpm;
+});
+
+document.getElementById("randomizeBtn").addEventListener("click", () => {
+  const steps = currentSteps();
+  state.measures.forEach((m, mi) => {
+    for (let s = 0; s < steps; s++) {
+      if (!m.activityLocked) m.activity[s] = Math.random() < 0.35;
+      m.pain[s] = Math.random() < 0.35 ? 1 + Math.floor(Math.random() * 2) : 0;
+      m.feeling[s] = Math.random() < 0.35 ? 1 + Math.floor(Math.random() * 3) : 0;
+    }
+  });
+  renderAll();
+});
+
+const DEFAULT_FOOTER = `Click any <b>Activity</b>, <b>Pain</b>, or <b>Feeling</b> cell to cycle through off / soft / loud — build the song measure by measure, up to 10. <b>Age</b> sets the tempo instead of a plain BPM slider — older, slower. <b>Time signature</b> is yours to pick, not tied to anything about the patient. Load the Kiwi example to see a locked <b>Mystery</b> track: a real detail from the record that never made it onto a form.`;
+
+function resetMysteryUI() {
+  mysteryRevealed = false;
+  revealBtn.classList.remove("active");
+  revealBtn.textContent = "👁 Reveal Mystery Track";
+  footerNote.innerHTML = DEFAULT_FOOTER;
+}
+
+revealBtn.addEventListener("click", () => {
+  mysteryRevealed = !mysteryRevealed;
+  revealBtn.classList.toggle("active", mysteryRevealed);
+  revealBtn.textContent = mysteryRevealed ? "🙈 Hide Mystery Track" : "👁 Reveal Mystery Track";
+  footerNote.innerHTML = mysteryRevealed && state.mystery
+    ? `<b>Revealed:</b> that locked note is <b>${state.mystery.label}</b> It's not on any checkbox form. It rings on every playthrough whether or not anyone asks about it.`
+    : DEFAULT_FOOTER;
+  renderAll();
+});
+
+renderAll();
+</script>
+</body>
+</html>
