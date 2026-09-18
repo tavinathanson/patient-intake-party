@@ -44,12 +44,13 @@
   .appt.lost { background: var(--red); }
   .controls { font-size: 9px; opacity: .8; margin-top: 14px; text-align: center; }
   kbd { border: 2px solid var(--ink); padding: 1px 5px; background: #fff; font: inherit; }
-  .modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+  .modes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 6px; }
   .mode { border: 3px solid var(--ink); background: #fff; padding: 8px; cursor: pointer; font-size: 8px; line-height: 1.6; text-align: left; box-shadow: none; margin: 0; }
   .mode b { display: block; font-size: 10px; margin-bottom: 4px; }
   .mode.sel { background: var(--gold); box-shadow: 3px 3px 0 var(--ink); }
   .mode.hard.sel { background: #f07c7c; }
   .mode.easy.sel { background: #9fd8a8; }
+  .mode.nightmare.sel { background: #2b2b2b; color: #fff4d6; }
   .board { margin-top: 10px; }
   .board h2 { font-size: 10px; margin: 8px 0 4px; }
   .board ol { margin: 0; padding-left: 22px; font-size: 9px; line-height: 1.9; }
@@ -121,6 +122,8 @@ const QUESTIONS = [
   { id: 'redflags',   label: 'Red flags',          text: 'Any numbness, weakness or bladder trouble?',   opts: ['No', 'Yes'] },
   { id: 'tobacco',    label: 'Tobacco',            text: 'Tobacco?',                                     opts: ['Never', 'Former', 'Current'] },
   { id: 'alcohol',    label: 'Alcohol',            text: 'Alcohol?',                                     opts: ['None', 'Occasional', 'Daily'] },
+  // Nightmare-only consistency check. Must match the first allergies answer or triage flags you.
+  { id: 'allergies2', label: 'Allergies (recheck)', text: 'Allergies? Still the same story?',            opts: ['None', 'Penicillin', 'Latex', 'Other'], mustMatch: 'allergies' },
 ];
 
 // ---------- Difficulty ----------
@@ -143,6 +146,12 @@ const MODES = {
     speed: 360, ramp: 30, lives: 1, obstacles: [4, 6], blockSpacing: 150, bob: true,
     questions: ['reason', 'redflags', 'meds'],
     apptTomorrow: true, apptTime: '9:00 AM', apptNote: 'with the attending. Copay waived.',
+  },
+  nightmare: {
+    key: 'nightmare', name: 'NIGHTMARE', sub: 'ER Triage', blurb: 'Signs redacted. Blocks unlabelled until you\'re close. One question repeats. Reward: house call.',
+    speed: 400, ramp: 30, lives: 1, obstacles: [5, 7], blockSpacing: 140, bob: true, redacted: true, revealDist: 300,
+    questions: ['reason', 'redflags', 'meds', 'allergies', 'pain', 'allergies2'],
+    apptToday: true, apptTime: '4:30 PM', apptNote: 'HOUSE CALL. The doctor comes to you.',
   },
 };
 let selectedMode = 'normal';
@@ -223,7 +232,7 @@ function nextTuesday(weeksOut) {
 }
 function apptDate() {
   const m = G.mode_;
-  if (m.apptTomorrow) { const d = new Date(); d.setDate(d.getDate() + 1 + G.deaths * 21); return d; }
+  if (m.apptToday || m.apptTomorrow) { const d = new Date(); d.setDate(d.getDate() + (m.apptToday ? 0 : 1) + G.deaths * 21); return d; }
   return nextTuesday(m.apptWeeks + G.deaths * 3);
 }
 function fmtAppt(d) {
@@ -341,6 +350,7 @@ function winGame() {
   $('winAppt').textContent = `BOOKED: ${fmtAppt(apptDate())} ${m.apptNote}`;
   const rows = [['Name', G.name || 'Player 1'], ['Filled out by', `Patient (via platformer, ${m.name} mode)`]];
   if (m.key === 'hard') rows.push(['Triage', 'PRIORITY PATIENT. Chart reviewed before arrival.']);
+  if (m.key === 'nightmare') rows.push(['Triage', 'LEVEL 1. Story consistent. Doctor en route to you.']);
   for (const q of G.questions) {
     const a = G.answers[q.id];
     rows.push([q.label, Array.isArray(a) ? a.join(', ') : (a ?? '-')]);
@@ -486,6 +496,9 @@ function update(dt) {
       const q = G.questions[e.q];
       const answered = G.answers[q.id] !== undefined;
       if (!answered && px + PLAYER_W - 6 > e.x + 20) hurt(`Form incomplete: you skipped "${q.text}" Reception won't let you through.`, { skippedQ: e.q });
+      else if (answered && q.mustMatch && px + PLAYER_W - 6 > e.x + 20 && G.answers[q.id] !== G.answers[q.mustMatch]) {
+        die(`Your story changed. You said "${G.answers[q.mustMatch]}" then "${G.answers[q.id]}". Triage flagged you.`);
+      }
     }
     else if (e.type === 'obstacle') {
       const ob = OBSTACLES[e.kind];
@@ -595,7 +608,7 @@ function draw() {
 
 function drawSign(e, sx) {
   const q = G.questions[e.q];
-  const lines = wrap(q.text, 9, e.w - 24);
+  const lines = G.mode_.redacted ? ['[REDACTED]', 'READ THE HUD'] : wrap(q.text, 9, e.w - 24);
   const bh = lines.length * 15 + 34;
   const by = GROUND - 160;
   rect(sx + e.w / 2 - 5, by + bh, 10, GROUND - by - bh, '#8b5a2b');
@@ -615,13 +628,15 @@ function drawBlock(e, sx) {
   rect(sx + 3, y + 3, e.w - 6, e.h - 6, fill);
   if (e.state !== 'inert') { rect(sx + 5, y + 5, 6, 6, '#fff6d6'); rect(sx + e.w - 11, y + e.h - 11, 6, 6, 'rgba(0,0,0,.25)'); }
   if (mark) text(mark, sx + e.w / 2, y + 14, 16, e.state === 'hit' ? '#fff' : INK, 'center');
-  // label tag
+  // label tag (hidden until you're within a jump on nightmare)
+  const hidden = G.mode_.redacted && e.state === 'idle' && (e.x - (G.camera + PLAYER_SX)) > G.mode_.revealDist;
+  const label = hidden ? '???' : e.label;
   const labelSize = 8;
   ctx.font = `${labelSize}px 'Press Start 2P', monospace`;
-  const tw = ctx.measureText(e.label).width + 12;
+  const tw = ctx.measureText(label).width + 12;
   const ty = y - 22;
   rect(sx + e.w / 2 - tw / 2, ty, tw, 16, e.state === 'inert' ? '#d9d4c5' : INK);
-  text(e.label, sx + e.w / 2, ty + 4, labelSize, e.state === 'inert' ? '#f4f0e3' : '#fff4d6', 'center');
+  text(label, sx + e.w / 2, ty + 4, labelSize, e.state === 'inert' ? '#f4f0e3' : '#fff4d6', 'center');
 }
 
 function drawGate(e, sx) {
@@ -692,7 +707,7 @@ function drawPlayer() {
   rect(x + 2, y + 16, PLAYER_W - 4, 16, '#a9d6f5');
   for (let i = 0; i < 3; i++) rect(x + 5 + i * 7, y + 20 + (i % 2) * 6, 2, 2, '#4a90d9');
   // wristband: gold PRIORITY band on hard mode, white otherwise
-  rect(x + PLAYER_W - 2, y + 24, 5, 6, G.mode_.key === 'hard' ? '#f2b134' : '#fff');
+  rect(x + PLAYER_W - 2, y + 24, 5, 6, G.mode_.key === 'hard' ? '#f2b134' : G.mode_.key === 'nightmare' ? '#d64545' : '#fff');
   if (G.mode_.key === 'hard') rect(x + PLAYER_W - 3, y + 23, 7, 1, '#b8860b');
   // head
   rect(x + 4, y, 18, 16, INK);
