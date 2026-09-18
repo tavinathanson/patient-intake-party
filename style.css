@@ -10,6 +10,7 @@ h1 { margin: 0; font-size: 1.4rem; }
 .chip { display: inline-block; margin: 6px 6px 0 0; padding: 0 10px; border-radius: 12px; background: var(--red); color: #fff; font-size: .8rem; }
 
 #letters { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-top: 10px; }
+#letters[hidden] { display: none; }
 .tile { position: relative; padding: 2px 0; border-radius: 4px; background: var(--bag); color: var(--ink); text-align: center; font: bold .85rem/1.1 monospace; }
 .tile small { display: block; font-weight: normal; }
 .tile.burnt { background: #1a1410; color: #6b5a4a; }

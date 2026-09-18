@@ -12,6 +12,7 @@ const el = (tag, props = {}, ...kids) => {
 };
 const lettersOf = t => t.toLowerCase().match(/[a-z]/g) || [];
 const costOf = t => lettersOf(t).reduce((m, c) => (m[c] = (m[c] || 0) + 1, m), {});
+const lettersOn = () => story.letterBudget && S.lettersOn;
 const affordable = t => !story.letterBudget || Object.entries(costOf(t)).every(([c, n]) => S.letters[c] >= n);
 const lettersLeft = () => Object.values(S.letters).reduce((a, b) => a + b, 0);
 const fill = t => t.replace(/\{(\w+)\}/g, (_, k) => k === 'day' ? S.day : S.vars[k] ?? '');
@@ -139,12 +140,13 @@ function renderHud() {
   $('stats').replaceChildren(...Object.values(S.stats).map(statBar));
   $('items').replaceChildren(...[...S.items].map(i => el('span', { className: 'chip', textContent: i })));
   $('items').hidden = !S.items.size;
+  $('letters').hidden = !lettersOn();
   $('letters').replaceChildren(...Object.entries(S.letters).map(([c, n]) => {
     const tile = el('span', { className: `tile${n ? '' : ' burnt'}${justBurnt.includes(c) ? ' burning' : ''}` }, c.toUpperCase(), el('small', { textContent: n }));
     tile.dataset.letter = c;
     return tile;
   }));
-  burn(justBurnt);
+  if (lettersOn()) burn(justBurnt);
   justBurnt = [];
 }
 
@@ -189,10 +191,11 @@ function render(id) {
   const node = story.nodes[id];
   if (node.ending) return end(node);
   S.node = id;
+  if (node.showLetters) S.lettersOn = true;
   const controls = (node.choices || []).filter(c => test(c.condition)).map(choiceRow);
   if (node.input) controls.unshift(inputBox(node.input));
   if (node.skip) controls.push(button(story.skipLabel || 'Skip', () => act(node.skip), { className: 'skip' }));
-  if (past.length) {
+  if (lettersOn() && past.length) {
     const stuck = controls.some(c => c.querySelector(':disabled'));
     controls.push(button(backLabel(), back, { className: stuck ? 'back urgent' : 'back' }));
   }
@@ -227,8 +230,8 @@ function end(node) {
   $('ending').className = node.endingType || '';
   $('endStats').replaceChildren(...Object.values(S.stats).map(statBar));
   $('report').replaceChildren(...(story.report ? reportView(story.report) : []));
-  $('back').textContent = past.length ? backLabel() : '';
-  $('back').hidden = !past.length;
+  $('back').textContent = lettersOn() && past.length ? backLabel() : '';
+  $('back').hidden = !(lettersOn() && past.length);
   $('ending').hidden = false;
 }
 
@@ -238,8 +241,9 @@ function start() {
     day: 1, items: new Set(), flags: new Set(), vars: {}, records: [], bags: {},
     stats: structuredClone(story.stats),
     letters: Object.fromEntries([...ALPHABET].map(c => [c, story.letterBudget || 0])),
+    lettersOn: false,
   };
-  $('letters').hidden = !story.letterBudget;
+  $('letters').hidden = true;
   $('ending').hidden = true;
   $('title').textContent = document.title = story.title;
   $('text').textContent = '';

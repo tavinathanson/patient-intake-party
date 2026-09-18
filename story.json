@@ -3,7 +3,7 @@
   "author": "Team Dragon",
   "startNode": "cover",
   "dayLabel": "Page",
-  "letterBudget": 10,
+  "letterBudget": 5,
   "backLabel": "↩ Take it back and get the letters back",
   "skipLabel": "🔥 Just roar (skip, costs no letters)",
   "stats": {
@@ -49,7 +49,8 @@
       "choices": [{ "text": ["hello princess", "hi"], "next": [{ "node": "bag" }] }]
     },
     "bag": {
-      "text": "\"One problem,\" she says. \"Your fire burnt every letter in the kingdom. I saved 10 of each in my paper bag. Every word you say uses them up. Each row is one answer with a few ways to say it: long ones cost more letters. If you run out, you can take an answer back and say it shorter.\"",
+      "showLetters": true,
+      "text": "\"One problem,\" she says. \"Your fire burnt every letter in the kingdom. I saved 5 of each in my paper bag. Every word you say uses them up. Each row is one answer with a few ways to say it: long ones cost more letters. If you run out, you can take an answer back and say it shorter.\"",
       "image": "images/bag.svg",
       "choices": [{ "text": ["got it", "ok", "mm"], "next": [{ "node": "q_where" }] }]
     },
