@@ -1,3 +1,52 @@
+# Intake Investigations
+
+**Team 22 · Ship It · branch `team-22`**
+
+Four ordinary intake fields. One wildly overqualified detective. Up to eighty unnecessary questions.
+
+A local browser game powered by your installed Codex CLI. Detective Maybe tries to discover your first name, reason for visit, date of birth, and specific pharmacy. You may answer only **Yes**, **No**, or **Maybe / I don't know**. Each category gets 20 questions. A confirmed complete guess solves it early; otherwise, the detective reluctantly produces a normal input field.
+
+The first-name round follows namesakes, nicknames, songs, stories, and questionable hunches. Alphabet ranges and letter-by-letter searches are off the table. The detective is here to entertain; getting your name right is a bonus.
+
+## Run locally
+
+Requires Node.js 22+ and [Codex CLI](https://learn.chatgpt.com/docs/cli) installed and signed in.
+
+```bash
+codex login status
+# If needed:
+codex login
+
+npm start
+```
+
+Open **http://localhost:4317**. There are no production dependencies to install and no build step. The server binds only to `127.0.0.1`; this version is for a local demo. The model runs through OpenAI, so an internet connection and available Codex usage are required.
+
+Optional settings:
+
+```bash
+PORT=4318 npm start
+CODEX_MODEL=gpt-5.6-sol npm start
+# For a CLI executable not on PATH:
+CODEX_BIN=/absolute/path/to/codex npm start
+```
+
+`CODEX_TIMEOUT_MS` controls the per-turn deadline (default 90000). Unless `CODEX_MODEL` is supplied, Codex chooses its default model. The game ignores personal Codex configuration, disables unrelated tools, uses a read-only sandbox, and sends the explicit game transcript on each ephemeral model call. It uses existing Codex authentication; it never reads or copies credentials itself.
+
+Games live in server memory. Reloading the page restores the current case by its opaque ID; restarting the server expires cases. Normal field values are collected only after a failed round. The final intake summary can be copied from the app. The original breakout materials below are preserved; its Fly deployment flow is separate from this local Codex setup.
+
+Team 22's initial source push skips CI because this implementation runs locally. The shared Fly workflow cannot use your computer's Codex login; use the local URL above for the demo.
+
+## Verify
+
+```bash
+npm test
+```
+
+Tests exercise the real game transitions and HTTP endpoints with deterministic model responses. Live model output is checked separately because answers are nondeterministic. The game rules, rather than model confidence, determine when a category is solved and when fallback becomes available.
+
+---
+
 ![Did I hear party?](did-i-hear-party.jpg)
 
 ## Patient Intake Party

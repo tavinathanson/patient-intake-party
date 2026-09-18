@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 600" fill="none">
+  <title>Detective Maybe, a very confident investigator</title>
+  <defs>
+    <pattern id="lines" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(28)"><path d="M0 0V9" stroke="#171b19" stroke-opacity=".12" stroke-width="2"/></pattern>
+    <clipPath id="circle"><circle cx="260" cy="290" r="218"/></clipPath>
+  </defs>
+  <circle cx="260" cy="290" r="218" fill="#d94b2d"/>
+  <g clip-path="url(#circle)" stroke="#efdfc4" stroke-width="1" opacity=".3">
+    <path d="M-20 320 540 160M-20 353 540 193M-20 386 540 226M-20 419 540 259M-20 452 540 292M-20 485 540 325M-20 518 540 358"/>
+  </g>
+  <path d="M120 486 64 583H466L424 442 341 400 196 393Z" fill="#e8d5ae" stroke="#171b19" stroke-width="5"/>
+  <path d="M96 529 154 438 196 418 204 583H64Z" fill="url(#lines)"/>
+  <path d="m188 404-24 42 50 63-19 25 51 49 89-5 58-111-32-43-40-37Z" fill="#171b19"/>
+  <path d="m253 414 18 43-27 107 46 19 35-103-11-51Z" fill="#d94b2d"/>
+  <path d="m218 361-10 63 54 33 28-53 34 24 26-25-27-65Z" fill="#eadcbd" stroke="#171b19" stroke-width="5"/>
+  <path d="m233 375 42 47 16-17 29 19 25-24-22-65Z" fill="#171b19"/>
+  <path d="m192 388-20 36 55 127-52-47 10-31-42-12 25-58Z" fill="#f0e5cf" stroke="#171b19" stroke-width="5"/>
+  <path d="m342 389 32 27 26 45-45 13 10 27-43 82h-45l57-135Z" fill="#f0e5cf" stroke="#171b19" stroke-width="5"/>
+  <path d="M203 200 344 219 346 296 369 326 344 338 330 374 297 401 249 388 208 354 185 282Z" fill="#f1e5c9" stroke="#171b19" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m202 220 41 31-18 50 11 36-19 23-12-17-20-64Z" fill="#171b19"/>
+  <path d="m306 271 35 6-3 8-29-6Z" fill="#171b19"/>
+  <path d="m285 318 16 8 10-2M292 355l34 2M300 367l16 2" stroke="#171b19" stroke-width="4" stroke-linecap="round"/>
+  <path d="m285 306 9-11 1 26" stroke="#171b19" stroke-width="4"/>
+  <path d="M169 244 194 146 226 107 275 125 313 125 353 236Z" fill="#242927" stroke="#171b19" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m195 145 40-20 37 17 34-3 24 67-137-11Z" fill="#363c36"/>
+  <path d="m180 206 159 11 7 24-172-7Z" fill="#e8d5ae"/>
+  <path d="M106 249c18-19 50-26 88-24l128 12c37 3 72 12 93 34-49 15-102 16-155 6l-107-14-47-4Z" fill="#171b19"/>
+  <path d="m132 250 119 7 114 17" stroke="#6b705e" stroke-width="2"/>
+  <path d="m347 453 20-21 11-42 19-17 33 15 7 41-7 48-35 24Z" fill="#f1e5c9" stroke="#171b19" stroke-width="5" stroke-linejoin="round"/>
+  <path d="m382 395 26 10M380 411l29 9M376 430l31 9" stroke="#171b19" stroke-width="4" stroke-linecap="round"/>
+  <path d="m395 409-13-97" stroke="#171b19" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="377" cy="272" r="55" fill="#f6ebd2" fill-opacity=".75" stroke="#171b19" stroke-width="11"/>
+  <circle cx="377" cy="272" r="44" stroke="#f5e9ce" stroke-width="3"/>
+  <path d="m351 252 35-17m-27 33 40-19" stroke="#fff9e9" stroke-width="5" stroke-linecap="round"/>
+  <path d="m355 465 73-18 23 79-30 57h-81l-4-42Z" fill="#e8d5ae" stroke="#171b19" stroke-width="5"/>
+  <path d="m363 476 64-16M140 558h43M108 558h17" stroke="#171b19" stroke-width="4"/>
+  <circle cx="248" cy="537" r="5" fill="#e8d5ae"/>
+  <path d="M82 583h372" stroke="#171b19" stroke-width="6"/>
+  <g fill="#171b19"><path d="m408 107 6 19 20 5-20 6-6 19-5-19-20-6 20-5Z"/><path d="m99 355 4 13 13 4-13 4-4 13-4-13-13-4 13-4Z"/></g>
+  <path d="m93 173 16-11m-3 25 21-5M388 83l7-17" stroke="#171b19" stroke-width="3" stroke-linecap="round"/>
+</svg>
