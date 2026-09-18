@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f3ff">
+  <title>Amble — GLP-1 check-in</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+
+    :root {
+      --ink: #25233a;
+      --muted: #706d83;
+      --paper: #fffefe;
+      --wash: #f6f3ff;
+      --line: #ded9eb;
+      --violet: #7058c7;
+      --violet-dark: #4a3798;
+      --violet-soft: #ebe5ff;
+      --coral: #dc655f;
+      --coral-soft: #fde9e6;
+      --mint: #2c8a6f;
+      --mint-soft: #ddf4eb;
+      --yellow: #f2c96d;
+      --radius: 28px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--wash);
+      color: var(--ink);
+      font-family: "DM Sans", sans-serif;
+    }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, textarea:focus-visible, input:focus-visible {
+      outline: 3px solid rgba(112, 88, 199, .28);
+      outline-offset: 2px;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 294px minmax(0, 1fr);
+    }
+    .sidebar {
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: var(--ink);
+      color: white;
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 8px 27px;
+      font: 800 20px/1 "Manrope", sans-serif;
+      letter-spacing: -.03em;
+    }
+    .brand-mark {
+      width: 31px;
+      height: 31px;
+      border-radius: 11px 11px 11px 3px;
+      background: var(--yellow);
+      display: grid;
+      place-items: center;
+      color: var(--ink);
+      font-size: 18px;
+    }
+    .sidebar-title {
+      margin: 0 8px 10px;
+      font-size: 12px;
+      color: #aaa5bb;
+      font-weight: 600;
+    }
+    .chat-list { display: grid; gap: 6px; overflow: auto; }
+    .chat-row {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      border-radius: 15px;
+      color: #dfdce8;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 38px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      text-align: left;
+      cursor: pointer;
+    }
+    .chat-row:hover, .chat-row.active { background: rgba(255,255,255,.09); }
+    .chat-avatar {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background-color: #4c4961;
+      background-image: url('cartoon-profiles.png');
+      background-size: 200% 200%;
+      font-size: 0;
+      border: 2px solid rgba(255,255,255,.22);
+    }
+    .avatar-0 { background-position: 0 0; }
+    .avatar-1 { background-position: 100% 0; }
+    .avatar-2 { background-position: 0 100%; }
+    .avatar-3 { background-position: 100% 100%; }
+    .chat-copy { min-width: 0; }
+    .chat-copy strong { display: block; font-size: 14px; color: white; }
+    .chat-copy span { display: block; font-size: 12px; color: #aaa5bb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .chat-status { width: 9px; height: 9px; background: var(--yellow); border-radius: 50%; }
+    .chat-status.done { background: #6d6a7f; }
+    .privacy-note {
+      margin-top: auto;
+      color: #aaa5bb;
+      font-size: 11px;
+      line-height: 1.45;
+      padding: 16px 8px 0;
+    }
+
+    .main { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      min-height: 76px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 30px;
+      border-bottom: 1px solid var(--line);
+    }
+    .topbar-copy strong { display: block; font: 700 15px "Manrope", sans-serif; }
+    .topbar-copy span { color: var(--muted); font-size: 13px; }
+    .progress-pill {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .progress-pill i { display: inline-block; width: 8px; height: 8px; background: var(--violet); border-radius: 50%; margin-right: 7px; }
+
+    .stage {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      overflow: hidden;
+    }
+    .swipe-view { width: min(100%, 510px); text-align: center; }
+    .intro h1, .completion h1 {
+      margin: 0 0 12px;
+      font: 800 clamp(28px, 4vw, 42px)/1.05 "Manrope", sans-serif;
+      letter-spacing: -.045em;
+    }
+    .intro p, .completion p { margin: 0 auto; max-width: 46ch; color: var(--muted); line-height: 1.55; }
+    .deck { height: 408px; margin: 28px auto 18px; position: relative; perspective: 900px; }
+    .deck::before, .deck::after {
+      content: "";
+      position: absolute;
+      inset: 18px 24px -4px;
+      border-radius: var(--radius);
+      background: #e9e3f6;
+      border: 1px solid #d8d0e7;
+    }
+    .deck::after { inset: 9px 12px 5px; background: #f0ebfa; }
+    .question-card {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: var(--paper);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    .question-card.dragging { transition: none; cursor: grabbing; }
+    .question-card.exit-right { transform: translateX(130%) rotate(15deg) !important; opacity: 0; }
+    .question-card.exit-left { transform: translateX(-130%) rotate(-15deg) !important; opacity: 0; }
+    .category {
+      background: var(--violet-soft);
+      color: var(--violet-dark);
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .question-card h2 { margin: auto 0 14px; font: 800 32px/1.12 "Manrope", sans-serif; letter-spacing: -.035em; }
+    .card-emoji { width: 100%; text-align: center; font-size: 74px; line-height: 1; margin: 24px 0 8px; filter: saturate(.9); }
+    .question-card p { margin: 0 0 26px; color: var(--muted); line-height: 1.55; font-size: 15px; }
+    .card-foot { width: 100%; display: flex; justify-content: space-between; color: #9995a7; font-size: 12px; }
+    .swipe-stamp {
+      position: absolute;
+      top: 35px;
+      padding: 9px 13px;
+      border: 3px solid;
+      border-radius: 8px;
+      font: 800 18px "Manrope", sans-serif;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .swipe-stamp.no { right: 28px; color: var(--coral); transform: rotate(9deg); }
+    .swipe-stamp.yes { left: 28px; color: var(--mint); transform: rotate(-9deg); }
+    .swipe-controls { display: flex; justify-content: center; gap: 18px; }
+    .swipe-button {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      background: white;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+      font-weight: 500;
+    }
+    .swipe-button.no { color: var(--coral); }
+    .swipe-button.yes { color: var(--mint); }
+    .swipe-labels { display: flex; justify-content: center; gap: 58px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+
+    .chat-view { width: min(100%, 720px); height: min(720px, calc(100vh - 140px)); display: flex; flex-direction: column; }
+    .chat-header { display: flex; align-items: center; gap: 12px; padding: 0 4px 18px; }
+    .chat-header .chat-avatar { background: var(--violet); color: white; }
+    .chat-header h1 { margin: 0; font: 800 20px "Manrope", sans-serif; }
+    .chat-header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+    .back-button { display: none; border: 0; background: transparent; padding: 8px; font-size: 22px; cursor: pointer; }
+    .messages { flex: 1; overflow: auto; padding: 4px 4px 20px; display: flex; flex-direction: column; gap: 12px; }
+    .bubble { max-width: 78%; padding: 13px 16px; border-radius: 19px; line-height: 1.45; font-size: 15px; }
+    .bubble.clinician { align-self: flex-start; background: white; border-bottom-left-radius: 6px; }
+    .bubble.patient { align-self: flex-end; background: var(--violet); color: white; border-bottom-right-radius: 6px; }
+    .reply-panel { border-top: 1px solid var(--line); padding-top: 16px; }
+    .quick-replies { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 13px; }
+    .chip { border: 1px solid #cfc8e0; background: white; border-radius: 999px; padding: 10px 14px; cursor: pointer; }
+    .chip.selected { border-color: var(--violet); background: var(--violet-soft); color: var(--violet-dark); }
+    .text-reply { display: flex; gap: 10px; }
+    .text-reply textarea { flex: 1; resize: none; height: 52px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 16px; background: white; color: var(--ink); }
+    .send-button, .finish-reply {
+      border: 0;
+      border-radius: 15px;
+      background: var(--violet);
+      color: white;
+      font-weight: 700;
+      padding: 0 19px;
+      cursor: pointer;
+    }
+    .finish-reply { padding: 12px 18px; }
+    .finish-reply:disabled { opacity: .45; cursor: not-allowed; }
+    .upload-card { border: 1px dashed #bcb3d4; border-radius: 20px; background: rgba(255,255,255,.55); padding: 22px; text-align: center; }
+    .upload-card input { position: absolute; opacity: 0; pointer-events: none; }
+    .upload-label { display: inline-block; background: white; border: 1px solid var(--line); padding: 11px 16px; border-radius: 14px; cursor: pointer; font-weight: 700; }
+    .photo-preview { width: min(240px, 100%); max-height: 210px; object-fit: cover; border-radius: 18px; margin-bottom: 12px; }
+    .chat-complete { border-top: 1px solid var(--line); padding-top: 18px; display: flex; justify-content: space-between; gap: 14px; align-items: center; color: var(--muted); font-size: 14px; }
+    .next-chat { border: 0; background: var(--ink); color: white; border-radius: 14px; padding: 11px 16px; cursor: pointer; font-weight: 700; }
+
+    .completion { width: min(100%, 580px); text-align: center; }
+    .completion-mark { width: 78px; height: 78px; margin: 0 auto 24px; border-radius: 28px 28px 28px 8px; background: var(--mint-soft); color: var(--mint); display: grid; place-items: center; font-size: 38px; }
+    .summary { margin: 30px 0; background: white; border: 1px solid var(--line); border-radius: 22px; text-align: left; padding: 20px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .summary-row:last-child { border: 0; }
+    .summary-row span { color: var(--muted); }
+    .restart { border: 0; background: transparent; color: var(--violet-dark); font-weight: 700; cursor: pointer; padding: 8px; }
+    .empty-chats { color: #aaa5bb; padding: 16px 10px; font-size: 13px; line-height: 1.5; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(37,35,58,.78);
+      backdrop-filter: blur(8px);
+    }
+    .match-pop { text-align: center; color: white; animation: match-in .28s cubic-bezier(.2,.9,.25,1.25); }
+    .match-heart { font-size: 92px; line-height: 1; filter: drop-shadow(0 10px 20px rgba(0,0,0,.2)); }
+    .match-pop h2 { margin: 12px 0 4px; font: 800 38px "Manrope", sans-serif; letter-spacing: -.04em; }
+    .match-pop p { margin: 0; color: #e9e5f1; }
+    .paywall {
+      width: min(100%, 410px);
+      background: white;
+      border-radius: 30px;
+      padding: 28px;
+      text-align: center;
+      animation: paywall-in .24s ease-out;
+    }
+    .paywall-avatars { display: flex; justify-content: center; margin-bottom: 18px; }
+    .paywall-avatars .chat-avatar { width: 58px; height: 58px; margin: 0 -7px; border: 4px solid white; }
+    .paywall h2 { margin: 0 0 10px; font: 800 30px/1.08 "Manrope", sans-serif; letter-spacing: -.035em; }
+    .paywall p { margin: 0 0 22px; color: var(--muted); line-height: 1.5; }
+    .paywall ul { list-style: none; padding: 0; margin: 0 0 22px; text-align: left; }
+    .paywall li { padding: 9px 0; border-bottom: 1px solid var(--line); }
+    .paywall li:last-child { border: 0; }
+    .unlock-button { width: 100%; border: 0; border-radius: 16px; padding: 14px; background: var(--violet); color: white; font-weight: 800; cursor: pointer; }
+    .paywall small { display: block; margin-top: 10px; color: var(--muted); }
+    .not-now { margin-top: 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; padding: 7px; }
+    @keyframes match-in { from { transform: scale(.65) rotate(-5deg); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes paywall-in { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .sidebar { display: none; }
+      .topbar { min-height: 66px; padding: 12px 18px; }
+      .stage { padding: 22px 16px 30px; align-items: start; }
+      .swipe-view { padding-top: 20px; }
+      .intro h1 { font-size: 29px; }
+      .intro p { font-size: 14px; }
+      .deck { height: 390px; margin-top: 22px; }
+      .question-card { padding: 23px; }
+      .question-card h2 { font-size: 27px; }
+      .chat-view { height: calc(100vh - 110px); }
+      .back-button { display: block; }
+      .chat-header { padding-bottom: 12px; }
+      .bubble { max-width: 88%; }
+      .mobile-inbox {
+        position: fixed;
+        right: 16px;
+        bottom: 18px;
+        z-index: 20;
+        border: 0;
+        border-radius: 999px;
+        background: var(--ink);
+        color: white;
+        padding: 13px 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .mobile-inbox[hidden] { display: none; }
+      .mobile-drawer {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        background: var(--ink);
+        color: white;
+        padding: 24px 18px;
+        display: none;
+      }
+      .mobile-drawer.open { display: block; }
+      .drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+      .drawer-head strong { font: 800 20px "Manrope", sans-serif; }
+      .drawer-head button { border: 0; background: transparent; color: white; font-size: 26px; }
+    }
+    @media (min-width: 761px) { .mobile-inbox, .mobile-drawer { display: none !important; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">a</span> amble</div>
+      <p class="sidebar-title">Your follow-ups</p>
+      <div class="chat-list" id="chat-list"></div>
+      <p class="privacy-note">Your answers are saved securely for your care team. This demo does not send or store data.</p>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-copy"><strong>GLP-1 check-in</strong><span id="topbar-subtitle">A few quick questions</span></div>
+        <div class="progress-pill"><i></i><span id="progress-text">Question 1 of 7</span></div>
+      </header>
+      <section class="stage" id="stage"></section>
+    </main>
+  </div>
+
+  <button class="mobile-inbox" id="mobile-inbox" hidden>Follow-ups <span id="mobile-count"></span></button>
+  <div class="mobile-drawer" id="mobile-drawer">
+    <div class="drawer-head"><strong>Your follow-ups</strong><button id="close-drawer" aria-label="Close">×</button></div>
+    <div class="chat-list" id="mobile-chat-list"></div>
+  </div>
+
+  <script>
+    const questions = [
+      { id: 'dose', emoji: '💉', avatar: 0, category: 'Your medication', title: 'Has your GLP-1 dose changed since your last visit?', detail: 'Swipe yes even if you changed it yourself or only changed it briefly.', kind: 'choice', prompt: 'Hey! 👋 Thanks for flagging that. What dose are you taking now?', options: ['0.25 mg', '0.5 mg', '1.0 mg', '1.7 mg', '2.4 mg', 'I’m not sure'], advisor: 'Nia' },
+      { id: 'side-effects', emoji: '🤢', avatar: 1, category: 'How you feel', title: 'Have you had any side effects lately?', detail: 'Think nausea, vomiting, constipation, stomach pain, or anything that felt unusual.', kind: 'multi', prompt: 'Let’s get the full picture 🧩 Which ones have you noticed?', options: ['Nausea', 'Vomiting', 'Constipation', 'Diarrhea', 'Stomach pain', 'Headache', 'Something else'], advisor: 'Theo' },
+      { id: 'missed', emoji: '📆', avatar: 2, category: 'Your medication', title: 'Have you missed or delayed any doses?', detail: 'Travel, supply problems, cost, or simply forgetting all count.', kind: 'multi', prompt: 'No judgment here 💜 What got in the way?', options: ['Pharmacy stock', 'Cost or coverage', 'Travel', 'Side effects', 'Forgot', 'Something else'], advisor: 'Leena' },
+      { id: 'medications', emoji: '🧴', avatar: 3, category: 'Medication list', title: 'Are you taking any other medicines or supplements?', detail: 'Include prescriptions, over-the-counter medicines, and vitamins.', kind: 'text', prompt: 'What else are you taking? Names and doses are helpful, but share whatever you know ✍️', advisor: 'Mateo' },
+      { id: 'pregnancy', emoji: '🌱', avatar: 0, category: 'Plans & safety', title: 'Are you pregnant, breastfeeding, or planning a pregnancy?', detail: 'This helps your clinician talk with you about safe timing and options.', kind: 'multi', prompt: 'Thanks for sharing this 💛 Which best describes you?', options: ['Pregnant', 'Breastfeeding', 'Trying now', 'Planning within a year', 'Not sure'], advisor: 'Nia' },
+      { id: 'pen-photo', emoji: '📸', avatar: 1, category: 'One quick photo', title: 'Would you like help confirming your current pen?', detail: 'A photo of the label can help your care team verify the medication and dose.', kind: 'photo', prompt: 'Okay, show me what you’ve got 📸 A quick photo of the label would make my day — keep your name and prescription number out of frame, and I’ll pass it along 💫', advisor: 'Theo' },
+      { id: 'anything-else', emoji: '💭', avatar: 2, category: 'Last one', title: 'Is there anything else you want your care team to know?', detail: 'A new goal, a concern, or a question you do not want to forget.', kind: 'text', prompt: 'I’m listening 👀 What should they know before the visit?', advisor: 'Leena' }
+    ];
+
+    const state = { index: 0, chats: [], activeChat: null, view: 'swipe' };
+    const stage = document.getElementById('stage');
+    const chatList = document.getElementById('chat-list');
+    const mobileChatList = document.getElementById('mobile-chat-list');
+    const progressText = document.getElementById('progress-text');
+    const topbarSubtitle = document.getElementById('topbar-subtitle');
+    const mobileInbox = document.getElementById('mobile-inbox');
+    const mobileCount = document.getElementById('mobile-count');
+    const drawer = document.getElementById('mobile-drawer');
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+    }
+
+    function addChat(question) {
+      if (!state.chats.some(chat => chat.id === question.id)) {
+        state.chats.push({ ...question, selected: [], answer: '', complete: false, messages: [{ from: 'clinician', text: question.prompt }] });
+      }
+    }
+
+    function answerCard(answer) {
+      const question = questions[state.index];
+      const card = document.querySelector('.question-card');
+      if (!card || !question) return;
+      card.classList.add(answer ? 'exit-right' : 'exit-left');
+      if (answer) addChat(question);
+      setTimeout(() => {
+        state.index += 1;
+        renderLists();
+        if (answer) {
+          if (state.index < questions.length) renderSwipe();
+          showMatch(question);
+        } else if (state.index >= questions.length) {
+          const next = state.chats.find(chat => !chat.complete);
+          if (next) openChat(next.id); else renderCompletion();
+        } else renderSwipe();
+      }, 220);
+    }
+
+    function renderSwipe() {
+      state.view = 'swipe';
+      state.activeChat = null;
+      const q = questions[state.index];
+      topbarSubtitle.textContent = 'A few quick questions';
+      progressText.textContent = `Question ${state.index + 1} of ${questions.length}`;
+      mobileInbox.hidden = state.chats.length === 0;
+      stage.innerHTML = `
+        <div class="swipe-view">
+          <div class="intro"><h1>Your check-in, one card at a time.</h1><p>Swipe right for yes, left for no. A yes starts a private follow-up conversation.</p></div>
+          <div class="deck">
+            <article class="question-card" tabindex="0" aria-label="${escapeHtml(q.title)}">
+              <span class="swipe-stamp yes">YES</span><span class="swipe-stamp no">NO</span>
+              <span class="category">${escapeHtml(q.category)}</span>
+              <div class="card-emoji" aria-hidden="true">${q.emoji}</div>
+              <h2>${escapeHtml(q.title)}</h2>
+              <p>${escapeHtml(q.detail)}</p>
+              <div class="card-foot"><span>← No</span><span>Yes →</span></div>
+            </article>
+          </div>
+          <div class="swipe-controls">
+            <button class="swipe-button no" id="no-button" aria-label="No">×</button>
+            <button class="swipe-button yes" id="yes-button" aria-label="Yes">✓</button>
+          </div>
+          <div class="swipe-labels"><span>No</span><span>Yes</span></div>
+        </div>`;
+      document.getElementById('no-button').onclick = () => answerCard(false);
+      document.getElementById('yes-button').onclick = () => answerCard(true);
+      enableDrag(document.querySelector('.question-card'));
+    }
+
+    function enableDrag(card) {
+      let startX = 0;
+      let currentX = 0;
+      let dragging = false;
+      const yesStamp = card.querySelector('.swipe-stamp.yes');
+      const noStamp = card.querySelector('.swipe-stamp.no');
+      card.addEventListener('pointerdown', event => {
+        dragging = true;
+        startX = event.clientX;
+        card.classList.add('dragging');
+        card.setPointerCapture(event.pointerId);
+      });
+      card.addEventListener('pointermove', event => {
+        if (!dragging) return;
+        currentX = event.clientX - startX;
+        card.style.transform = `translateX(${currentX}px) rotate(${currentX / 22}deg)`;
+        yesStamp.style.opacity = Math.max(0, Math.min(1, currentX / 90));
+        noStamp.style.opacity = Math.max(0, Math.min(1, -currentX / 90));
+      });
+      const release = () => {
+        if (!dragging) return;
+        dragging = false;
+        card.classList.remove('dragging');
+        if (Math.abs(currentX) > 95) answerCard(currentX > 0);
+        else {
+          card.style.transform = '';
+          yesStamp.style.opacity = 0;
+          noStamp.style.opacity = 0;
+        }
+        currentX = 0;
+      };
+      card.addEventListener('pointerup', release);
+      card.addEventListener('pointercancel', release);
+      card.addEventListener('keydown', event => {
+        if (event.key === 'ArrowLeft') answerCard(false);
+        if (event.key === 'ArrowRight') answerCard(true);
+      });
+    }
+
+    function renderLists() {
+      const html = state.chats.length ? state.chats.map(chat => `
+        <button class="chat-row ${state.activeChat === chat.id ? 'active' : ''}" data-chat="${chat.id}">
+          <span class="chat-avatar avatar-${chat.avatar}">${chat.advisor[0]}</span>
+          <span class="chat-copy"><strong>${escapeHtml(chat.category)}</strong><span>${chat.complete ? escapeHtml(chat.answer) : `New message from ${chat.advisor}`}</span></span>
+          <span class="chat-status ${chat.complete ? 'done' : ''}"></span>
+        </button>`).join('') : '<p class="empty-chats">Swipe yes on a card and its follow-up will appear here.</p>';
+      chatList.innerHTML = html;
+      mobileChatList.innerHTML = html;
+      [...document.querySelectorAll('[data-chat]')].forEach(button => button.onclick = () => { drawer.classList.remove('open'); openChat(button.dataset.chat); });
+      const open = state.chats.filter(chat => !chat.complete).length;
+      mobileCount.textContent = open ? `(${open})` : '';
+      mobileInbox.hidden = state.chats.length === 0 || state.view === 'chat';
+    }
+
+    function openChat(id) {
+      const chat = state.chats.find(item => item.id === id);
+      if (!chat) return;
+      state.view = 'chat';
+      state.activeChat = id;
+      topbarSubtitle.textContent = `Chat with ${chat.advisor}`;
+      const done = state.chats.filter(item => item.complete).length;
+      progressText.textContent = `${done} of ${state.chats.length} follow-ups done`;
+      mobileInbox.hidden = true;
+      renderLists();
+      renderChat(chat);
+    }
+
+    function renderChat(chat) {
+      const messages = chat.messages.map(message => `<div class="bubble ${message.from}">${escapeHtml(message.text)}</div>`).join('');
+      stage.innerHTML = `
+        <div class="chat-view">
+          <div class="chat-header">
+            <button class="back-button" id="back-button" aria-label="Back to follow-ups">‹</button>
+            <span class="chat-avatar avatar-${chat.avatar}">${chat.advisor[0]}</span>
+            <div><h1>${chat.advisor}</h1><p>Online now ✨</p></div>
+          </div>
+          <div class="messages">${messages}</div>
+          ${chat.complete ? completePanel(chat) : replyPanel(chat)}
+        </div>`;
+      const back = document.getElementById('back-button');
+      if (back) back.onclick = () => drawer.classList.add('open');
+      wireReply(chat);
+      const messagesEl = stage.querySelector('.messages');
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function replyPanel(chat) {
+      if (chat.kind === 'multi' || chat.kind === 'choice') {
+        return `<div class="reply-panel"><div class="quick-replies">${chat.options.map(option => `<button class="chip ${chat.selected.includes(option) ? 'selected' : ''}" data-option="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join('')}</div><button class="finish-reply" id="save-options" ${chat.selected.length ? '' : 'disabled'}>Send answer</button></div>`;
+      }
+      if (chat.kind === 'photo') {
+        return `<div class="reply-panel"><div class="upload-card"><div id="photo-slot"></div><input id="photo-input" type="file" accept="image/*"><label class="upload-label" for="photo-input">Choose a photo</label><p style="margin:10px 0 0;color:var(--muted);font-size:12px">You can review it before sending.</p></div></div>`;
+      }
+      return `<div class="reply-panel"><div class="text-reply"><textarea id="text-answer" aria-label="Your answer" placeholder="Type your answer…"></textarea><button class="send-button" id="send-text">Send</button></div></div>`;
+    }
+
+    function completePanel() {
+      const next = state.chats.find(item => !item.complete);
+      const nextLabel = next
+        ? 'Next follow-up'
+        : state.index < questions.length
+          ? 'Back to questions'
+          : 'Finish check-in';
+      return `<div class="chat-complete"><span>Saved for your care team.</span><button class="next-chat" id="next-chat">${nextLabel}</button></div>`;
+    }
+
+    function wireReply(chat) {
+      if (chat.complete) {
+        document.getElementById('next-chat').onclick = () => {
+          const next = state.chats.find(item => !item.complete);
+          if (next) openChat(next.id); else if (state.index < questions.length) renderSwipe(); else renderCompletion();
+        };
+        return;
+      }
+      document.querySelectorAll('[data-option]').forEach(button => button.onclick = () => {
+        if (chat.kind === 'choice') chat.selected = [button.dataset.option];
+        else if (chat.selected.includes(button.dataset.option)) chat.selected = chat.selected.filter(item => item !== button.dataset.option);
+        else chat.selected.push(button.dataset.option);
+        renderChat(chat);
+      });
+      const save = document.getElementById('save-options');
+      if (save) save.onclick = () => finishChat(chat, chat.selected.join(', '));
+      const send = document.getElementById('send-text');
+      if (send) send.onclick = () => {
+        const value = document.getElementById('text-answer').value.trim();
+        if (value) finishChat(chat, value);
+      };
+      const input = document.getElementById('photo-input');
+      if (input) input.onchange = event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById('photo-slot').innerHTML = `<img class="photo-preview" src="${reader.result}" alt="Selected medication pen"><br><button class="finish-reply" id="send-photo">Send this photo</button><br><br>`;
+          document.getElementById('send-photo').onclick = () => finishChat(chat, 'Medication pen photo attached');
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+
+    function finishChat(chat, answer) {
+      chat.answer = answer;
+      chat.complete = true;
+      chat.messages.push({ from: 'patient', text: answer });
+      chat.messages.push({ from: 'clinician', text: 'Got it — I’ve added that to your check-in ✅' });
+      renderLists();
+      openChat(chat.id);
+    }
+
+    function renderCompletion() {
+      state.view = 'done';
+      state.activeChat = null;
+      topbarSubtitle.textContent = 'Ready for your visit';
+      progressText.textContent = 'Check-in complete';
+      mobileInbox.hidden = true;
+      renderLists();
+      const followups = state.chats.length;
+      stage.innerHTML = `
+        <div class="completion">
+          <div class="completion-mark">✓</div>
+          <h1>You’re all caught up.</h1>
+          <p>Your answers are organized for your care team, so your visit can start with what matters.</p>
+          <div class="summary">
+            <div class="summary-row"><span>Cards reviewed</span><strong>${questions.length}</strong></div>
+            <div class="summary-row"><span>Follow-ups answered</span><strong>${followups}</strong></div>
+            <div class="summary-row"><span>Status</span><strong>Ready for review</strong></div>
+          </div>
+          <button class="restart" id="restart">Restart demo</button>
+        </div>`;
+      document.getElementById('restart').onclick = () => {
+        state.index = 0; state.chats = []; state.activeChat = null; renderLists(); renderSwipe();
+      };
+    }
+
+    function showMatch(question) {
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay';
+      overlay.innerHTML = `<div class="match-pop"><div class="match-heart">💜</div><h2>It’s a match!</h2><p>${question.advisor} has a quick follow-up 💬</p></div>`;
+      document.body.appendChild(overlay);
+      setTimeout(() => showPaywall(overlay, question), 650);
+    }
+
+    function showPaywall(overlay, question) {
+      overlay.innerHTML = `
+        <section class="paywall" role="dialog" aria-modal="true" aria-labelledby="paywall-title">
+          <div class="paywall-avatars"><span class="chat-avatar avatar-${question.avatar}">${question.advisor[0]}</span><span class="chat-avatar avatar-3">M</span></div>
+          <h2 id="paywall-title">Keep the conversation going 💬</h2>
+          <p>Unlock every follow-up chat and send your completed check-in to the care team.</p>
+          <ul><li>💜 Unlimited intake chats</li><li>📸 Secure photo sharing</li><li>✨ One tidy visit summary</li></ul>
+          <button class="unlock-button" id="unlock-button">Start free trial</button>
+          <small>Then $12/month · cancel anytime</small>
+          <button class="not-now" id="not-now">Not now</button>
+        </section>`;
+      document.getElementById('unlock-button').onclick = () => { overlay.remove(); openChat(question.id); };
+      document.getElementById('not-now').onclick = () => {
+        overlay.remove();
+        if (state.index >= questions.length) openChat(question.id);
+      };
+    }
+
+    mobileInbox.onclick = () => drawer.classList.add('open');
+    document.getElementById('close-drawer').onclick = () => drawer.classList.remove('open');
+    renderLists();
+    renderSwipe();
+  </script>
+</body>
+</html>
