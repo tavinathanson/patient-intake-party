@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 340" role="img" aria-labelledby="title description">
+  <title id="title">Small Dose, Big Goals</title>
+  <desc id="description">A cheerful tiny medicine pen rolls a giant golden star up a green hill.</desc>
+  <defs>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="7" dy="10" stdDeviation="0" flood-color="#22563b" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <path d="M10 323C79 236 161 231 221 263c58 31 116 31 189-3v80H10Z" fill="#dff3df"/>
+  <path d="M51 324c79-77 159-77 230-24 44 32 84 31 129 13" fill="none" stroke="#3c7a57" stroke-width="11" stroke-linecap="round"/>
+
+  <g filter="url(#shadow)" transform="translate(245 66) rotate(9 82 88)">
+    <path d="m82 0 19 57 61 1-49 36 18 58-49-34-50 34 19-58L2 58l61-1Z" fill="#f8d76b" stroke="#22563b" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="61" cy="80" r="5" fill="#243328"/>
+    <circle cx="101" cy="80" r="5" fill="#243328"/>
+    <path d="M62 96c12 12 28 12 39 0" fill="none" stroke="#243328" stroke-width="5" stroke-linecap="round"/>
+    <path d="M24 120c-18 4-27 15-29 30M139 120c18 5 27 16 28 31" fill="none" stroke="#22563b" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#shadow)" transform="translate(57 171) rotate(-13 80 44)">
+    <rect x="28" y="10" width="129" height="68" rx="30" fill="#fffdf8" stroke="#22563b" stroke-width="8"/>
+    <path d="M126 11h31c13 0 24 11 24 24v18c0 14-11 25-24 25h-31Z" fill="#ff7a59" stroke="#22563b" stroke-width="8"/>
+    <rect x="4" y="26" width="35" height="36" rx="16" fill="#d8cef7" stroke="#22563b" stroke-width="8"/>
+    <path d="M5 44h-22" stroke="#22563b" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="65" cy="38" r="4.5" fill="#243328"/>
+    <circle cx="92" cy="38" r="4.5" fill="#243328"/>
+    <path d="M65 52c9 8 19 8 27 0" fill="none" stroke="#243328" stroke-width="4" stroke-linecap="round"/>
+    <path d="M56 76 42 98M107 76l15 20" stroke="#22563b" stroke-width="7" stroke-linecap="round"/>
+    <path d="M38 99h-18M122 97h19" stroke="#22563b" stroke-width="7" stroke-linecap="round"/>
+    <path d="M48 18 36-2M112 18l13-20" stroke="#22563b" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <g fill="#ff7a59">
+    <path d="m46 90 5 14 15 1-12 9 4 15-12-9-13 9 5-15-12-9 15-1Z"/>
+    <circle cx="179" cy="78" r="8"/>
+    <circle cx="205" cy="115" r="5"/>
+  </g>
+  <path d="M177 146c12-18 27-24 45-17" fill="none" stroke="#d8cef7" stroke-width="9" stroke-linecap="round" stroke-dasharray="2 18"/>
+</svg>
