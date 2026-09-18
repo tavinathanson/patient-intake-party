@@ -12,12 +12,14 @@
     --sans:ui-sans-serif,-apple-system,"Segoe UI",Inter,system-ui,sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%}
+  html,body{margin:0}
+  html{background:var(--bg)}            /* keeps long pages dark below the fold */
   body{
-    background:radial-gradient(1100px 620px at 50% -12%,#1d2531 0%,var(--bg) 62%);
+    background:radial-gradient(1100px 620px at 50% -12%,#1d2531 0%,var(--bg) 62%) fixed;
+    background-color:var(--bg);
     color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased;
     display:flex; flex-direction:column; align-items:center;
-    padding:22px 16px 40px; min-height:100%;
+    padding:22px 16px 40px; min-height:100vh;
   }
   .wrap{width:100%; max-width:520px}
 
@@ -113,6 +115,62 @@
   button.act.no{flex:1 1 calc(50% - 4px)}
   .hint{margin:12px 0 0; font-size:12px; color:var(--dim); text-align:center; min-height:16px}
 
+  /* within-question counter, so an 8-item reel doesn't feel infinite */
+  .subcount{
+    margin:10px 0 0 32px; font-size:11px; color:var(--gold); letter-spacing:.06em;
+    font-weight:700; opacity:.9;
+  }
+
+  /* jackpot */
+  .jackpot{
+    position:absolute; inset:0; z-index:5; display:grid; place-items:center;
+    background:radial-gradient(circle at 50% 50%,#ffc53d38,#0c1f1ae0 70%);
+    animation:flash .5s ease-out; pointer-events:none;
+  }
+  .jackpot span{
+    font-size:30px; font-weight:900; letter-spacing:.06em; color:#fff3cf;
+    text-shadow:0 0 18px #ffc53d, 0 2px 0 #9b6a00; animation:pop .45s cubic-bezier(.2,1.5,.4,1);
+  }
+  @keyframes flash{from{opacity:0} 30%{opacity:1} to{opacity:1}}
+  @keyframes pop{from{transform:scale(.5) rotate(-6deg); opacity:0} to{transform:scale(1); opacity:1}}
+  @media (prefers-reduced-motion:reduce){ .jackpot,.jackpot span{animation:none} }
+
+  /* end-of-form intake printout */
+  .tally{
+    display:flex; gap:8px; align-items:baseline; margin:0 0 14px; padding:11px 13px;
+    border-radius:11px; background:#ffc53d12; border:1px solid #ffc53d33;
+  }
+  .tally b{font-size:22px; color:var(--gold); font-weight:900}
+  .tally span{font-size:12.5px; color:var(--dim)}
+  .sect{margin:20px 0 8px; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); font-weight:700}
+  .row{
+    display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #1e2531; font-size:13.5px;
+  }
+  .row .k{flex:none; width:38%; color:var(--dim)}
+  .row .v{min-width:0; font-weight:600}
+  .row .v em{font-style:normal; color:var(--gold)}
+  /* thermal receipt */
+  .receipt{
+    margin:0; padding:20px 16px 26px; border-radius:3px; overflow-x:auto;
+    background:repeating-linear-gradient(0deg,#fdfbf4,#fdfbf4 2px,#f7f4ea 2px,#f7f4ea 4px);
+    color:#1c1a15; font:12.5px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;
+    white-space:pre; box-shadow:0 10px 26px -8px rgba(0,0,0,.6);
+    /* torn edges, top and bottom */
+    -webkit-mask:
+      radial-gradient(5px 8px at 5px 0, transparent 97%, #000) top left/11px 9px repeat-x,
+      radial-gradient(5px 8px at 5px 100%, transparent 97%, #000) bottom left/11px 9px repeat-x,
+      linear-gradient(#000,#000) center/100% calc(100% - 18px) no-repeat;
+    mask:
+      radial-gradient(5px 8px at 5px 0, transparent 97%, #000) top left/11px 9px repeat-x,
+      radial-gradient(5px 8px at 5px 100%, transparent 97%, #000) bottom left/11px 9px repeat-x,
+      linear-gradient(#000,#000) center/100% calc(100% - 18px) no-repeat;
+  }
+  .copy{
+    width:100%; margin-top:8px; padding:11px; border-radius:11px; cursor:pointer;
+    background:#1b212b; border:1px solid var(--edge); color:var(--ink); font:inherit; font-size:13px; font-weight:600;
+  }
+  .copy:hover{border-color:#3a4457}
+
   /* handoff */
   .done h2{margin:0 0 4px; font-size:22px; font-weight:800; letter-spacing:-.02em}
   .done .sub{margin:0 0 16px; font-size:12.5px; color:var(--dim)}
@@ -174,7 +232,7 @@ boot();
 
 async function boot(){
   try{
-    const r = await fetch('slot-intake.json');
+    const r = await fetch('slot-intake.json', {cache:'no-store'});   // never serve a stale reel
     if(!r.ok) throw new Error(r.status);
     DATA = await r.json();
   }catch(e){
@@ -217,6 +275,7 @@ function render(){
     <p class="printed ${q.not_on_paper_form?'ghost':''}">
       ${q.not_on_paper_form ? '★ not on the paper form' : 'paper form: ' + q.printed_as}
     </p>
+    ${q.mode==='spin_through_all' ? `<p class="subcount" id="subcount">1 OF ${items.length}</p>` : ''}
     <div class="machine">
       <div class="window"><div class="payline"></div><div class="strip" id="strip"></div></div>
       <button class="lever" id="lever" aria-label="Pull the lever">
@@ -257,11 +316,12 @@ function setStrip(i, animate, ms=0){
 // Every pull is a real spin: PASSES full trips through all the options, then it
 // settles on `land`. Afterwards the strip snaps back to an identical-looking
 // position further up, so the reel can be pulled forever without running out.
-function spin(items, land, onLanded){
+function spin(items, land, onLanded, quick){
   const len = items.length;
   const offset = ((land - (absIdx % len)) + len) % len;
   const target = absIdx + PASSES * len + offset;
-  const ms = reduced ? 0 : 1500 + Math.random() * 500;
+  // walk-through reels get pulled many times per question, so they spin brisker
+  const ms = reduced ? 0 : (quick ? 850 + Math.random()*200 : 1500 + Math.random()*500);
   const mine = gen;
 
   setStrip(target, true, ms);
@@ -289,10 +349,12 @@ function pull(q, items){
   if(q.mode === 'spin_through_all'){
     // spins the whole reel, then settles on the option being asked about
     if(reelPos >= items.length){ lever.dataset.spinning = '0'; return; }
+    const sub = $('#subcount');
+    if(sub) sub.textContent = `${reelPos+1} OF ${items.length}`;
     spin(items, reelPos, () => {
       lever.dataset.spinning = '0';
       showYesNo(q, items[reelPos]);
-    });
+    }, true);
     return;
   }
 
@@ -307,6 +369,19 @@ function pull(q, items){
   });
 }
 
+// A yes is a hit. A yes on something the paper form missed is the real jackpot.
+let jackpots = 0;
+function jackpot(text, then){
+  jackpots++;
+  const win = document.querySelector('.window');
+  if(!win) return then && then();
+  const el = document.createElement('div');
+  el.className = 'jackpot';
+  el.innerHTML = `<span>🎰 ${text}</span>`;
+  win.appendChild(el);
+  setTimeout(()=>{ el.remove(); then && then(); }, reduced ? 200 : 1000);
+}
+
 function showYesNo(q, item){
   $('#hint').textContent = item.plain_language || 'Yes or no. Then pull again.';
   $('#acts').innerHTML = `<button class="act go" id="yes">Yes</button>
@@ -314,10 +389,15 @@ function showYesNo(q, item){
                           <button class="act no" id="dunno">Not sure</button>`;
   const step = verdict => {
     if(verdict !== 'no') answers.push({q, item, verdict});
-    reelPos++;
-    if(reelPos >= (q.reel||[]).length || item.terminal){ qi++; return render(); }
-    $('#acts').innerHTML = '';                    // no auto-advance — the lever drives it
-    $('#hint').textContent = 'Pull again for the next one.';
+    const advance = () => {
+      reelPos++;
+      if(reelPos >= (q.reel||[]).length || item.terminal){ qi++; return render(); }
+      $('#acts').innerHTML = '';                  // no auto-advance — the lever drives it
+      $('#hint').textContent = 'Pull again for the next one.';
+    };
+    // a yes the paper form never captured is the one worth celebrating
+    if(verdict === 'yes') return jackpot(item.paper_caught_it === false ? 'JACKPOT!' : 'HIT!', advance);
+    advance();
   };
   $('#yes').onclick = () => step('yes');
   $('#no').onclick = () => step('no');
@@ -326,21 +406,133 @@ function showYesNo(q, item){
 
 function accept(q, item){
   answers.push({q, item, verdict:'picked'});
-  qi++;
-  render();
+  const go = () => { qi++; render(); };
+  if(item.chart_match) return jackpot('JACKPOT!', go);   // matches what the chart knows
+  go();
+}
+
+// Turn the pulls into the same shape as the clinic's intake-form.json
+function buildIntake(){
+  const out = {
+    form: 'PULL FOR PAIN — slot machine intake',
+    patient: DATA.patient_context.name,
+    date_of_visit: '2026-08-27',
+    filled_out_by: 'the patient, by lever',
+    jackpots: jackpots,
+    pulls: 0,
+    missed_on_paper: 0,
+    answers: {}
+  };
+  for(const a of answers){
+    const id = a.q.id;
+    out.pulls++;
+    if(a.item.paper_caught_it === false) out.missed_on_paper++;
+    if(a.q.mode === 'spin_through_all'){
+      (out.answers[id] ||= []).push({
+        item: a.item.value,
+        said: a.verdict,
+        ...(a.item.paper_caught_it === false ? {missed_on_paper: true} : {})
+      });
+    }else{
+      out.answers[id] = a.item.value;
+    }
+  }
+  return out;
+}
+
+// ── the receipt ───────────────────────────────────────────────
+const W = 34;
+const rule  = c => c.repeat(W);
+const mid   = s => { const p = Math.max(0, Math.floor((W - s.length)/2)); return ' '.repeat(p) + s; };
+const cols  = (l, r) => {
+  l = String(l); r = String(r);
+  const gap = Math.max(1, W - l.length - r.length);
+  return l.length + r.length >= W ? l.slice(0, W-r.length-1) + ' ' + r : l + ' '.repeat(gap) + r;
+};
+const wrap  = (s, indent=2) => {
+  const out = []; let line = '';
+  for(const word of String(s).split(' ')){
+    if((line + ' ' + word).trim().length > W - indent){ out.push(' '.repeat(indent) + line.trim()); line = word; }
+    else line += ' ' + word;
+  }
+  if(line.trim()) out.push(' '.repeat(indent) + line.trim());
+  return out.join('\n');
+};
+
+function buildReceipt(intake){
+  const L = [];
+  L.push(rule('='));
+  L.push(mid('GARDEN ROW FAMILY MEDICINE'));
+  L.push(mid('* PULL FOR PAIN *'));
+  L.push(mid('slot machine intake'));
+  L.push(rule('='));
+  L.push(cols('PATIENT', DATA.patient_context.name));
+  L.push(cols('DOB', '1965-03-14'));
+  L.push(cols('DATE', intake.date_of_visit));
+  L.push(cols('FILLED BY', 'LEVER'));
+  L.push(rule('-'));
+
+  for(const q of DATA.questions){
+    const v = intake.answers[q.id];
+    if(v === undefined) continue;
+    const head = q.printed_as === 'NOT ON THE PAPER FORM'
+      ? '* ' + q.id.replace(/_/g,' ').toUpperCase()
+      : q.id.replace(/_/g,' ').toUpperCase();
+    L.push(head);
+    if(Array.isArray(v)){
+      if(!v.length) L.push('  (nothing selected)');
+      for(const x of v){
+        const mark = x.missed_on_paper ? ' *' : '';
+        L.push(cols('  ' + x.item.replace(/_/g,' '), x.said.toUpperCase() + mark));
+      }
+    }else{
+      L.push(wrap(String(v).replace(/_/g,' ')));
+    }
+    L.push('');
+  }
+
+  L.push(rule('-'));
+  L.push(cols('PULLS', intake.pulls));
+  L.push(cols('JACKPOTS', intake.jackpots));
+  L.push(cols('* MISSED ON PAPER', intake.missed_on_paper));
+  L.push(rule('='));
+  L.push(mid('* ITEMS MARKED * WERE NEVER *'));
+  L.push(mid('* CAPTURED BY THE PAPER FORM *'));
+  L.push(rule('='));
+  L.push('');
+  L.push(mid('THANK YOU FOR PULLING'));
+  L.push(mid('|| |||| | ||| || |||| |'));
+  return L.join('\n');
 }
 
 function handoff(){
   $('#pips').innerHTML = '';
   const h = DATA.handoff;
+  const intake = buildIntake();
+  const receipt = buildReceipt(intake);
+
   stage.innerHTML = `<div class="done">
     <h2>${h.title}</h2>
     <p class="sub">${h.rule}</p>
+
+    <div class="tally"><b>${jackpots}</b><span>jackpot${jackpots===1?'':'s'} — answers the paper form never got</span></div>
+
     ${h.lines.map(l => `<div class="flag ${l.severity}">
         <span class="sev">${l.severity}</span><span>${l.text}</span></div>`).join('')}
+
+    <p class="sect">Your receipt</p>
+    <pre class="receipt" id="receipt">${receipt.replace(/</g,'&lt;')}</pre>
+    <button class="copy" id="copy">Copy receipt</button>
+
     <button class="again" id="again">Run it again</button>
   </div>`;
-  $('#again').onclick = () => { qi = 0; answers = []; render(); };
+
+  $('#copy').onclick = () => {
+    navigator.clipboard?.writeText(receipt);
+    $('#copy').textContent = 'Copied ✓';
+    setTimeout(()=> $('#copy').textContent = 'Copy receipt', 1400);
+  };
+  $('#again').onclick = () => { qi = 0; answers = []; jackpots = 0; render(); };
 }
 </script>
 </body>

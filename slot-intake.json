@@ -106,7 +106,7 @@
       "reel_from_chart": true,
       "reel": [
         { "value": "metformin", "label": "Metformin", "plain_language": "the sugar one, twice a day", "emoji": "💊", "truth": "taking" },
-        { "value": "sertraline", "label": "Sertraline", "plain_language": "the mood one, small white pill", "emoji": "💊", "truth": "stopped_months_ago", "flag": "STOPPED. Nobody at the clinic knows. Not on his paper list — he listed four, the chart has five, this is the missing one." },
+        { "value": "sertraline", "label": "Sertraline", "plain_language": "the mood one, small white pill", "emoji": "💊", "truth": "stopped_months_ago", "paper_caught_it": false, "flag": "STOPPED. Nobody at the clinic knows. Not on his paper list — he listed four, the chart has five, this is the missing one." },
         { "value": "gabapentin", "label": "Gabapentin", "plain_language": "the nerve one, three times a day", "emoji": "💊", "truth": "skips_some_days", "flag": "Skips it on days he has things to do. Says it makes him foggy. Reads as non-response to treatment." },
         { "value": "meloxicam", "label": "Meloxicam", "plain_language": "the one for swelling", "emoji": "💊", "truth": "taking_daily" },
         { "value": "cyclobenzaprine", "label": "Cyclobenzaprine", "plain_language": "the muscle one at night", "emoji": "💊", "truth": "ran_out_in_2025", "flag": "Finished it in 2025. Still listed Active on the med list." }

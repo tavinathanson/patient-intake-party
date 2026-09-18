@@ -26,6 +26,33 @@ and it will not advance until it gets a yes or a no.
 The slot machine isn't decoration on the form. It's the fix for the exact failure
 mode already sitting in his chart.
 
+## Pull the lever
+
+Every pull spins the **whole reel** — two full passes through every option — then
+settles on one. No quiet stepping between options: if you're being asked, the reel
+spun for it.
+
+Say **yes** and the machine pays out:
+
+- **HIT** — a yes the paper form already caught
+- **JACKPOT** — a yes the paper form *missed*. Say yes to "ever been on something
+  for your mood or nerves?" and that's a jackpot, because the checkbox grid never got it.
+
+## The receipt
+
+At the end it prints a receipt — every answer, the pull count, the jackpot count,
+and a `*` beside everything the paper form never captured.
+
+```
+PAST CONDITIONS
+  diabetes                     YES
+  depression anxiety         YES *
+...
+PULLS                            9
+JACKPOTS                         3
+* MISSED ON PAPER                2
+```
+
 ## What the care team gets
 
 The patient pulls a lever seven times. The doctor gets one screen, on the rule
