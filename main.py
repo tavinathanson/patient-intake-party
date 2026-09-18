@@ -36,6 +36,54 @@ FIELDS = [
     "signature",
 ]
 
+# 0-10 scales the patient screams (or drags) an answer for. Each one is stored
+# as {"value": 1-10, "method": "scream"|"slider", "seconds": float|None} —
+# a 7 that came from a 7.2-second scream is worth more than a 7 dragged on a
+# slider, so we keep how it was measured.
+RATING_FIELDS = [
+    "pain",
+    "itch",
+    "nausea",
+    "fatigue",
+    "sleep_trouble",
+    "stiffness",
+    "breathlessness",
+    "low_spirits",
+    "interference",
+]
+
+METHODS = ("scream", "slider")
+
+
+def clean_ratings(raw):
+    """Keep only known scales with an in-range value. Silently drop the rest."""
+    ratings = {}
+    if not isinstance(raw, dict):
+        return ratings
+
+    for key in RATING_FIELDS:
+        entry = raw.get(key)
+        if not isinstance(entry, dict):
+            continue
+        try:
+            value = int(entry.get("value"))
+        except (TypeError, ValueError):
+            continue
+        if not 1 <= value <= 10:
+            continue
+
+        try:
+            seconds = round(float(entry.get("seconds")), 1)
+        except (TypeError, ValueError):
+            seconds = None
+
+        ratings[key] = {
+            "value": value,
+            "method": entry.get("method") if entry.get("method") in METHODS else "slider",
+            "seconds": seconds,
+        }
+    return ratings
+
 app = Flask(__name__, static_folder="static")
 
 
@@ -101,6 +149,8 @@ def create_intake():
             form[field] = [str(v).strip() for v in value] if isinstance(value, list) else []
         else:
             form[field] = str(value).strip()
+
+    form["ratings"] = clean_ratings(body.get("ratings"))
 
     # Only hard requirement: we need to know who walked in.
     if not form["name"]:

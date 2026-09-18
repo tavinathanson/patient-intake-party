@@ -10,352 +10,245 @@
     --wood-dark: #2e1c0f;
     --wood: #4a2c17;
     --parchment: #ece0c4;
-    --parchment-dim: #ded0af;
     --ink: #2b1c0e;
     --ink-faded: #6d5940;
     --gold: #c08a2e;
     --rope: #b99760;
     --blood: #8a2b1c;
+    --sea: #1d4b5a;
   }
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    padding: 2.5rem 1rem 5rem;
+    padding: 0 0 4rem;
     color: var(--ink);
     font: 16px/1.55 "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-    /* deck planking */
     background-color: var(--wood);
     background-image:
-      repeating-linear-gradient(90deg,
-        rgba(0,0,0,.28) 0 2px, rgba(0,0,0,0) 2px 15%),
-      repeating-linear-gradient(0deg,
-        rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.13) 1px 3px, rgba(0,0,0,0) 3px 9px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.28) 0 2px, rgba(0,0,0,0) 2px 15%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, rgba(0,0,0,.13) 1px 3px, rgba(0,0,0,0) 3px 9px),
       linear-gradient(180deg, var(--wood-dark), var(--wood) 40%, var(--wood-dark));
   }
-
   .display { font-family: Luminari, Papyrus, "Iowan Old Style", Georgia, serif; }
 
-  main {
-    max-width: 780px;
+  /* ---------------- the plank (progress) ---------------- */
+  .hud {
+    position: sticky; top: 0; z-index: 10;
+    padding: .9rem 1rem .7rem;
+    background: linear-gradient(180deg, rgba(20,12,6,.97), rgba(20,12,6,.86));
+    border-bottom: 2px solid var(--wood-dark);
+    box-shadow: 0 6px 18px rgba(0,0,0,.45);
+  }
+  .track {
+    position: relative;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 2.5rem 2.25rem 2rem;
+    height: 64px;
+  }
+  .ship {
+    position: absolute; left: 0; bottom: 6px;
+    font-size: 1.9rem; line-height: 1;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.6));
+  }
+  .board {
+    position: absolute;
+    left: 2.4rem; right: 2.2rem; bottom: 14px;
+    height: 13px;
+    background-color: #7a4a22;
+    background-image: repeating-linear-gradient(90deg,
+      rgba(0,0,0,.34) 0 2px, rgba(255,255,255,.07) 2px 9px, rgba(0,0,0,0) 9px 26px);
+    border: 2px solid var(--wood-dark);
+    border-radius: 2px;
+    box-shadow: 0 3px 6px rgba(0,0,0,.5);
+  }
+  .sea {
+    position: absolute;
+    left: 2.4rem; right: 0; bottom: 0;
+    height: 14px;
+    overflow: hidden;
+    color: rgba(255,255,255,.5);
+    font-size: .8rem;
+  }
+  .sea .shark { position: absolute; bottom: -2px; right: 1.2rem; font-size: 1rem; animation: lurk 3.5s ease-in-out infinite; }
+  @keyframes lurk {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    50% { transform: translateX(-14px) rotate(-6deg); }
+  }
+  .walker {
+    position: absolute;
+    bottom: 22px;
+    font-size: 1.6rem; line-height: 1;
+    transform: translateX(-50%);
+    transition: left .55s cubic-bezier(.34,1.3,.64,1);
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,.6));
+  }
+  .walker.falling { animation: fall 1.1s ease-in forwards; }
+  @keyframes fall {
+    0% { bottom: 22px; transform: translateX(-50%) rotate(0deg); }
+    100% { bottom: -34px; transform: translateX(-50%) rotate(220deg); opacity: .15; }
+  }
+  .caption {
+    max-width: 820px;
+    margin: .15rem auto 0;
+    display: flex; justify-content: space-between; gap: 1rem;
+    font-size: .8rem; color: var(--rope);
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  .caption .doom { font-style: italic; text-transform: none; letter-spacing: 0; color: #d8b98a; }
+
+  /* ---------------- the card ---------------- */
+  main { max-width: 620px; margin: 2rem auto 0; padding: 0 1rem; }
+  .card {
     background-color: var(--parchment);
     background-image:
       radial-gradient(ellipse at 15% 10%, rgba(139,105,58,.16), transparent 55%),
-      radial-gradient(ellipse at 85% 85%, rgba(139,105,58,.2), transparent 55%),
-      radial-gradient(circle at 60% 40%, rgba(120,88,45,.09), transparent 40%);
+      radial-gradient(ellipse at 85% 85%, rgba(139,105,58,.2), transparent 55%);
     border: 3px solid var(--wood-dark);
     border-radius: 3px;
-    box-shadow: 0 0 0 6px rgba(185,151,96,.25), 0 14px 40px rgba(0,0,0,.55);
+    padding: 2rem 1.9rem 1.6rem;
+    box-shadow: 0 0 0 6px rgba(185,151,96,.22), 0 14px 40px rgba(0,0,0,.55);
+    animation: deal .3s ease-out;
   }
+  @keyframes deal { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
-  header { text-align: center; border-bottom: 3px double var(--ink-faded); padding-bottom: 1.25rem; }
-  h1 { font-size: 2.1rem; margin: 0; letter-spacing: .04em; text-transform: uppercase; }
-  .skull { font-size: 2rem; display: block; line-height: 1; }
-  .tagline { margin: .4rem 0 0; font-style: italic; color: var(--ink-faded); }
-  .warning {
-    margin: 1.25rem 0 0;
-    font-size: .82rem;
-    color: var(--blood);
-    text-transform: uppercase;
-    letter-spacing: .1em;
-  }
+  .step-no { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faded); }
+  h1 { font-size: 1.55rem; margin: .35rem 0 .3rem; line-height: 1.25; }
+  .plain { font-style: italic; color: var(--ink-faded); font-size: .9rem; margin: 0 0 1.3rem; }
 
-  fieldset {
+  .answer {
+    min-height: 3.4rem;
+    padding: .7rem .8rem;
+    font-size: 1.15rem;
+    background: rgba(255,253,245,.8);
     border: 2px solid var(--ink-faded);
     border-radius: 2px;
-    margin: 2rem 0 0;
-    padding: 0 1.25rem 1.25rem;
-    background: rgba(255,252,240,.35);
+    white-space: pre-wrap;
+    word-break: break-word;
   }
-  legend {
-    padding: 0 .6rem;
-    font-size: 1.15rem;
-    font-weight: 700;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-  }
-  .sec-head {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    flex-wrap: wrap;
-    margin: .25rem 0 1.1rem;
-    padding-bottom: .6rem;
-    border-bottom: 1px dashed var(--ink-faded);
-  }
-  .sec-note { font-style: italic; color: var(--ink-faded); font-size: .85rem; flex: 1; min-width: 12ch; }
+  .answer.empty { color: rgba(43,28,14,.33); font-style: italic; font-size: 1rem; }
+  .answer.hot { outline: 3px solid var(--blood); outline-offset: 1px; background: rgba(255,244,205,.95); }
+  .answer .interim { color: var(--ink-faded); font-style: italic; }
+  .answer .parsed { display: block; font-size: .8rem; color: var(--ink-faded); font-style: italic; margin-top: .3rem; }
 
-  /* ---- record buttons ---- */
-  .rec {
-    font: 600 .8rem/1 "Iowan Old Style", Georgia, serif;
+  .choices { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .choice {
+    padding: .4rem .7rem;
+    font-size: .92rem;
+    background: rgba(255,253,245,.7);
+    border: 2px solid var(--ink-faded);
+    border-radius: 1.4rem;
+    color: rgba(43,28,14,.62);
+    cursor: default;
+    user-select: none;
+  }
+  .choice.on {
+    background: var(--blood);
+    border-color: var(--wood-dark);
+    color: #f7ecd2;
+    font-weight: 700;
+  }
+
+  /* scream gauge */
+  .pips { display: flex; gap: 4px; margin-bottom: .5rem; }
+  .pip {
+    width: 1.5rem; height: 1.7rem;
+    display: grid; place-items: center;
+    font-size: 1.1rem;
+    color: rgba(43,28,14,.2);
+    border-bottom: 3px solid var(--ink-faded);
+    transition: color .08s linear, transform .08s linear;
+  }
+  .pip.lit { color: var(--blood); transform: scale(1.16); }
+  .gauge-val { font-size: 1.6rem; font-weight: 700; }
+  .gauge-val .of { font-size: .9rem; font-weight: 400; color: var(--ink-faded); }
+  .vu { height: 7px; background: rgba(43,28,14,.14); border-radius: 4px; overflow: hidden; margin: .7rem 0 0; }
+  .vu span { display: block; height: 100%; width: 0; background: var(--blood); transition: width .05s linear; }
+
+  /* ---------------- buttons & notes ---------------- */
+  .acts { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1.3rem 0 0; }
+  button {
+    font: 600 .82rem/1.2 "Iowan Old Style", Georgia, serif;
     letter-spacing: .06em;
     text-transform: uppercase;
-    color: var(--parchment);
-    background: linear-gradient(180deg, #6b3f20, #45260f);
+    color: #f7ecd2;
     border: 2px solid var(--wood-dark);
     border-radius: 2rem;
-    padding: .5rem .9rem;
+    padding: .62rem 1.05rem;
     cursor: pointer;
-    white-space: nowrap;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16);
   }
-  .rec:hover { background: linear-gradient(180deg, #7d4a26, #522d13); }
-  .rec[aria-pressed="true"] {
-    background: linear-gradient(180deg, #a33124, #6f1f14);
-    animation: pulse 1.25s ease-in-out infinite;
-  }
-  .rec:disabled { opacity: .45; cursor: not-allowed; animation: none; }
+  .speak { background: linear-gradient(180deg, #6b3f20, #45260f); }
+  .speak:hover { background: linear-gradient(180deg, #7d4a26, #522d13); }
+  .holler { background: linear-gradient(180deg, #8a2b1c, #5e1a10); }
+  .holler:hover { background: linear-gradient(180deg, #a33124, #6f1f14); }
+  button:disabled { opacity: .4; cursor: not-allowed; animation: none !important; }
+  button[data-live="1"] { animation: pulse 1.05s ease-in-out infinite; }
   @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(163,49,36,.7); }
-    50% { box-shadow: 0 0 0 .5rem rgba(163,49,36,0); }
-  }
-  .heard {
-    flex-basis: 100%;
-    min-height: 1.3em;
-    font-size: .85rem;
-    font-style: italic;
-    color: var(--blood);
+    0%, 100% { box-shadow: 0 0 0 0 rgba(200,64,31,.75); }
+    50% { box-shadow: 0 0 0 .55rem rgba(200,64,31,0); }
   }
 
-  /* ---- fields ---- */
-  label { display: block; margin-bottom: 1.05rem; }
-  label > .lbl { display: block; font-weight: 700; font-size: .95rem; }
-  .plain { display: block; font-weight: 400; font-size: .78rem; font-style: italic; color: var(--ink-faded); margin-bottom: .3rem; }
-
-  input[type=text], input[type=date], input[type=tel], textarea, select {
-    width: 100%;
-    padding: .5rem .6rem;
-    font: inherit;
-    color: var(--ink);
-    background: rgba(255,253,245,.85);
-    border: 0;
-    border-bottom: 2px solid var(--ink-faded);
-    border-radius: 2px 2px 0 0;
+  .note { min-height: 1.4em; margin: .9rem 0 0; font-style: italic; color: var(--blood); font-size: .92rem; }
+  .gate {
+    margin: 1.1rem 0 0;
+    padding: .65rem .8rem;
+    border-left: 4px solid var(--blood);
+    background: rgba(138,43,28,.08);
+    font-size: .88rem;
   }
-  textarea { min-height: 4.5rem; resize: vertical; border: 2px solid var(--ink-faded); border-radius: 2px; }
-  input:focus, textarea:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .gate b { text-transform: uppercase; letter-spacing: .05em; }
 
-  /* field currently being dictated into */
-  .listening {
-    background: rgba(255,244,205,.95) !important;
-    outline: 3px solid var(--blood) !important;
-    outline-offset: 1px;
-  }
+  /* ---------------- intro & end ---------------- */
+  .hero { text-align: center; }
+  .hero .skull { font-size: 2.6rem; display: block; line-height: 1; }
+  .hero h1 { font-size: 1.9rem; text-transform: uppercase; letter-spacing: .03em; }
+  .rules { text-align: left; margin: 1.4rem 0 0; padding: 0; list-style: none; font-size: .95rem; }
+  .rules li { margin-bottom: .6rem; padding-left: 1.7rem; position: relative; }
+  .rules li::before { content: "☠"; position: absolute; left: 0; color: var(--blood); }
+  .nosupport { margin: 1.2rem 0 0; padding: .7rem .85rem; border: 2px dashed var(--blood); color: var(--blood); font-size: .88rem; }
+  .summary { margin: 1.2rem 0 0; font-size: .9rem; border-top: 2px solid var(--ink-faded); }
+  .summary div { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem 0; border-bottom: 1px dotted var(--ink-faded); }
+  .summary .k { color: var(--ink-faded); font-style: italic; }
+  .summary .v { font-weight: 700; text-align: right; }
 
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.5rem; }
+  footer { max-width: 620px; margin: 1.3rem auto 0; padding: 0 1rem; text-align: center; font-size: .82rem; color: var(--rope); }
+  footer a { color: #ded0af; }
 
-  .curses {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: .3rem 1rem;
-    margin: 0 0 1.1rem;
-    padding: .7rem;
-    border: 2px solid var(--ink-faded);
-    border-radius: 2px;
-  }
-  .curses label { margin: 0; display: flex; align-items: center; gap: .5rem; font-size: .9rem; }
-  .curses input { accent-color: var(--blood); width: 1.05rem; height: 1.05rem; }
-
-  /* ---- plank ---- */
-  .plank-wrap { text-align: center; margin: 2.5rem 0 .5rem; }
-  .plank {
-    font-family: Luminari, Papyrus, Georgia, serif;
-    font-size: 1.2rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: #f7ecd2;
-    background-color: #5a3418;
-    background-image: repeating-linear-gradient(90deg,
-      rgba(0,0,0,.22) 0 1px, rgba(255,255,255,.05) 1px 10px, rgba(0,0,0,0) 10px 30px);
-    border: 3px solid var(--wood-dark);
-    border-radius: 2px;
-    padding: 1rem 3rem;
-    cursor: pointer;
-    box-shadow: 0 6px 0 var(--wood-dark), 0 10px 18px rgba(0,0,0,.4);
-  }
-  .plank:hover { background-color: #6b4020; }
-  .plank:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--wood-dark); }
-  #status { display: block; margin-top: 1rem; min-height: 1.5em; font-weight: 700; }
-  #status.ok { color: #2f5d3a; }
-  #status.err { color: var(--blood); }
-
-  footer { max-width: 780px; margin: 1.5rem auto 0; text-align: center; font-size: .85rem; color: var(--rope); }
-  footer a { color: var(--parchment-dim); }
-  .nosupport { margin: 1rem 0 0; padding: .6rem .8rem; border: 2px dashed var(--blood); color: var(--blood); font-size: .85rem; }
-
-  @media (max-width: 580px) {
-    .row { grid-template-columns: 1fr; }
-    main { padding: 1.5rem 1.1rem; }
-    h1 { font-size: 1.5rem; }
+  @media (max-width: 520px) {
+    .card { padding: 1.4rem 1.1rem; }
+    h1 { font-size: 1.3rem; }
+    .pip { width: 1.15rem; font-size: .9rem; }
   }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <span class="skull display">☠</span>
-    <h1 class="display">Articles of the Ship's Surgeon</h1>
-    <p class="tagline">Signed afore ye are hauled below deck &mdash; for the good of crew an' cargo alike</p>
-    <p class="warning">Speak true. Liars walk the plank.</p>
-    <div id="nosupport" class="nosupport" hidden>
-      Yer browser has no ears. Use Chrome or Safari to speak yer answers, or scratch 'em in by hand.
-    </div>
-  </header>
 
-  <form id="intake">
+<div class="hud">
+  <div class="track">
+    <span class="ship">🚢</span>
+    <div class="board"></div>
+    <div class="sea"><span class="shark">🦈</span></div>
+    <span class="walker" id="walker">🚶</span>
+  </div>
+  <div class="caption">
+    <span id="progress-text">Step 0</span>
+    <span class="doom" id="doom-text">still aboard</span>
+  </div>
+</div>
 
-    <fieldset data-section="Ship's Manifest">
-      <legend class="display">I. Ship's Manifest</legend>
-      <div class="sec-head">
-        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
-        <span class="sec-note">Who ye are, an' who to blame.</span>
-        <span class="heard" aria-live="polite"></span>
-      </div>
-
-      <label><span class="lbl">Scribe at the quill</span>
-        <span class="plain">Filled out by, if not the patient</span>
-        <input type="text" name="filled_out_by"></label>
-
-      <div class="row">
-        <label><span class="lbl">This day in the log</span>
-          <span class="plain">Today's date</span>
-          <input type="date" name="date"></label>
-        <label><span class="lbl">Name ye answer to <em>(required)</em></span>
-          <span class="plain">Patient name</span>
-          <input type="text" name="name" required></label>
-        <label><span class="lbl">Day ye were launched</span>
-          <span class="plain">Date of birth &mdash; say it like "June 2nd 1943"</span>
-          <input type="date" name="date_of_birth"></label>
-        <label><span class="lbl">How we hail ye</span>
-          <span class="plain">Phone</span>
-          <input type="tel" name="phone"></label>
-      </div>
-
-      <label><span class="lbl">Where ye drop anchor</span>
-        <span class="plain">Address</span>
-        <input type="text" name="address"></label>
-
-      <div class="row">
-        <label><span class="lbl">Colors ye fly</span>
-          <span class="plain">Insurance</span>
-          <input type="text" name="insurance"></label>
-        <label><span class="lbl">Mark upon yer papers</span>
-          <span class="plain">Member ID</span>
-          <input type="text" name="member_id"></label>
-      </div>
-
-      <label><span class="lbl">Who to notify when ye're lost at sea</span>
-        <span class="plain">Emergency contact &mdash; name, relationship, phone</span>
-        <input type="text" name="emergency_contact"></label>
-    </fieldset>
-
-    <fieldset data-section="The Affliction">
-      <legend class="display">II. The Affliction</legend>
-      <div class="sec-head">
-        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
-        <span class="sec-note">What drove ye to the surgeon's quarters.</span>
-        <span class="heard" aria-live="polite"></span>
-      </div>
-
-      <label><span class="lbl">What ails ye</span>
-        <span class="plain">Reason for visit</span>
-        <textarea name="reason_for_visit"></textarea></label>
-
-      <label><span class="lbl">Potions, tonics an' tinctures ye swallow</span>
-        <span class="plain">Current medications &mdash; include over-the-counter, vitamins, eye drops, inhalers</span>
-        <textarea name="current_medications"></textarea></label>
-
-      <label><span class="lbl">What makes ye break out in barnacles</span>
-        <span class="plain">Allergies &mdash; say "none" if none</span>
-        <input type="text" name="allergies"></label>
-    </fieldset>
-
-    <fieldset data-section="Past Voyages">
-      <legend class="display">III. Past Voyages &amp; Scars</legend>
-      <div class="sec-head">
-        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
-        <span class="sec-note">Name the curses aloud an' they'll be ticked for ye.</span>
-        <span class="heard" aria-live="polite"></span>
-      </div>
-
-      <label><span class="lbl">Curses ye've carried</span>
-        <span class="plain">Past conditions &mdash; tick all that apply, or just say them</span></label>
-      <div class="curses" id="curses" data-voice-group="past_conditions"></div>
-
-      <label><span class="lbl">Times the surgeon has cut ye open</span>
-        <span class="plain">Past surgeries &mdash; procedure and year</span>
-        <textarea name="past_surgeries"></textarea></label>
-
-      <label><span class="lbl">Afflictions runnin' in yer bloodline</span>
-        <span class="plain">Family history &mdash; parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma</span>
-        <textarea name="family_history"></textarea></label>
-    </fieldset>
-
-    <fieldset data-section="Vices">
-      <legend class="display">IV. Vices &amp; Grog</legend>
-      <div class="sec-head">
-        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
-        <span class="sec-note">No judgement. The surgeon's seen worse.</span>
-        <span class="heard" aria-live="polite"></span>
-      </div>
-
-      <div class="row">
-        <label><span class="lbl">Pipe smoke</span>
-          <span class="plain">Tobacco &mdash; never, former, or current</span>
-          <select name="tobacco">
-            <option value="">—</option>
-            <option>Never</option>
-            <option>Former</option>
-            <option>Current</option>
-          </select></label>
-        <label><span class="lbl">Grog</span>
-          <span class="plain">Alcohol &mdash; none, occasional, or daily</span>
-          <select name="alcohol">
-            <option value="">—</option>
-            <option>None</option>
-            <option>Occasional</option>
-            <option>Daily</option>
-          </select></label>
-        <label><span class="lbl">Other mischief</span>
-          <span class="plain">Recreational drugs &mdash; no or yes</span>
-          <select name="drugs">
-            <option value="">—</option>
-            <option>No</option>
-            <option>Yes</option>
-          </select></label>
-      </div>
-    </fieldset>
-
-    <fieldset data-section="Yer Mark">
-      <legend class="display">V. Make Yer Mark</legend>
-      <div class="sec-head">
-        <button type="button" class="rec" aria-pressed="false">🎙 Speak this section</button>
-        <span class="sec-note">An X will do, if ye cannot write.</span>
-        <span class="heard" aria-live="polite"></span>
-      </div>
-
-      <label><span class="lbl">Yer mark</span>
-        <span class="plain">Signature &mdash; type or say your name; if not the patient, add your relationship</span>
-        <input type="text" name="signature"></label>
-    </fieldset>
-
-    <div class="plank-wrap">
-      <button type="submit" class="plank">Walk the Plank ⚓</button>
-      <span id="status" aria-live="polite"></span>
-    </div>
-  </form>
-</main>
-
-<footer>
-  ☠ All souls aboard: <a href="/api/intake">/api/intake</a> ☠
-</footer>
+<main><div class="card" id="card"></div></main>
+<footer>☠ All souls aboard: <a href="/api/intake">/api/intake</a> ☠</footer>
 
 <script>
-/* ------------------------------------------------------------------ *
- * The curses (past conditions) — real names, so the data stays usable
- * ------------------------------------------------------------------ */
+/* ==================================================================
+ * Articles of the Ship's Surgeon — one question per plank-step.
+ *
+ * Nothing here can be typed: there is not a single editable element on
+ * the page. Written answers arrive by dictation, the 0-10 scales by the
+ * length of a scream, and the ONLY way forward is to scream.
+ * ================================================================== */
+
 const CONDITIONS = [
   "Arthritis", "Diabetes", "Kidney disease",
   "Asthma", "Glaucoma", "Seizures",
@@ -364,277 +257,654 @@ const CONDITIONS = [
   "Depression / anxiety", "High cholesterol",
 ];
 
-/* Extra words a pirate might say for each condition, for voice matching. */
 const CONDITION_ALIASES = {
   "COPD / emphysema": ["copd", "emphysema", "black lung"],
   "High blood pressure": ["blood pressure", "hypertension"],
   "High cholesterol": ["cholesterol"],
   "Depression / anxiety": ["depression", "anxiety", "melancholy"],
-  "Heart disease": ["heart"],
-  "Kidney disease": ["kidney"],
-  "Thyroid disease": ["thyroid"],
-  "Diabetes": ["diabetes", "sugar"],
-  "Arthritis": ["arthritis", "creaky bones"],
-  "Glaucoma": ["glaucoma", "eye pressure"],
-  "Seizures": ["seizure", "fits"],
-  "Cancer": ["cancer"],
-  "Stroke": ["stroke"],
-  "Asthma": ["asthma"],
+  "Heart disease": ["heart"], "Kidney disease": ["kidney"],
+  "Thyroid disease": ["thyroid"], "Diabetes": ["diabetes", "sugar"],
+  "Arthritis": ["arthritis", "creaky bones"], "Glaucoma": ["glaucoma", "eye pressure"],
+  "Seizures": ["seizure", "fits"], "Cancer": ["cancer"],
+  "Stroke": ["stroke"], "Asthma": ["asthma"],
 };
 
-const cursesBox = document.getElementById("curses");
-for (const condition of CONDITIONS) {
-  const label = document.createElement("label");
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.name = "past_conditions";
-  input.value = condition;
-  const span = document.createElement("span");
-  span.textContent = condition;
-  label.append(input, span);
-  cursesBox.appendChild(label);
-}
+/* One question per section, in the order the plank runs. */
+const STEPS = [
+  { key: "filled_out_by", kind: "text", q: "Who holds the quill?",
+    plain: "Filled out by, if not the patient", say: 'Say "just me" if it\'s yerself' },
+  { key: "name", kind: "text", q: "What name do ye answer to?",
+    plain: "Patient name — the one question we cannot sail without", required: true },
+  { key: "date_of_birth", kind: "date", q: "What day were ye launched?",
+    plain: "Date of birth", say: 'Say it like "June 2nd 1943"' },
+  { key: "address", kind: "text", q: "Where do ye drop anchor?", plain: "Address" },
+  { key: "phone", kind: "text", q: "How do we hail ye?", plain: "Phone number" },
+  { key: "insurance", kind: "text", q: "What colors do ye fly?", plain: "Insurance" },
+  { key: "member_id", kind: "text", q: "What mark is on yer papers?", plain: "Member ID" },
+  { key: "emergency_contact", kind: "text", q: "Who's told if ye're lost at sea?",
+    plain: "Emergency contact — name, relationship, phone" },
 
-const form = document.getElementById("intake");
-const status = document.getElementById("status");
-const today = () => new Date().toISOString().slice(0, 10);
-form.date.value = today();
+  { key: "reason_for_visit", kind: "textarea", q: "What ails ye?",
+    plain: "Reason for visit — the whole of it, in yer own words" },
+  { key: "current_medications", kind: "textarea", q: "What potions do ye swallow?",
+    plain: "Current medications — include over-the-counter, vitamins, eye drops, inhalers" },
+  { key: "allergies", kind: "text", q: "What makes ye break out in barnacles?",
+    plain: "Allergies", say: 'Say "none" if none' },
 
-/* ------------------------------------------------------------------ *
- * Voice dictation, one section at a time (Web Speech API)
- * ------------------------------------------------------------------ */
+  { key: "pain", kind: "scale", q: "How bad is the agony?",
+    plain: "Pain at its worst this past week" },
+  { key: "itch", kind: "scale", q: "How fierce is the itch?",
+    plain: "Itching — skin crawlin' with barnacles" },
+  { key: "nausea", kind: "scale", q: "How green about the gills?",
+    plain: "Nausea and queasiness" },
+  { key: "fatigue", kind: "scale", q: "How deep are the doldrums?",
+    plain: "Tiredness — no wind in yer sails" },
+  { key: "sleep_trouble", kind: "scale", q: "How restless are yer nights?",
+    plain: "Trouble sleeping" },
+  { key: "stiffness", kind: "scale", q: "How rusted are yer joints?",
+    plain: "Stiffness — how hard it is to get movin'" },
+  { key: "breathlessness", kind: "scale", q: "How short o' wind are ye?",
+    plain: "Breathlessness" },
+  { key: "low_spirits", kind: "scale", q: "How low are yer spirits?",
+    plain: "Mood — how low ye've been feelin'" },
+  { key: "interference", kind: "scale", q: "Can ye still haul rope?",
+    plain: "How much all this keeps ye from daily life" },
+
+  { key: "past_conditions", kind: "choices", multi: true, options: CONDITIONS,
+    aliases: CONDITION_ALIASES, q: "What curses have ye carried?",
+    plain: "Past conditions", say: "Name as many as ye like, all in one breath" },
+  { key: "past_surgeries", kind: "textarea", q: "When has the surgeon cut ye open?",
+    plain: "Past surgeries — procedure and year" },
+  { key: "family_history", kind: "textarea", q: "What runs in yer bloodline?",
+    plain: "Family history — parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma" },
+
+  { key: "tobacco", kind: "choices", options: ["Never", "Former", "Current"],
+    q: "What of pipe smoke?", plain: "Tobacco" },
+  { key: "alcohol", kind: "choices", options: ["None", "Occasional", "Daily"],
+    q: "What of grog?", plain: "Alcohol" },
+  { key: "drugs", kind: "choices", options: ["No", "Yes"],
+    q: "Any other mischief?", plain: "Recreational drugs" },
+
+  { key: "signature", kind: "text", q: "Make yer mark.",
+    plain: "Signature — say yer name; if ye're not the patient, say yer relationship too" },
+];
+
+const SCALE_KEYS = STEPS.filter((s) => s.kind === "scale").map((s) => s.key);
+
+/* ---------------- state ---------------- */
+const answers = {};                 // key -> string
+const chosen = {};                  // key -> array of options
+const ratings = {};                 // key -> {value, method, seconds}
+let index = -1;                     // -1 = the intro card
+let submitted = false;
+
+const card = document.getElementById("card");
+const walker = document.getElementById("walker");
+const progressText = document.getElementById("progress-text");
+const doomText = document.getElementById("doom-text");
+
 const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+const AudioContextAPI = window.AudioContext || window.webkitAudioContext;
+const canHear = !!(SpeechRecognitionAPI && AudioContextAPI
+                   && navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 
-// Sequence of dictation targets inside a section, in document order.
-// The curses grid counts as a single target that ticks boxes.
-function targetsIn(section) {
-  return [...section.querySelectorAll(
-    "input:not([type=checkbox]), textarea, select, [data-voice-group]"
-  )];
+/* ---------------- the plank HUD ---------------- */
+const DOOM = [
+  "still aboard", "a long walk ahead", "the boards creak",
+  "past the point of turnin' back", "the sharks take notice",
+  "one pace from the edge", "nothin' below but sea",
+];
+
+function paintPlank() {
+  const total = STEPS.length;
+  const done = Math.max(0, index);
+  const fraction = total ? done / total : 0;
+  walker.style.left = `calc(2.4rem + ${fraction} * (100% - 4.6rem))`;
+
+  if (index < 0) {
+    progressText.textContent = "On deck";
+    doomText.textContent = DOOM[0];
+    return;
+  }
+  progressText.textContent = `Step ${index + 1} of ${total}`;
+  const remaining = total - index - 1;
+  doomText.textContent = remaining === 0 ? "nothin' below but sea"
+    : remaining === 1 ? "one pace from the edge"
+    : DOOM[Math.min(DOOM.length - 2, 1 + Math.floor(fraction * 4))];
 }
 
-function describe(target) {
-  if (target.dataset.voiceGroup) return "Curses ye've carried";
-  const label = target.closest("label");
-  const text = label && label.querySelector(".lbl") ? label.querySelector(".lbl").textContent : target.name;
-  return text.replace(/\s*\(required\)\s*/i, "").trim();
-}
+/* ---------------- scream detection ---------------- */
+const FLOOR = 0.045;         // quietest thing that counts as a holler
+const SILENCE_MS = 500;      // this much quiet ends a scream
+const ADVANCE_MS = 250;      // this much noise counts as "let me through"
+const WAIT_MS = 8000;        // give up waiting for a holler
+const MAX_SECONDS = 10;      // top of every scale
 
+class Screamer {
+  constructor() { this.token = 0; this.stream = null; this.context = null; }
+
+  get live() { return this.stream !== null; }
+
+  async open() {
+    if (!this.context) this.context = new AudioContextAPI();
+    if (this.context.state === "suspended") await this.context.resume();
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+    const analyser = this.context.createAnalyser();
+    analyser.fftSize = 1024;
+    this.context.createMediaStreamSource(this.stream).connect(analyser);
+    return analyser;
+  }
+
+  stop() {
+    this.token++;
+    if (this.stream) {
+      for (const track of this.stream.getTracks()) track.stop();
+      this.stream = null;
+    }
+  }
+
+  /* mode "advance": resolve as soon as a real holler is heard.
+   * mode "measure": resolve with how many seconds they held it. */
+  async listen({ mode, onLevel, onArmed, onHold, onFail }) {
+    this.stop();
+    const mine = ++this.token;
+    const alive = () => this.token === mine;
+
+    let analyser;
+    try {
+      analyser = await this.open();
+    } catch (error) {
+      onFail(error && error.name === "NotAllowedError"
+        ? "Ye must let the ship listen — allow the microphone, then holler."
+        : "No microphone aboard. This form has no other door.");
+      return null;
+    }
+    if (!alive()) return null;
+
+    const buffer = new Float32Array(analyser.fftSize);
+    const level = () => {
+      analyser.getFloatTimeDomainData(buffer);
+      let sum = 0;
+      for (const sample of buffer) sum += sample * sample;
+      return Math.sqrt(sum / buffer.length);
+    };
+
+    // learn the room, so a noisy waiting room isn't mistaken for a scream
+    const until = performance.now() + 450;
+    let room = 0;
+    while (performance.now() < until && alive()) {
+      room = Math.max(room, level());
+      await new Promise(requestAnimationFrame);
+    }
+    if (!alive()) return null;
+    const threshold = Math.max(FLOOR, room * 4);
+    onArmed();
+
+    const armedAt = performance.now();
+    let start = null;
+    let quietSince = null;
+
+    while (alive()) {
+      await new Promise(requestAnimationFrame);
+      if (!alive()) return null;
+      const now = performance.now();
+      const loudness = level();
+      const loud = loudness >= threshold;
+      if (onLevel) onLevel(loudness);
+
+      if (start === null) {
+        if (loud) { start = now; quietSince = null; }
+        else if (now - armedAt > WAIT_MS) { onFail("Heard naught but wind. Holler again."); this.stop(); return null; }
+        continue;
+      }
+
+      const held = (now - start) / 1000;
+      if (mode === "advance") {
+        if (!loud) { start = null; continue; }        // a cough won't do it
+        if (held * 1000 >= ADVANCE_MS) { this.stop(); return held; }
+        continue;
+      }
+
+      if (onHold) onHold(held);
+      if (held >= MAX_SECONDS) { this.stop(); return MAX_SECONDS; }
+      if (loud) quietSince = null;
+      else {
+        if (quietSince === null) quietSince = now;
+        if (now - quietSince >= SILENCE_MS) { this.stop(); return (quietSince - start) / 1000; }
+      }
+    }
+    return null;
+  }
+}
+const screamer = new Screamer();
+
+/* ---------------- dictation (one field at a time) ---------------- */
+class Dictation {
+  constructor() { this.recognition = null; }
+  get live() { return this.recognition !== null; }
+
+  stop() {
+    if (!this.recognition) return;
+    const recognition = this.recognition;
+    this.recognition = null;
+    try { recognition.stop(); } catch { /* already closed */ }
+  }
+
+  /* Resolves with the final transcript, or null if nothing was heard. */
+  listen({ onInterim, onFail }) {
+    this.stop();
+    return new Promise((resolve) => {
+      const recognition = new SpeechRecognitionAPI();
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      this.recognition = recognition;
+      let heard = null;
+
+      recognition.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) heard = (heard ? `${heard} ` : "") + result[0].transcript.trim();
+          else interim += result[0].transcript;
+        }
+        if (interim && onInterim) onInterim(interim);
+      };
+      recognition.onerror = (event) => {
+        if (event.error === "no-speech") onFail("Heard naught. Try again.");
+        else if (event.error === "not-allowed" || event.error === "service-not-allowed")
+          onFail("Ye must let the ship listen — allow the microphone.");
+        else onFail(`Trouble hearin' ye: ${event.error}`);
+      };
+      recognition.onend = () => {
+        if (this.recognition === recognition) this.recognition = null;
+        resolve(heard);
+      };
+      try { recognition.start(); } catch { onFail("Couldn't open yer microphone."); resolve(null); }
+    });
+  }
+}
+const dictation = new Dictation();
+
+/* ---------------- turning speech into answers ---------------- */
 function normalize(text) {
   return text.toLowerCase().replace(/[.,!?;:]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// Put a spoken phrase into a target. Returns a short note for the crew.
-function fill(target, phrase) {
-  const spoken = phrase.trim();
-  if (!spoken) return "nothing heard";
-
-  if (target.dataset.voiceGroup) {
-    const said = normalize(spoken);
-    const ticked = [];
-    for (const box of target.querySelectorAll("input[type=checkbox]")) {
-      const needles = [normalize(box.value), ...(CONDITION_ALIASES[box.value] || [])];
-      if (needles.some((needle) => needle && said.includes(normalize(needle)))) {
-        box.checked = true;
-        ticked.push(box.value);
-      }
-    }
-    return ticked.length ? `ticked ${ticked.join(", ")}` : `no curse matched "${spoken}"`;
-  }
-
-  if (target.tagName === "SELECT") {
-    const said = normalize(spoken);
-    const match = [...target.options].find(
-      (option) => option.value && (said.includes(normalize(option.value)) || normalize(option.value).includes(said))
-    );
-    if (match) { target.value = match.value; return `set to ${match.value}`; }
-    return `couldn't match "${spoken}" — pick by hand`;
-  }
-
-  if (target.type === "date") {
-    // "June 2nd 1943" -> 1943-06-02
-    const cleaned = spoken.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
-    const parsed = new Date(cleaned);
-    if (!isNaN(parsed.getTime())) {
-      target.value = new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000)
-        .toISOString().slice(0, 10);
-      return `logged ${target.value}`;
-    }
-    return `couldn't read "${spoken}" as a date`;
-  }
-
-  // Text inputs and textareas: append, so several breaths add up.
-  target.value = target.value ? `${target.value.trim()} ${spoken}` : spoken;
-  return "written down";
+function spokenDate(spoken) {
+  const cleaned = spoken.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
+  const parsed = new Date(cleaned);
+  if (isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getTime() - parsed.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 }
 
-class SectionDictation {
-  constructor() { this.recognition = null; this.section = null; }
-
-  get active() { return this.recognition !== null; }
-
-  start(section) {
-    this.stop();
-    const targets = targetsIn(section);
-    if (!targets.length) return;
-
-    this.section = section;
-    this.targets = targets;
-    this.index = 0;
-    this.stopping = false;
-
-    const recognition = new SpeechRecognitionAPI();
-    recognition.lang = "en-US";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    this.recognition = recognition;
-
-    recognition.onresult = (event) => {
-      let interim = "";
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        const said = result[0].transcript;
-        if (!result.isFinal) { interim += said; continue; }
-
-        const target = this.targets[this.index];
-        if (!target) continue;
-
-        const trimmed = said.trim().toLowerCase().replace(/[.!?]$/, "");
-        if (trimmed === "skip" || trimmed === "next") {
-          this.note(`skipped ${describe(target)}`);
-        } else {
-          this.note(`${describe(target)}: ${fill(target, said)}`);
-        }
-        this.advance();
-      }
-      if (interim) this.note(`…${interim}`, true);
-    };
-
-    recognition.onerror = (event) => {
-      const messages = {
-        "not-allowed": "Ye must let the ship listen — allow the microphone.",
-        "service-not-allowed": "Ye must let the ship listen — allow the microphone.",
-        "no-speech": "Heard naught but wind. Try again.",
-        "audio-capture": "No microphone found aboard.",
-      };
-      this.note(messages[event.error] || `Trouble hearin' ye: ${event.error}`);
-      // keepNote, else stop() wipes the message the crew needs to read
-      if (event.error !== "no-speech") this.stop(true);
-    };
-
-    // Chrome cuts the stream on silence — pick it back up until told to stop.
-    recognition.onend = () => {
-      if (this.stopping || !this.recognition) return;
-      try { this.recognition.start(); } catch { this.stop(); }
-    };
-
-    try { recognition.start(); } catch { this.note("Couldn't open yer microphone."); this.stop(true); return; }
-
-    section.querySelector(".rec").setAttribute("aria-pressed", "true");
-    section.querySelector(".rec").textContent = "■ Belay that";
-    this.focusTarget();
-    this.note(`Listening — speak yer "${describe(targets[0])}"`);
+function matchChoices(step, spoken) {
+  const said = normalize(spoken);
+  const hits = [];
+  for (const option of step.options) {
+    const needles = [option, ...((step.aliases && step.aliases[option]) || [])];
+    if (needles.some((needle) => said.includes(normalize(needle)))) hits.push(option);
   }
-
-  advance() {
-    this.clearHighlight();
-    this.index++;
-    if (this.index >= this.targets.length) {
-      this.note("That's the whole section. Belayed.");
-      this.stop(true);
-      return;
-    }
-    this.focusTarget();
-  }
-
-  focusTarget() {
-    const target = this.targets[this.index];
-    if (!target) return;
-    this.clearHighlight();
-    target.classList.add("listening");
-    if (target.focus && !target.dataset.voiceGroup) target.focus({ preventScroll: false });
-  }
-
-  clearHighlight() {
-    if (this.section) {
-      for (const el of this.section.querySelectorAll(".listening")) el.classList.remove("listening");
-    }
-  }
-
-  note(message, interim = false) {
-    if (!this.section) return;
-    const slot = this.section.querySelector(".heard");
-    slot.textContent = message;
-    slot.style.opacity = interim ? ".7" : "1";
-  }
-
-  stop(keepNote = false) {
-    if (!this.recognition) { return; }
-    this.stopping = true;
-    try { this.recognition.stop(); } catch { /* already closed */ }
-    this.recognition = null;
-
-    if (this.section) {
-      this.clearHighlight();
-      const button = this.section.querySelector(".rec");
-      button.setAttribute("aria-pressed", "false");
-      button.textContent = "🎙 Speak this section";
-      if (!keepNote) this.note("");
-    }
-    this.section = null;
-  }
+  return hits;
 }
 
-const dictation = new SectionDictation();
+/* ---------------- rendering ---------------- */
+function el(html) {
+  const wrap = document.createElement("div");
+  wrap.innerHTML = html.trim();
+  return wrap.firstElementChild;
+}
 
-for (const button of document.querySelectorAll(".rec")) {
-  const section = button.closest("fieldset");
-  if (!SpeechRecognitionAPI) {
-    button.disabled = true;
-    button.title = "This browser has no speech recognition";
-    continue;
+function renderIntro() {
+  card.innerHTML = `
+    <div class="hero">
+      <span class="skull display">☠</span>
+      <h1 class="display">Articles of the Ship's Surgeon</h1>
+      <p class="plain">Signed afore ye are hauled below deck</p>
+    </div>
+    <ul class="rules">
+      <li><b>There are no quills aboard.</b> Nothing on this form can be typed. Ye speak, we write.</li>
+      <li><b>One question at a time.</b> ${STEPS.length} paces down the plank, and no goin' back.</li>
+      <li><b>Ye pass by screamin'.</b> Say yer answer, then holler to move a pace along. That is the only door.</li>
+      <li><b>For how bad it hurts, scream it out.</b> One second of holler for each point out of ten. Seven seconds is a seven.</li>
+    </ul>
+    ${canHear ? "" : `<p class="nosupport"><b>Yer browser has no ears.</b> This form takes no typing
+       and no clickin' through — without speech recognition there is nothing ye can do here.
+       Open it in Chrome or Safari.</p>`}
+    <div class="acts">
+      <button class="holler" id="begin" ${canHear ? "" : "disabled"}>⚓ Step onto the plank</button>
+    </div>
+    <p class="note" id="note"></p>`;
+  document.getElementById("begin").addEventListener("click", () => go(0));
+  paintPlank();
+}
+
+function renderStep() {
+  const step = STEPS[index];
+  const isScale = step.kind === "scale";
+  const isChoices = step.kind === "choices";
+
+  card.innerHTML = `
+    <p class="step-no">Pace ${index + 1} of ${STEPS.length}</p>
+    <h1 class="display">${step.q}</h1>
+    <p class="plain">${step.plain}${step.say ? ` &middot; <b>${step.say}</b>` : ""}</p>
+    ${isScale ? `
+      <div class="pips" id="pips"></div>
+      <div class="gauge-val" id="gauge">—</div>
+      <div class="vu"><span id="vu"></span></div>
+    ` : isChoices ? `
+      <div class="choices" id="choices"></div>
+    ` : `
+      <div class="answer empty" id="answer"></div>
+    `}
+    <div class="acts">
+      ${isScale ? "" : `<button class="speak" id="speak">🎙 Speak yer answer</button>`}
+      <button class="holler" id="holler">${isScale ? "🗣 Scream it" : "🗣 Scream to pass"}</button>
+    </div>
+    <p class="note" id="note"></p>
+    <p class="gate">${isScale
+      ? `<b>This one ye scream.</b> Hold it one second for every point out of ten — the holler
+         both answers the question and carries ye onward.`
+      : `<b>The only way onward is a scream.</b> Speak yer answer, then holler to take the next pace.
+         Ye may leave it blank and holler anyway.`}</p>`;
+
+  if (isScale) {
+    const pips = document.getElementById("pips");
+    for (let i = 1; i <= 10; i++) pips.appendChild(el(`<span class="pip">☠</span>`));
+    paintScale(ratings[step.key] ? ratings[step.key].value : 0);
+  } else if (isChoices) {
+    const box = document.getElementById("choices");
+    for (const option of step.options) {
+      const pill = el(`<span class="choice">${option}</span>`);
+      pill.dataset.option = option;
+      box.appendChild(pill);
+    }
+    paintChoices();
+  } else {
+    paintAnswer();
   }
-  button.addEventListener("click", () => {
-    if (dictation.active && dictation.section === section) dictation.stop();
-    else dictation.start(section);
+
+  const speak = document.getElementById("speak");
+  if (speak) speak.addEventListener("click", startSpeaking);
+  document.getElementById("holler").addEventListener("click", () => {
+    if (STEPS[index].kind === "scale") measureScream();
+    else armAdvance();
   });
+
+  paintPlank();
 }
 
-if (!SpeechRecognitionAPI) document.getElementById("nosupport").hidden = false;
+function note(message) {
+  const slot = document.getElementById("note");
+  if (slot) slot.textContent = message;
+}
 
-/* ------------------------------------------------------------------ *
- * Walk the plank
- * ------------------------------------------------------------------ */
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
+function paintAnswer(interim = "") {
+  const slot = document.getElementById("answer");
+  if (!slot) return;
+  const step = STEPS[index];
+  const value = answers[step.key] || "";
+  if (!value && !interim) {
+    slot.className = "answer empty";
+    slot.textContent = step.say || "waitin' on yer voice…";
+    return;
+  }
+  slot.className = "answer";
+  slot.textContent = value;
+  if (interim) slot.appendChild(el(`<span class="interim"> ${interim}…</span>`));
+  if (step.kind === "date" && answers[`${step.key}__heard`]) {
+    slot.appendChild(el(`<span class="parsed">heard: “${answers[`${step.key}__heard`]}”</span>`));
+  }
+}
+
+function paintChoices() {
+  const step = STEPS[index];
+  const picked = chosen[step.key] || [];
+  for (const pill of document.querySelectorAll(".choice")) {
+    pill.classList.toggle("on", picked.includes(pill.dataset.option));
+  }
+}
+
+function paintScale(value) {
+  const pips = document.querySelectorAll(".pip");
+  pips.forEach((pip, i) => pip.classList.toggle("lit", i < value));
+  const gauge = document.getElementById("gauge");
+  if (gauge) gauge.innerHTML = value > 0 ? `${value}<span class="of">/10</span>` : "—";
+}
+
+/* ---------------- speaking an answer ---------------- */
+async function startSpeaking() {
+  const step = STEPS[index];
+  screamer.stop();                       // one mic, one job
+  const speak = document.getElementById("speak");
+  const holler = document.getElementById("holler");
+  speak.dataset.live = "1";
+  speak.textContent = "🎙 Listening…";
+  holler.disabled = true;
+  note("Speak now.");
+  const hot = document.getElementById("answer");
+  if (hot) hot.classList.add("hot");
+
+  const heard = await dictation.listen({
+    onInterim: (interim) => paintAnswer(interim),
+    onFail: (message) => note(message),
+  });
+
+  delete speak.dataset.live;
+  speak.textContent = answers[step.key] || (chosen[step.key] || []).length
+    ? "🎙 Speak again" : "🎙 Speak yer answer";
+  holler.disabled = false;
+  if (hot) hot.classList.remove("hot");
+
+  if (!heard) { paintAnswer(); return; }
+  recordSpoken(step, heard);
+
+  // Having spoken, the gate opens: start listening for the scream.
+  armAdvance();
+}
+
+function recordSpoken(step, heard) {
+  if (step.kind === "choices") {
+    const hits = matchChoices(step, heard);
+    if (!hits.length) { note(`Nothin' matched “${heard}”. Try again.`); return; }
+    chosen[step.key] = step.multi
+      ? [...new Set([...(chosen[step.key] || []), ...hits])]
+      : [hits[0]];
+    paintChoices();
+    note(`Marked: ${chosen[step.key].join(", ")}`);
+    return;
+  }
+
+  if (step.kind === "date") {
+    const iso = spokenDate(heard);
+    if (!iso) { note(`Couldn't read “${heard}” as a date. Try "June 2nd 1943".`); return; }
+    answers[step.key] = iso;
+    answers[`${step.key}__heard`] = heard;
+    paintAnswer();
+    note(`Logged ${iso}.`);
+    return;
+  }
+
+  answers[step.key] = answers[step.key] ? `${answers[step.key]} ${heard}` : heard;
+  paintAnswer();
+  note("Written down.");
+}
+
+/* ---------------- screaming ---------------- */
+async function armAdvance() {
   dictation.stop();
-  status.className = "";
-  status.textContent = "Rowin' it over…";
+  const holler = document.getElementById("holler");
+  const speak = document.getElementById("speak");
+  holler.dataset.live = "1";
+  holler.textContent = "🗣 Waitin' on yer holler…";
+  if (speak) speak.disabled = true;
 
-  const data = Object.fromEntries(new FormData(form).entries());
-  data.past_conditions = [...form.querySelectorAll("input[name=past_conditions]:checked")]
-    .map((input) => input.value);
+  const held = await screamer.listen({
+    mode: "advance",
+    onArmed: () => note("SCREAM NOW to take the next pace 🗣"),
+    onFail: (message) => {
+      note(message);
+      delete holler.dataset.live;
+      holler.textContent = "🗣 Scream to pass";
+      if (speak) speak.disabled = false;
+    },
+  });
+
+  if (held === null) return;           // failed or cancelled
+  note("Heard ye. A pace onward.");
+  go(index + 1);
+}
+
+async function measureScream() {
+  dictation.stop();
+  const step = STEPS[index];
+  const holler = document.getElementById("holler");
+  const vu = document.getElementById("vu");
+  holler.dataset.live = "1";
+  holler.textContent = "■ Hollerin'…";
+  note("Hold yer breath…");
+
+  const seconds = await screamer.listen({
+    mode: "measure",
+    onArmed: () => note("SCREAM NOW — one second for each point 🗣"),
+    onLevel: (level) => { if (vu) vu.style.width = `${Math.min(100, (level / 0.3) * 100)}%`; },
+    onHold: (held) => {
+      paintScale(Math.min(MAX_SECONDS, Math.max(1, Math.round(held))));
+      note(`${held.toFixed(1)}s…`);
+    },
+    onFail: (message) => {
+      note(message);
+      delete holler.dataset.live;
+      holler.textContent = "🗣 Scream it";
+    },
+  });
+
+  if (vu) vu.style.width = "0";
+  if (seconds === null) return;
+
+  const value = Math.min(MAX_SECONDS, Math.max(1, Math.round(seconds)));
+  ratings[step.key] = { value, method: "scream", seconds: Number(seconds.toFixed(1)) };
+  paintScale(value);
+  note(`Screamed ${seconds.toFixed(1)}s → ${value} out of 10. A pace onward.`);
+  setTimeout(() => go(index + 1), 850);
+}
+
+/* ---------------- walking the plank ---------------- */
+function go(next) {
+  dictation.stop();
+  screamer.stop();
+  if (next >= STEPS.length) { walkOff(); return; }
+  index = next;
+  renderStep();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function payload() {
+  const body = { ratings };
+  for (const step of STEPS) {
+    if (step.kind === "scale") continue;
+    if (step.kind === "choices") {
+      const picked = chosen[step.key] || [];
+      body[step.key] = step.multi ? picked : (picked[0] || "");
+    } else {
+      body[step.key] = answers[step.key] || "";
+    }
+  }
+  body.date = new Date().toISOString().slice(0, 10);
+  return body;
+}
+
+function screamedSummary() {
+  const rows = SCALE_KEYS
+    .filter((key) => ratings[key])
+    .map((key) => {
+      const step = STEPS.find((s) => s.key === key);
+      const rating = ratings[key];
+      return `<div><span class="k">${step.plain.split("—")[0].trim()}</span>
+              <span class="v">${rating.value}/10 <span class="k">(${rating.seconds}s)</span></span></div>`;
+    }).join("");
+  return rows ? `<div class="summary">${rows}</div>` : "";
+}
+
+async function walkOff() {
+  if (submitted) return;
+  submitted = true;
+  index = STEPS.length;
+  paintPlank();
+  walker.classList.add("falling");
+
+  card.innerHTML = `
+    <div class="hero">
+      <span class="skull display">🌊</span>
+      <h1 class="display">Off the end ye go</h1>
+      <p class="plain">Handin' yer articles to the surgeon…</p>
+    </div>
+    <p class="note" id="note"></p>`;
+
+  const body = payload();
+  if (!body.name) {
+    walker.classList.remove("falling");
+    submitted = false;
+    const nameStep = STEPS.findIndex((s) => s.key === "name");
+    index = nameStep;
+    renderStep();
+    note("We'll not treat a soul with no name. Back ye go — speak it.");
+    return;
+  }
 
   try {
     const response = await fetch("/api/intake", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error === "name is required"
-      ? "We'll not treat a soul with no name."
-      : (result.error || "The sea swallowed it. Try again."));
+    if (!response.ok) throw new Error(result.error || "The sea swallowed it.");
 
-    status.className = "ok";
-    status.textContent = `Aye, ${result.name} — logged as soul #${result.id}. Below deck with ye.`;
-    form.reset();
-    form.date.value = today();
+    card.innerHTML = `
+      <div class="hero">
+        <span class="skull display">☠</span>
+        <h1 class="display">Aye, ${result.name}</h1>
+        <p class="plain">Logged as soul #${result.id}. The surgeon will see ye below deck.</p>
+      </div>
+      ${screamedSummary()}
+      <div class="acts"><button class="speak" id="again">⚓ Another soul</button></div>`;
+    document.getElementById("again").addEventListener("click", () => {
+      for (const key of Object.keys(answers)) delete answers[key];
+      for (const key of Object.keys(chosen)) delete chosen[key];
+      for (const key of Object.keys(ratings)) delete ratings[key];
+      submitted = false;
+      walker.classList.remove("falling");
+      index = -1;
+      renderIntro();
+    });
   } catch (error) {
-    status.className = "err";
-    status.textContent = error.message;
+    submitted = false;
+    walker.classList.remove("falling");
+    card.innerHTML = `
+      <div class="hero">
+        <span class="skull display">🌊</span>
+        <h1 class="display">The sea took it</h1>
+        <p class="plain">${error.message}</p>
+      </div>
+      <div class="acts"><button class="holler" id="retry">⚓ Haul it up again</button></div>`;
+    document.getElementById("retry").addEventListener("click", () => { index = STEPS.length - 1; walkOff(); });
   }
+}
+
+/* No quills aboard: there is nothing typeable on this page, but if they try
+ * a key anyway, say so plainly. */
+document.addEventListener("keydown", (event) => {
+  if (event.metaKey || event.ctrlKey || event.altKey) return;
+  if (["Tab", "Enter", " ", "Escape"].includes(event.key)) return;
+  if (event.key.length !== 1) return;
+  event.preventDefault();
+  note("No quills aboard — speak it, then scream.");
 });
+
+renderIntro();
 </script>
 </body>
 </html>

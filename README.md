@@ -12,6 +12,22 @@ this repo has some synthetic, LLM-generated patient examples.
 
 Flask backend (`main.py`), one static page (`static/index.html`), SQLite storage.
 
+**Screaming your pain (section III, "The Hollerin'"):** rating a symptom 1–10 means screaming for that many seconds. A 7 is a seven-second holler. Hit 🗣, wait for *SCREAM NOW*, let it out; skull pips climb in real time and the count stops when you run out of breath (half a second of quiet ends it, 10s is the ceiling). Built on the Web Audio API — it calibrates to the room's noise floor first, so a loud waiting room doesn't register as a scream. Nine scales, each one something a clinic would normally ask you to rate by number:
+
+| Scale | On the form | Who it's for |
+|---|---|---|
+| Pain (worst this week) | The Agony | everyone |
+| Itching | The Itch | Mango (eczema) |
+| Nausea | Green About the Gills | Papaya (GLP-1) |
+| Tiredness | The Doldrums | everyone |
+| Trouble sleeping | Restless Nights | Kiwi (strained back) |
+| Stiffness | Rusted Joints | Kiwi (strained back) |
+| Breathlessness | Short o' Wind | asthma / COPD |
+| Mood | Low Spirits | Fig (persistent pain) |
+| Interference with daily life | Can Ye Still Haul Rope? | everyone |
+
+Each rating is stored with **how it was measured** — `{"value": 7, "method": "scream", "seconds": 7.2}` — because a 7 someone screamed for 7.2 seconds tells the care team more than a 7 dragged on a slider. Anything you'd rather not scream, drag the rope instead; anything that doesn't trouble you, leave blank.
+
 **Speaking a section:** hit 🎙, and it walks the fields in order — the one it's listening for glows red. Pause between answers; each pause moves to the next field. Say "skip" to leave one blank. Dates understand "June 2nd 1943", the grog/tobacco dropdowns match spoken words, and in *Past Voyages* you can just name your curses ("creaky bones and high blood pressure") to tick the boxes. Needs Chrome or Safari — it uses the browser's built-in `SpeechRecognition`, so no API key and no audio ever leaves the page. Every field is still typeable.
 
 ```bash
