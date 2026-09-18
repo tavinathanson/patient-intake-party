@@ -568,6 +568,7 @@ function renderIntro() {
       <li><b>There are no quills aboard.</b> Nothing on this form can be typed. Ye speak, we write.</li>
       <li><b>One question at a time.</b> ${STEPS.length} paces down the plank, and no goin' back.</li>
       <li><b>Ye pass by screamin'.</b> Say yer answer, then holler to move a pace along. That is the only door.</li>
+      <li><b>No blanks.</b> The gate stays shut until ye've answered. Every question, all ${STEPS.length}.</li>
       <li><b>For how bad it hurts, scream it out.</b> One second of holler for each point out of ten. Seven seconds is a seven.</li>
     </ul>
     ${canHear ? "" : `<p class="nosupport"><b>Yer browser has no ears.</b> This form takes no typing
@@ -607,8 +608,7 @@ function renderStep() {
     <p class="gate">${isScale
       ? `<b>This one ye scream.</b> Hold it one second for every point out of ten — the holler
          both answers the question and carries ye onward.`
-      : `<b>The only way onward is a scream.</b> Speak yer answer, then holler to take the next pace.
-         Ye may leave it blank and holler anyway.`}</p>`;
+      : `<b>Speak yer answer first.</b> The gate opens once there's somethin' written down.`}</p>`;
 
   if (isScale) {
     const pips = document.getElementById("pips");
@@ -630,15 +630,42 @@ function renderStep() {
   if (speak) speak.addEventListener("click", startSpeaking);
   document.getElementById("holler").addEventListener("click", () => {
     if (STEPS[index].kind === "scale") measureScream();
-    else armAdvance();
+    else if (answered(STEPS[index])) armAdvance();
+    else note("Nothin' written down yet — speak yer answer, then holler.");
   });
 
+  paintGate();
   paintPlank();
 }
 
 function note(message) {
   const slot = document.getElementById("note");
   if (slot) slot.textContent = message;
+}
+
+/* Has this question actually been answered? No blanks aboard — the scream
+ * gate stays shut until there's something written down. */
+function answered(step) {
+  if (step.kind === "scale") return !!ratings[step.key];
+  if (step.kind === "choices") return (chosen[step.key] || []).length > 0;
+  return !!(answers[step.key] || "").trim();
+}
+
+/* Lock or unlock the holler button for the question on screen. */
+function paintGate() {
+  const step = STEPS[index];
+  const holler = document.getElementById("holler");
+  if (!holler || step.kind === "scale") return;
+  const open = answered(step);
+  holler.disabled = !open;
+  holler.title = open ? "" : "Speak yer answer first";
+  const gate = document.querySelector(".gate");
+  if (gate) {
+    gate.innerHTML = open
+      ? `<b>The gate is open.</b> Holler and ye take the next pace.`
+      : `<b>Speak yer answer first.</b> The gate opens once there's somethin' written down —
+         no soul passes this plank on a blank. Then scream to move onward.`;
+  }
 }
 
 function paintAnswer(interim = "") {
@@ -693,16 +720,16 @@ async function startSpeaking() {
   });
 
   delete speak.dataset.live;
-  speak.textContent = answers[step.key] || (chosen[step.key] || []).length
-    ? "🎙 Speak again" : "🎙 Speak yer answer";
-  holler.disabled = false;
+  speak.textContent = answered(step) ? "🎙 Speak again" : "🎙 Speak yer answer";
   if (hot) hot.classList.remove("hot");
 
-  if (!heard) { paintAnswer(); return; }
+  if (!heard) { paintAnswer(); paintGate(); return; }
   recordSpoken(step, heard);
+  paintGate();
 
-  // Having spoken, the gate opens: start listening for the scream.
-  armAdvance();
+  // Only once somethin' is written down does the gate open.
+  if (answered(step)) armAdvance();
+  else note("Nothin' written down yet — speak it again.");
 }
 
 function recordSpoken(step, heard) {
@@ -749,6 +776,7 @@ async function armAdvance() {
       delete holler.dataset.live;
       holler.textContent = "🗣 Scream to pass";
       if (speak) speak.disabled = false;
+      paintGate();
     },
   });
 
