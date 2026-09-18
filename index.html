@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Man the Helm — Pirate Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Pirata+One&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sea: #14606b;
+    --sea-2: #0e3f48;
+    --paper: #efe0bd;
+    --paper-edge: #e3cf9f;
+    --ink: #3b2a17;
+    --ink-soft: #6b5637;
+    --plank: #7a5230;
+    --plank-dark: #5c3c22;
+    --brass: #c69a2e;
+    --brass-deep: #9c7519;
+    --rope: #d8c39b;
+    --danger: #9e2b1a;
+    --good: #2f6b3a;
+    --shadow: rgba(0,0,0,.28);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sea: #06171b;
+      --sea-2: #02090b;
+      --paper: #241c10;
+      --paper-edge: #2f2413;
+      --ink: #eaddb9;
+      --ink-soft: #b8a67f;
+      --plank: #3a2716;
+      --plank-dark: #26170b;
+      --brass: #d8b24a;
+      --brass-deep: #b9902c;
+      --rope: #5a4a2e;
+      --danger: #e0674f;
+      --good: #6bbf7a;
+      --shadow: rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --sea: #06171b;
+    --sea-2: #02090b;
+    --paper: #241c10;
+    --paper-edge: #2f2413;
+    --ink: #eaddb9;
+    --ink-soft: #b8a67f;
+    --plank: #3a2716;
+    --plank-dark: #26170b;
+    --brass: #d8b24a;
+    --brass-deep: #b9902c;
+    --rope: #5a4a2e;
+    --danger: #e0674f;
+    --good: #6bbf7a;
+    --shadow: rgba(0,0,0,.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--sea) 0%, var(--sea-2) 70%) fixed;
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Moving ocean: two ranks of SVG waves drifting at different speeds (parallax) */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    inset: -40px 0 -40px 0;
+    z-index: -1;
+    pointer-events: none;
+    background-repeat: repeat;
+    will-change: background-position, transform;
+  }
+  body::before {
+    /* far swell — slow, faint, wide */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='240' viewBox='0 0 1400 240'%3E%3Cpath fill='%23ffffff' fill-opacity='0.045' d='M0 120 C 175 70 350 70 525 120 S 875 170 1050 120 S 1400 70 1400 120 V240 H0 Z'/%3E%3C/svg%3E");
+    background-size: 1400px 240px;
+    animation: wave-drift-a 26s linear infinite, wave-bob-a 9s ease-in-out infinite;
+  }
+  body::after {
+    /* near crests — faster, brighter, tighter */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='170' viewBox='0 0 900 170'%3E%3Cpath fill='%23bfe6ea' fill-opacity='0.07' d='M0 90 C 112 55 225 55 337 90 S 562 125 675 90 S 900 55 900 90 V170 H0 Z'/%3E%3C/svg%3E");
+    background-size: 900px 170px;
+    animation: wave-drift-b 15s linear infinite reverse, wave-bob-b 6.5s ease-in-out infinite;
+  }
+  @keyframes wave-drift-a { from { background-position: 0 0; } to { background-position: 1400px 0; } }
+  @keyframes wave-drift-b { from { background-position: 0 0; } to { background-position: 900px 0; } }
+  @keyframes wave-bob-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+  @keyframes wave-bob-b { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; position: relative; z-index: 0; }
+
+  header.top { text-align: center; position: relative; }
+  h1 {
+    font-family: "Pirata One", "Atkinson Hyperlegible", cursive;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 7vw, 3.6rem);
+    letter-spacing: .02em;
+    margin: .2em 0 .1em;
+    color: var(--brass);
+    text-shadow: 0 2px 0 var(--brass-deep), 0 3px 8px var(--shadow);
+  }
+  .lede { color: var(--rope); max-width: 62ch; margin: 0 auto; font-size: clamp(.95rem, 2.4vw, 1.08rem); }
+  .lede b { color: var(--paper); }
+
+  .theme-toggle {
+    position: absolute; top: 0; right: 0;
+    background: var(--plank); color: var(--paper);
+    border: 2px solid var(--brass-deep); border-radius: 999px;
+    width: 42px; height: 42px; font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 2px 6px var(--shadow);
+  }
+  .theme-toggle:hover { border-color: var(--brass); }
+
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    gap: 22px;
+    margin-top: 22px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
+
+  /* ---- Deck card (the wheel side) ---- */
+  .deck {
+    background:
+      repeating-linear-gradient(90deg, var(--plank) 0 34px, var(--plank-dark) 34px 36px);
+    border: 3px solid var(--plank-dark);
+    border-radius: 16px;
+    padding: 18px 18px 22px;
+    box-shadow: inset 0 0 0 2px var(--brass-deep), 0 10px 26px var(--shadow);
+    color: var(--paper);
+  }
+  .legband {
+    display: flex; align-items: center; gap: 10px; justify-content: space-between;
+    font-family: "IM Fell English", serif; font-size: .95rem; color: var(--rope);
+  }
+  .pips { display: flex; gap: 6px; }
+  .pip { width: 10px; height: 10px; border-radius: 999px; background: var(--plank-dark); border: 1px solid var(--brass-deep); }
+  .pip.done { background: var(--brass); }
+  .pip.now { background: var(--paper); box-shadow: 0 0 0 2px var(--brass); }
+
+  .prompt { font-family: "Pirata One", cursive; font-size: clamp(1.4rem, 4.4vw, 2rem); color: var(--paper); margin: 10px 0 2px; line-height: 1.15; }
+  .subprompt { color: var(--rope); font-size: .95rem; margin: 0 0 8px; }
+
+  /* ---- The helm ---- */
+  .helm {
+    position: relative;
+    width: min(92%, 460px);
+    margin: 6px auto 4px;
+    aspect-ratio: 1 / 1;
+    touch-action: none;
+  }
+  .helm svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  .helm svg:active { cursor: grabbing; }
+  .helm:focus-visible { outline: none; }
+  .helm:focus-visible svg { filter: drop-shadow(0 0 0 var(--brass)); }
+  .helm:focus-visible .rim-focus { opacity: 1; }
+
+  #wheelSpin { transform-box: view-box; transform-origin: 100px 100px; }
+  :root:not([data-reduce]) #wheelSpin { transition: transform .28s cubic-bezier(.22,.61,.36,1); }
+  .dragging #wheelSpin { transition: none; }
+
+  .chip {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    max-width: 30%;
+    padding: 6px 9px;
+    border-radius: 10px;
+    border: 2px solid var(--brass-deep);
+    background: var(--paper);
+    color: var(--ink);
+    font: 700 clamp(.68rem, 2.5vw, .92rem)/1.12 "Atkinson Hyperlegible", sans-serif;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px var(--shadow);
+    transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  }
+  .chip:hover { transform: translate(-50%, -50%) scale(1.04); }
+  .chip.aim { background: var(--brass); color: var(--plank-dark); border-color: var(--paper); box-shadow: 0 0 0 3px var(--brass-deep), 0 4px 10px var(--shadow); }
+  .chip.anchored { background: var(--good); color: #fff; border-color: var(--paper); }
+  .chip.anchored::before { content: "⚓ "; }
+
+  .readout {
+    text-align: center;
+    margin: 6px auto 2px;
+    font-family: "IM Fell English", serif;
+    color: var(--paper);
+  }
+  .readout .head { font-family: "Pirata One", cursive; font-size: clamp(1.1rem, 3.6vw, 1.5rem); color: var(--brass); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+  button.act {
+    font: 700 1rem "Atkinson Hyperlegible", sans-serif;
+    border-radius: 10px; padding: 10px 16px; cursor: pointer;
+    border: 2px solid var(--brass-deep);
+    background: var(--brass); color: var(--plank-dark);
+    box-shadow: 0 3px 0 var(--brass-deep);
+  }
+  button.act:hover { background: var(--paper); }
+  button.act:active { transform: translateY(2px); box-shadow: none; }
+  button.ghost { background: transparent; color: var(--rope); box-shadow: none; border-color: var(--rope); }
+  button.ghost:hover { color: var(--paper); border-color: var(--paper); background: transparent; }
+  button.act:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+  .anchored-list { text-align: center; margin: 6px 0 0; color: var(--rope); font-size: .9rem; min-height: 1.2em; }
+
+  .tilt-row { text-align: center; margin: 6px 0 0; }
+  .tilt-toggle {
+    font: 700 .85rem "Atkinson Hyperlegible", sans-serif;
+    background: transparent; color: var(--rope);
+    border: 2px solid var(--rope); border-radius: 999px;
+    padding: 5px 14px; cursor: pointer;
+  }
+  .tilt-toggle:hover { color: var(--paper); border-color: var(--paper); }
+  .tilt-toggle.on { background: var(--brass); color: var(--plank-dark); border-color: var(--paper); }
+  .tilt-hint { display: block; margin-top: 4px; color: var(--rope); font-size: .82rem; min-height: 1em; font-family: "IM Fell English", serif; }
+
+  /* ---- Surgeon's log ---- */
+  .log {
+    background: var(--paper);
+    background-image:
+      radial-gradient(140% 120% at 0% 0%, rgba(0,0,0,.04), transparent 40%),
+      radial-gradient(140% 120% at 100% 100%, rgba(0,0,0,.05), transparent 40%);
+    border: 3px solid var(--paper-edge);
+    border-radius: 14px;
+    padding: 20px 22px;
+    color: var(--ink);
+    box-shadow: 0 10px 26px var(--shadow);
+    position: sticky; top: 16px;
+    font-family: "IM Fell English", serif;
+  }
+  .log h2 { font-family: "Pirata One", cursive; font-weight: 400; margin: 0 0 12px; font-size: 1.5rem; color: var(--plank-dark); }
+  .log dl { margin: 0; }
+  .log dt { font-weight: 700; font-family: "Atkinson Hyperlegible", sans-serif; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); margin-top: 12px; }
+  .log dd { margin: 2px 0 0; font-size: 1.06rem; }
+  .log dd.pending { color: var(--ink-soft); font-style: italic; }
+  .flags { margin-top: 16px; border-top: 1px dashed var(--paper-edge); padding-top: 12px; display: grid; gap: 8px; }
+  .flag { font-family: "Atkinson Hyperlegible", sans-serif; font-size: .9rem; border-radius: 8px; padding: 8px 10px; }
+  .flag.warn { background: color-mix(in srgb, var(--danger) 16%, var(--paper)); border: 1px solid var(--danger); color: var(--danger); }
+  .flag.note { background: color-mix(in srgb, var(--good) 14%, var(--paper)); border: 1px solid var(--good); color: var(--good); }
+
+  /* ---- Voyage end ---- */
+  .done-card { text-align: center; color: var(--paper); padding: 10px 4px; }
+  .done-card .big { font-family: "Pirata One", cursive; font-size: clamp(1.6rem, 5vw, 2.4rem); color: var(--brass); }
+
+  .plunder {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: center;
+    margin-top: 18px; color: var(--rope); font-family: "IM Fell English", serif;
+  }
+  .plunder-label { color: var(--paper); }
+  .plunder-status { flex-basis: 100%; text-align: center; font-size: .92rem; min-height: 1.2em; }
+  .plunder-status.ok { color: var(--brass); }
+  .plunder-status.err { color: var(--danger); }
+
+  footer { text-align: center; margin-top: 26px; color: var(--rope); font-size: .85rem; }
+  footer a { color: var(--brass); }
+
+  .trail-booty {
+    position: fixed;
+    left: 0; top: 0;
+    z-index: 9999;
+    pointer-events: none;
+    font-size: 1.4rem;
+    transform: translate(-50%, -50%);
+    will-change: transform, opacity;
+    animation: booty-fade 900ms ease-out forwards;
+  }
+  @keyframes booty-fade {
+    0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), calc(-50% + 26px)) rotate(var(--spin, 0deg)) scale(.6); }
+  }
+
+  /* ---- Treasure chest that fills up ---- */
+  .treasure {
+    display: flex; align-items: center; gap: 12px;
+    margin: 6px 0 2px;
+  }
+  .chest-wrap { width: 76px; height: 64px; flex: none; }
+  .chest-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .chest-wrap.pop .chest-svg { animation: chest-pop .5s ease; }
+  @keyframes chest-pop {
+    0% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-6px) scale(1.07); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  .loot-label { font-size: .9rem; color: var(--rope); letter-spacing: .01em; }
+
+  /* ---- Gold-coin confetti (finish screen) ---- */
+  .coin-drop {
+    position: fixed; top: -40px; z-index: 9998;
+    pointer-events: none; will-change: transform, opacity;
+    animation-name: coin-fall; animation-timing-function: ease-in; animation-fill-mode: forwards;
+  }
+  @keyframes coin-fall {
+    0% { transform: translateY(-40px) translateX(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(104vh) translateX(var(--sway, 0px)) rotate(540deg); opacity: .9; }
+  }
+
+  /* ---- Finish screen: loot + treasure map ---- */
+  .loot { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 6px 0 14px; }
+  .loot .chest-wrap { width: 132px; height: 112px; }
+  .loot-count { text-align: left; line-height: 1.15; color: var(--ink-soft); font-size: .95rem; }
+  .loot-count .coin-num {
+    display: block; font-family: "Pirata One", cursive; font-size: 2.6rem;
+    color: var(--brass); text-shadow: 0 2px 0 var(--brass-deep);
+  }
+  .treasure-map {
+    position: relative; margin: 12px auto; max-width: 460px; padding: 18px 20px;
+    background: var(--paper); color: var(--ink);
+    border: 2px dashed var(--brass-deep); border-radius: 10px;
+    box-shadow: inset 0 0 40px var(--paper-edge), 0 4px 14px var(--shadow);
+  }
+  .treasure-map .map-x {
+    position: absolute; top: -14px; right: 14px; font-size: 2rem; color: var(--danger);
+    transform: rotate(12deg); text-shadow: 0 1px 2px var(--shadow);
+  }
+  .treasure-map .map-note { margin: 0; font-size: .95rem; }
+
+  /* ---- Anchor-drop transition between questions ---- */
+  .anchor-drop {
+    position: fixed; inset: 0; z-index: 9997; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(4, 22, 26, .28);
+    animation: ad-scrim .85s ease forwards;
+  }
+  @keyframes ad-scrim { 0% { opacity: 0; } 18% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+  .anchor-drop .rope {
+    position: absolute; top: 0; left: 50%; width: 3px; transform: translateX(-50%);
+    background: repeating-linear-gradient(var(--rope), var(--rope) 6px, transparent 6px, transparent 12px);
+    animation: ad-rope .85s ease forwards; opacity: 0;
+  }
+  @keyframes ad-rope { 0% { opacity: 0; height: 0; } 45% { opacity: .85; height: 52vh; } 100% { opacity: 0; height: 56vh; } }
+  .anchor-drop .anchor {
+    font-size: 4.5rem; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
+    animation: ad-fall .85s cubic-bezier(.55, 0, .35, 1) forwards;
+  }
+  @keyframes ad-fall {
+    0% { transform: translateY(-72vh) rotate(-12deg); opacity: 0; }
+    16% { opacity: 1; }
+    58% { transform: translateY(7vh) rotate(5deg); }
+    72% { transform: translateY(-2vh) rotate(-3deg); }
+    100% { transform: translateY(2vh) rotate(0deg); opacity: .95; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #wheelSpin, .chip { transition: none !important; }
+    .trail-booty { display: none !important; }
+    body::before, body::after { animation: none !important; }
+    .chest-wrap.pop .chest-svg { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <button class="theme-toggle" id="themeBtn" type="button" aria-label="Toggle dark and light">🌗</button>
+    <h1>Man the Helm</h1>
+    <p class="lede">Ye can't write, ye can't type, and yer hands know only one thing: <b>the ship's wheel</b>. Steer the brass marker to yer answer to give the ship's surgeon what they need. Yarrr!</p>
+  </header>
+
+  <div class="app">
+    <section class="deck" aria-label="The helm">
+      <div class="legband">
+        <span id="legLabel">Leg 1 of 5</span>
+        <span class="pips" id="pips" aria-hidden="true"></span>
+      </div>
+
+      <div class="treasure" aria-label="Doubloons stowed" title="Yer haul grows with every answer">
+        <div class="chest-wrap" id="chestWrap"></div>
+        <span class="loot-label" id="lootLabel"></span>
+      </div>
+
+      <div id="stage"><!-- question or summary rendered here --></div>
+    </section>
+
+    <aside class="log" aria-label="The ship's manifest" aria-live="polite">
+      <h2>The Ship's Manifest</h2>
+      <dl id="logBody"></dl>
+      <div class="flags" id="flags"></div>
+    </aside>
+  </div>
+
+  <footer>
+    A <a href="https://github.com/tavinathanson/patient-intake-party">Patient Intake Party</a> entry — team-20-pirates. All ailments fictional; no scallywags were harmed.
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- Data: pirate prompts mapped to a real front-desk intake form ----
+  const QUESTIONS = [
+    {
+      id: "reason",
+      type: "single",
+      prompt: "What brings ye to port?",
+      sub: "Steer the helm 'til yer chief trouble sits under the brass marker, then Set Course.",
+      field: "Chief complaint",
+      options: [
+        { label: "The Scurvy",     clinical: "scurvy (suspected vitamin C deficiency)" },
+        { label: "Peg-leg Trouble",clinical: "prosthetic (peg) leg pain / poor fit" },
+        { label: "Sea-Sickness",   clinical: "motion sickness with nausea" },
+        { label: "Cannon Wound",   clinical: "traumatic blast / shrapnel injury" },
+        { label: "Sunstroke",      clinical: "heat exhaustion / sunstroke" },
+        { label: "Rat Bite",       clinical: "animal (rat) bite" },
+      ],
+    },
+    {
+      id: "ailments",
+      type: "multi",
+      prompt: "What ails ye from voyages past?",
+      sub: "Steer to each old wound and Drop Anchor. Mark as many as ye carry, then Sail On.",
+      field: "Past conditions",
+      options: [
+        { label: "The Scurvy",        clinical: "chronic scurvy" },
+        { label: "Peg Leg",           clinical: "lower-limb amputation (prosthesis)" },
+        { label: "Hook Hand",         clinical: "upper-limb amputation (prosthesis)" },
+        { label: "Lost Eye",          clinical: "monocular vision / eye loss" },
+        { label: "The Gout",          clinical: "gout" },
+        { label: "Rotten Teeth",      clinical: "advanced dental decay" },
+        { label: "The Dreaded Lurgi", clinical: "unspecified chronic illness (patient-reported)" },
+        { label: "None, arr",         clinical: "no significant past conditions", exclusive: true },
+      ],
+    },
+    {
+      id: "grog",
+      type: "single",
+      prompt: "How much grog passes yer lips?",
+      sub: "Steer to yer measure and Set Course, bilge-rat.",
+      field: "Alcohol (grog)",
+      options: [
+        { label: "Dry Dock",          clinical: "none" },
+        { label: "A Tot Now & Again", clinical: "occasional" },
+        { label: "Grog Every Watch",  clinical: "daily / heavy use" },
+      ],
+    },
+    {
+      id: "barnacles",
+      type: "multi",
+      prompt: "What makes ye break out in barnacles?",
+      sub: "Yer allergies. Drop Anchor on each, then Sail On.",
+      field: "Allergies",
+      options: [
+        { label: "Shellfish",         clinical: "shellfish" },
+        { label: "Gunpowder",         clinical: "gunpowder / sulfur (environmental)" },
+        { label: "Ship's Cat",        clinical: "cats (dander)" },
+        { label: "Citrus",            clinical: "citrus fruit" },
+        { label: "Naught, iron gut",  clinical: "no known allergies", exclusive: true },
+      ],
+    },
+    {
+      id: "firstmate",
+      type: "single",
+      prompt: "Who's yer first mate, if the seas turn?",
+      sub: "Yer emergency contact. Steer and Set Course.",
+      field: "Emergency contact",
+      options: [
+        { label: "The Quartermaster", clinical: "quartermaster (crew)" },
+        { label: "Ship's Cook",       clinical: "ship's cook (crew)" },
+        { label: "Me Parrot",         clinical: "pet parrot — no valid human contact", flagNoContact: true },
+        { label: "The Cabin Boy",     clinical: "cabin boy (crew)" },
+        { label: "I Sail Alone",      clinical: "declines to name a contact", flagNoContact: true },
+      ],
+    },
+  ];
+  const N = QUESTIONS.length;
+  const RING = 46; // % radius of chip centers from helm center
+
+  // ---- State ----
+  const state = { current: 0, angle: 0, answers: {} };
+  QUESTIONS.forEach(q => { state.answers[q.id] = q.type === "multi" ? [] : null; });
+
+  // ---- Elements ----
+  const stage = document.getElementById("stage");
+  const legLabel = document.getElementById("legLabel");
+  const pips = document.getElementById("pips");
+  const logBody = document.getElementById("logBody");
+  const flagsEl = document.getElementById("flags");
+  const themeBtn = document.getElementById("themeBtn");
+  const chestWrap = document.getElementById("chestWrap");
+  const lootLabel = document.getElementById("lootLabel");
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) document.documentElement.setAttribute("data-reduce", "");
+
+  // ---- Angle helpers ----
+  const norm = a => ((a % 360) + 360) % 360;
+  function angDiff(a, b) { let d = (a - b) % 360; if (d > 180) d -= 360; if (d < -180) d += 360; return d; }
+  function stepFor(q) { return 360 / q.options.length; }
+  function selectedIndex(q) { return Math.round(norm(state.angle) / stepFor(q)) % q.options.length; }
+  function chipPos(i, n) {
+    const t = (i / n) * 2 * Math.PI;
+    return { x: 50 + RING * Math.sin(t), y: 50 - RING * Math.cos(t) };
+  }
+  function getOpt(qid, label) {
+    const q = QUESTIONS.find(x => x.id === qid);
+    return q && q.options.find(o => o.label === label);
+  }
+
+  // ---- Build the ship's wheel SVG (spokes generated so the geometry stays true) ----
+  function wheelSVG() {
+    const c = 100, spokes = 8, knobR = 46, tipR = 42;
+    let g = "";
+    for (let i = 0; i < spokes; i++) {
+      const a = (i / spokes) * 2 * Math.PI;
+      const kx = c + knobR * Math.sin(a), ky = c - knobR * Math.cos(a);
+      const tx = c + tipR * Math.sin(a), ty = c - tipR * Math.cos(a);
+      const isPointer = i === 0;
+      const col = isPointer ? "var(--brass)" : "var(--plank)";
+      const w = isPointer ? 5.5 : 4;
+      g += `<line x1="${c}" y1="${c}" x2="${tx.toFixed(2)}" y2="${ty.toFixed(2)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+      if (isPointer) {
+        // brass arrowhead marking the heading
+        g += `<polygon points="${c},48 ${c-6},60 ${c+6},60" fill="var(--brass)" stroke="var(--brass-deep)" stroke-width="1"/>`;
+      } else {
+        g += `<circle cx="${kx.toFixed(2)}" cy="${ky.toFixed(2)}" r="5.5" fill="var(--plank)" stroke="var(--plank-dark)" stroke-width="1.5"/>`;
+      }
+    }
+    return `
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="rim-focus" cx="100" cy="100" r="56" fill="none" stroke="var(--brass)" stroke-width="2" opacity="0" />
+        <g id="wheelSpin">
+          <circle cx="100" cy="100" r="34" fill="none" stroke="var(--plank-dark)" stroke-width="9"/>
+          <circle cx="100" cy="100" r="34" fill="none" stroke="var(--plank)" stroke-width="5"/>
+          ${g}
+          <circle cx="100" cy="100" r="12" fill="var(--brass)" stroke="var(--brass-deep)" stroke-width="2"/>
+          <circle cx="100" cy="100" r="4.5" fill="var(--plank-dark)"/>
+        </g>
+      </svg>`;
+  }
+
+  let spinEl = null; // #wheelSpin, cached per render
+
+  function applyAngle(animate) {
+    if (!spinEl) return;
+    if (animate === false) helm.classList.add("dragging");
+    spinEl.style.transform = `rotate(${state.angle}deg)`;
+    if (animate === false) requestAnimationFrame(() => helm.classList.remove("dragging"));
+  }
+
+  // ---- Rendering ----
+  let helm = null;
+
+  // ---- Tilt-to-steer state (opt-in; needs a device with an orientation sensor) ----
+  let tiltEnabled = false, tiltGamma = 0, tiltRAF = null, tiltGotEvent = false, tiltLastSel = -1;
+
+  function renderStage() {
+    stopTilt(); // end any tilt session from the previous leg before re-rendering
+    // Progress band
+    legLabel.textContent = state.current >= N ? "Voyage complete" : `Leg ${state.current + 1} of ${N}`;
+    pips.innerHTML = QUESTIONS.map((_, i) => {
+      const cls = i < state.current ? "done" : (i === state.current ? "now" : "");
+      return `<span class="pip ${cls}"></span>`;
+    }).join("");
+
+    if (state.current >= N) return renderDone();
+
+    const q = QUESTIONS[state.current];
+    // Aim the marker at the current answer, or the first option.
+    let aimIdx = 0;
+    if (q.type === "single" && state.answers[q.id]) {
+      aimIdx = Math.max(0, q.options.findIndex(o => o.label === state.answers[q.id]));
+    }
+    state.angle = aimIdx * stepFor(q);
+
+    stage.innerHTML = `
+      <p class="prompt">${q.prompt}</p>
+      <p class="subprompt">${q.sub}</p>
+      <div class="helm" id="helm" role="slider" tabindex="0"
+           aria-label="${q.prompt} Use left and right arrows to steer."
+           aria-valuemin="0" aria-valuemax="${q.options.length - 1}" aria-valuenow="${aimIdx}">
+        ${wheelSVG()}
+      </div>
+      <div class="readout"><span>⚓ Heading: </span><span class="head" id="headLabel"></span></div>
+      <p class="anchored-list" id="anchored"></p>
+      <div class="tilt-row">
+        <button class="tilt-toggle" id="tiltBtn" type="button" aria-pressed="false">🧭 Tilt to Steer</button>
+        <span class="tilt-hint" id="tiltHint"></span>
+      </div>
+      <div class="controls" id="controls"></div>
+    `;
+
+    helm = document.getElementById("helm");
+    spinEl = document.getElementById("wheelSpin");
+    wireHelm(q);
+    renderControls(q);
+    wireTilt(q);
+    applyAngle(true);
+    refreshSelectionUI(q);
+  }
+
+  function renderControls(q) {
+    const controls = document.getElementById("controls");
+    const back = state.current > 0
+      ? `<button class="act ghost" id="backBtn" type="button">◀ Come About</button>` : "";
+    const startOver = `<button class="act ghost" id="resetBtn" type="button">Scuttle & Restart</button>`;
+    if (q.type === "single") {
+      controls.innerHTML = `${back}<button class="act" id="commitBtn" type="button">⚓ Set Course</button>${startOver}`;
+      document.getElementById("commitBtn").onclick = () => setCourse(q);
+    } else {
+      controls.innerHTML = `${back}
+        <button class="act" id="anchorBtn" type="button">⚓ Drop Anchor</button>
+        <button class="act" id="sailBtn" type="button">Sail On →</button>${startOver}`;
+      document.getElementById("anchorBtn").onclick = () => dropAnchor(q);
+      document.getElementById("sailBtn").onclick = () => advance();
+    }
+    if (document.getElementById("backBtn")) document.getElementById("backBtn").onclick = () => { state.current--; renderAll(); };
+    document.getElementById("resetBtn").onclick = () => {
+      QUESTIONS.forEach(x => { state.answers[x.id] = x.type === "multi" ? [] : null; });
+      state.current = 0; renderAll();
+    };
+  }
+
+  function refreshSelectionUI(q) {
+    const sel = selectedIndex(q);
+    // (Re)build chips around the wheel
+    const existing = helm.querySelectorAll(".chip");
+    existing.forEach(e => e.remove());
+    q.options.forEach((o, i) => {
+      const p = chipPos(i, q.options.length);
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip" + (i === sel ? " aim" : "");
+      if (q.type === "multi" && state.answers[q.id].includes(o.label)) chip.className += " anchored";
+      chip.style.left = p.x + "%";
+      chip.style.top = p.y + "%";
+      chip.textContent = o.label;
+      chip.setAttribute("aria-label", o.label);
+      chip.onclick = (ev) => {
+        ev.stopPropagation();
+        state.angle = i * stepFor(q);
+        applyAngle(true);
+        refreshSelectionUI(q);
+      };
+      helm.appendChild(chip);
+    });
+    const head = document.getElementById("headLabel");
+    if (head) head.textContent = q.options[sel].label;
+    helm.setAttribute("aria-valuenow", sel);
+    helm.setAttribute("aria-valuetext", q.options[sel].label);
+    // anchored summary for multi
+    const anchored = document.getElementById("anchored");
+    if (anchored) {
+      if (q.type === "multi") {
+        const picks = state.answers[q.id];
+        anchored.textContent = picks.length ? "Anchored: " + picks.join(", ") : "Nothing anchored yet.";
+      } else {
+        anchored.textContent = "";
+      }
+    }
+  }
+
+  // ---- Interactions ----
+  function wireHelm(q) {
+    let dragging = false, last = 0;
+    const svg = helm.querySelector("svg");
+    const ptrAngle = (ev) => {
+      const r = helm.getBoundingClientRect();
+      const dx = ev.clientX - (r.left + r.width / 2);
+      const dy = ev.clientY - (r.top + r.height / 2);
+      return Math.atan2(dx, -dy) * 180 / Math.PI; // 0 at top, clockwise+
+    };
+    svg.addEventListener("pointerdown", (ev) => {
+      dragging = true; last = ptrAngle(ev);
+      helm.classList.add("dragging");
+      svg.setPointerCapture(ev.pointerId);
+    });
+    svg.addEventListener("pointermove", (ev) => {
+      if (!dragging) return;
+      const cur = ptrAngle(ev);
+      state.angle += angDiff(cur, last);
+      last = cur;
+      spinEl.style.transform = `rotate(${state.angle}deg)`;
+      refreshSelectionUI(q);
+    });
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      helm.classList.remove("dragging");
+      state.angle = selectedIndex(q) * stepFor(q); // snap
+      applyAngle(true);
+      refreshSelectionUI(q);
+    };
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+
+    helm.addEventListener("keydown", (ev) => {
+      const step = stepFor(q);
+      if (ev.key === "ArrowRight" || ev.key === "ArrowDown") { state.angle = (selectedIndex(q) + 1) * step; applyAngle(true); refreshSelectionUI(q); ev.preventDefault(); }
+      else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") { state.angle = (selectedIndex(q) - 1) * step; applyAngle(true); refreshSelectionUI(q); ev.preventDefault(); }
+      else if (ev.key === "Enter" || ev.key === " ") { q.type === "single" ? setCourse(q) : dropAnchor(q); ev.preventDefault(); }
+    });
+  }
+
+  // ---- Tilt to steer: proportional rotation from device roll (gamma) ----
+  const TILT_DEADZONE = 8;   // degrees of roll ignored so a level hold doesn't drift
+  const TILT_MAX = 45;       // roll at which we spin fastest
+  const TILT_SPEED = 220;    // max degrees/sec of wheel rotation
+
+  function onDeviceOrientation(ev) {
+    if (ev.gamma == null) return;
+    tiltGotEvent = true;
+    tiltGamma = ev.gamma; // left/right roll in degrees
+    setTiltHint("");
+  }
+
+  function tiltLoop(q, prev) {
+    if (!tiltEnabled) return;
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - prev) / 1000); // clamp so a hidden tab can't lurch
+    const mag = Math.abs(tiltGamma) - TILT_DEADZONE;
+    if (mag > 0) {
+      const norm2 = Math.min(1, mag / (TILT_MAX - TILT_DEADZONE));
+      const dir = Math.sign(tiltGamma);
+      state.angle += dir * norm2 * TILT_SPEED * dt;
+      if (spinEl) spinEl.style.transform = `rotate(${state.angle}deg)`;
+      const sel = selectedIndex(q);
+      if (sel !== tiltLastSel) { tiltLastSel = sel; refreshSelectionUI(q); }
+    }
+    tiltRAF = requestAnimationFrame(() => tiltLoop(q, now));
+  }
+
+  function setTiltHint(msg) { const h = document.getElementById("tiltHint"); if (h) h.textContent = msg; }
+
+  function stopTilt() {
+    tiltEnabled = false;
+    if (tiltRAF) { cancelAnimationFrame(tiltRAF); tiltRAF = null; }
+    window.removeEventListener("deviceorientation", onDeviceOrientation);
+  }
+
+  async function startTilt(q, btn) {
+    // iOS 13+ gates the sensor behind an explicit permission call that must
+    // come from a user gesture (this click).
+    try {
+      const DOE = window.DeviceOrientationEvent;
+      if (DOE && typeof DOE.requestPermission === "function") {
+        const res = await DOE.requestPermission();
+        if (res !== "granted") { setTiltHint("Permission denied — steer with the wheel instead."); return false; }
+      }
+    } catch {
+      setTiltHint("Couldn't reach the compass — steer with the wheel instead."); return false;
+    }
+    if (!("DeviceOrientationEvent" in window)) {
+      setTiltHint("No compass aboard this vessel — steer with the wheel instead."); return false;
+    }
+    tiltEnabled = true;
+    tiltGotEvent = false;
+    tiltLastSel = selectedIndex(q);
+    window.addEventListener("deviceorientation", onDeviceOrientation);
+    tiltRAF = requestAnimationFrame(() => tiltLoop(q, performance.now()));
+    setTiltHint("Tilt the ship to steer. Level her out to settle on a heading.");
+    // If no orientation events arrive shortly, this device has no sensor (e.g. a desktop).
+    setTimeout(() => {
+      if (tiltEnabled && !tiltGotEvent) setTiltHint("No tilt detected — this be a landlubber's desktop. Use the wheel.");
+    }, 1200);
+    return true;
+  }
+
+  function wireTilt(q) {
+    const btn = document.getElementById("tiltBtn");
+    if (!btn) return;
+    // Reset any tilt session carried over from the previous leg's render.
+    stopTilt();
+    btn.classList.remove("on");
+    btn.setAttribute("aria-pressed", "false");
+    btn.onclick = async () => {
+      if (tiltEnabled) {
+        stopTilt();
+        state.angle = selectedIndex(q) * stepFor(q); // snap to nearest on release
+        applyAngle(true);
+        refreshSelectionUI(q);
+        btn.classList.remove("on");
+        btn.setAttribute("aria-pressed", "false");
+        setTiltHint("");
+        return;
+      }
+      const ok = await startTilt(q, btn);
+      if (ok) { btn.classList.add("on"); btn.setAttribute("aria-pressed", "true"); }
+    };
+  }
+
+  function setCourse(q) {
+    if (tiltEnabled) state.angle = selectedIndex(q) * stepFor(q); // settle before committing
+    state.answers[q.id] = q.options[selectedIndex(q)].label;
+    advance();
+  }
+
+  function dropAnchor(q) {
+    const opt = q.options[selectedIndex(q)];
+    const picks = state.answers[q.id];
+    if (opt.exclusive) {
+      // toggle the exclusive "none" and clear the rest
+      state.answers[q.id] = picks.includes(opt.label) ? [] : [opt.label];
+    } else {
+      const withoutExclusive = picks.filter(l => { const o = getOpt(q.id, l); return o && !o.exclusive; });
+      const idx = withoutExclusive.indexOf(opt.label);
+      if (idx >= 0) withoutExclusive.splice(idx, 1); else withoutExclusive.push(opt.label);
+      state.answers[q.id] = withoutExclusive;
+    }
+    refreshSelectionUI(q);
+    renderLog();
+  }
+
+  function advance() {
+    playAnchorDrop(() => { state.current++; renderAll(); });
+  }
+
+  // ---- Treasure chest that fills with each answered leg ----
+  function answeredCount() {
+    return QUESTIONS.reduce((n, q) => {
+      const a = state.answers[q.id];
+      const done = q.type === "multi" ? a.length > 0 : !!a;
+      return n + (done ? 1 : 0);
+    }, 0);
+  }
+
+  function chestSVG(frac) {
+    const f = Math.max(0, Math.min(1, frac));
+    const inX = 20, inY = 48, inW = 80, inH = 38;         // interior opening
+    const goldH = inH * f;
+    const goldY = inY + inH - goldH;
+    const full = f >= 1;
+    const gold = f > 0 ? `
+      <g clip-path="url(#chestInner)">
+        <rect x="${inX}" y="${goldY.toFixed(1)}" width="${inW}" height="${(goldH + 4).toFixed(1)}" fill="url(#goldGrad)"/>
+        <ellipse cx="40" cy="${(goldY + 4).toFixed(1)}" rx="9" ry="4" fill="#ffe58a" stroke="#b9902c"/>
+        <ellipse cx="64" cy="${(goldY + 2).toFixed(1)}" rx="9" ry="4" fill="#ffe58a" stroke="#b9902c"/>
+        <ellipse cx="83" cy="${(goldY + 5).toFixed(1)}" rx="7" ry="3.4" fill="#ffe58a" stroke="#b9902c"/>
+      </g>` : "";
+    const sparkle = full ? `
+      <g fill="#fff8dc">
+        <path d="M30 40 l1.6 3.2 3.2 1.6 -3.2 1.6 -1.6 3.2 -1.6 -3.2 -3.2 -1.6 3.2 -1.6z"/>
+        <path d="M92 44 l1.2 2.4 2.4 1.2 -2.4 1.2 -1.2 2.4 -1.2 -2.4 -2.4 -1.2 2.4 -1.2z"/>
+      </g>` : "";
+    return `
+      <svg class="chest-svg" viewBox="0 0 120 100" aria-hidden="true">
+        <defs>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffe58a"/><stop offset="1" stop-color="#c69a2e"/>
+          </linearGradient>
+          <clipPath id="chestInner"><rect x="${inX}" y="${inY}" width="${inW}" height="${inH}" rx="4"/></clipPath>
+        </defs>
+        <g transform="rotate(-15 22 46)">
+          <rect x="16" y="20" width="88" height="24" rx="9" fill="var(--plank)" stroke="var(--plank-dark)" stroke-width="2"/>
+          <rect x="16" y="20" width="88" height="7" rx="3.5" fill="var(--brass-deep)"/>
+        </g>
+        <rect x="14" y="44" width="92" height="48" rx="8" fill="var(--plank)" stroke="var(--plank-dark)" stroke-width="2"/>
+        ${gold}
+        <rect x="14" y="44" width="6" height="48" fill="var(--brass)" opacity=".9"/>
+        <rect x="100" y="44" width="6" height="48" fill="var(--brass)" opacity=".9"/>
+        <rect x="14" y="86" width="92" height="6" fill="var(--brass)" opacity=".9"/>
+        <rect x="54" y="82" width="12" height="12" rx="2" fill="var(--brass-deep)"/>
+        <circle cx="60" cy="86" r="2" fill="var(--plank-dark)"/>
+        ${sparkle}
+      </svg>`;
+  }
+
+  let lastLoot = 0;
+  function updateTreasure() {
+    const n = answeredCount();
+    chestWrap.innerHTML = chestSVG(n / N);
+    lootLabel.textContent = `🪙 ${n} of ${N} doubloons stowed`;
+    if (n > lastLoot && !reduceMotion) {
+      chestWrap.classList.remove("pop");
+      void chestWrap.offsetWidth; // restart animation
+      chestWrap.classList.add("pop");
+    }
+    lastLoot = n;
+  }
+
+  // ---- Gold-coin confetti for the finish ----
+  function coinRain(count) {
+    if (reduceMotion) return;
+    const coins = ["🪙", "💰", "🪙", "✨"];
+    for (let i = 0; i < count; i++) {
+      const c = document.createElement("span");
+      c.className = "coin-drop";
+      c.textContent = coins[(Math.random() * coins.length) | 0];
+      c.style.left = (Math.random() * 100) + "vw";
+      c.style.fontSize = (0.9 + Math.random() * 1.2) + "rem";
+      c.style.animationDelay = (Math.random() * 0.9) + "s";
+      c.style.animationDuration = (1.6 + Math.random() * 1.7) + "s";
+      c.style.setProperty("--sway", (Math.random() * 80 - 40).toFixed(0) + "px");
+      c.addEventListener("animationend", () => c.remove());
+      document.body.appendChild(c);
+    }
+  }
+
+  // ---- Anchor-drop transition between questions ----
+  function playAnchorDrop(done) {
+    if (reduceMotion) { done(); return; }
+    const ov = document.createElement("div");
+    ov.className = "anchor-drop";
+    ov.innerHTML = `<div class="rope"></div><span class="anchor">⚓</span>`;
+    document.body.appendChild(ov);
+    setTimeout(done, 380);            // swap content mid-drop for a smooth handoff
+    setTimeout(() => ov.remove(), 900);
+  }
+
+  // ---- Surgeon's log ----
+  function clinicalFor(q) {
+    const a = state.answers[q.id];
+    if (q.type === "single") return a ? getOpt(q.id, a).clinical : null;
+    if (!a.length) return null;
+    return a.map(l => getOpt(q.id, l).clinical).join("; ");
+  }
+
+  function renderLog() {
+    logBody.innerHTML = QUESTIONS.map(q => {
+      const c = clinicalFor(q);
+      const dd = c
+        ? `<dd>${c}</dd>`
+        : `<dd class="pending">— awaiting soundings —</dd>`;
+      return `<dt>${q.field}</dt>${dd}`;
+    }).join("");
+    renderFlags();
+    updateTreasure();
+  }
+
+  function renderFlags() {
+    const flags = [];
+    const reason = state.answers.reason;
+    const past = state.answers.ailments || [];
+    const allergies = state.answers.barnacles || [];
+    const grog = state.answers.grog;
+    const mate = state.answers.firstmate;
+
+    const hasScurvy = reason === "The Scurvy" || past.includes("The Scurvy");
+    const citrusAllergy = allergies.includes("Citrus");
+    if (hasScurvy && citrusAllergy) {
+      flags.push(["warn", "⚠ Scurvy noted with a citrus allergy — the usual citrus fix is out. Reach for a non-citrus source of vitamin C."]);
+    }
+    if (grog === "Grog Every Watch") {
+      flags.push(["warn", "⚠ Heavy daily alcohol — screen for withdrawal and check for interactions before treatment."]);
+    }
+    const mateOpt = mate && getOpt("firstmate", mate);
+    if (mateOpt && mateOpt.flagNoContact) {
+      flags.push(["warn", "⚠ No valid emergency contact on file — flag for the front desk."]);
+    }
+    if (reason === "Cannon Wound") {
+      flags.push(["note", "☞ Blast injury as chief complaint — confirm tetanus status and screen for shrapnel."]);
+    }
+    flagsEl.innerHTML = flags.map(([k, t]) => `<div class="flag ${k}">${t}</div>`).join("");
+  }
+
+  // ---- Voyage end ----
+  function renderDone() {
+    const n = answeredCount();
+    stage.innerHTML = `
+      <div class="done-card">
+        <p class="big">🏴‍☠️ Ye survived the intake!</p>
+        <div class="loot">
+          <div class="chest-wrap">${chestSVG(1)}</div>
+          <div class="loot-count"><span class="coin-num">${n}</span>doubloons<br>plundered</div>
+        </div>
+        <div class="treasure-map">
+          <span class="map-x">✖</span>
+          <p class="map-note">Yer log be complete and stowed for the ship's surgeon on yer starboard side. <b>X marks yer care</b> — hand it over and set sail!</p>
+        </div>
+        <p>Fair winds, ye brave scallywag!</p>
+        <div class="controls">
+          <button class="act ghost" id="backBtn" type="button">◀ Come About</button>
+          <button class="act" id="resetBtn" type="button">New Voyage</button>
+        </div>
+        <div class="plunder">
+          <span class="plunder-label">Share yer booty:</span>
+          <button class="act" id="buryBtn" type="button">🪙 Bury yer Booty</button>
+          <button class="act ghost" id="raidBtn" type="button">🏴‍☠️ Raid a Ship</button>
+          <input type="file" id="raidFile" accept="application/json,.json" hidden />
+          <span class="plunder-status" id="plunderStatus"></span>
+        </div>
+      </div>`;
+    document.getElementById("backBtn").onclick = () => { state.current = N - 1; renderAll(); };
+    document.getElementById("resetBtn").onclick = () => {
+      QUESTIONS.forEach(x => { state.answers[x.id] = x.type === "multi" ? [] : null; });
+      state.current = 0; renderAll();
+    };
+    document.getElementById("buryBtn").onclick = buryBooty;
+    const raidFile = document.getElementById("raidFile");
+    document.getElementById("raidBtn").onclick = () => raidFile.click();
+    raidFile.onchange = () => { if (raidFile.files[0]) raidShip(raidFile.files[0]); };
+    helm = null; spinEl = null;
+    coinRain(42);
+  }
+
+  function plunderSay(msg, kind) {
+    const el = document.getElementById("plunderStatus");
+    if (el) { el.textContent = msg; el.className = "plunder-status" + (kind ? " " + kind : ""); }
+  }
+
+  // ---- Raid: export / import the intake as a JSON "treasure chest" ----
+  const CHEST_VERSION = 1;
+
+  function buryBooty() {
+    const chest = {
+      chest: "man-the-helm-intake",
+      version: CHEST_VERSION,
+      buried: new Date().toISOString(),
+      answers: state.answers,
+    };
+    const blob = new Blob([JSON.stringify(chest, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "treasure-chest.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    plunderSay("Booty buried in treasure-chest.json — hand it to yer crew.", "ok");
+  }
+
+  function raidShip(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      let chest;
+      try { chest = JSON.parse(reader.result); }
+      catch { plunderSay("That chest be locked — not readable treasure (bad JSON).", "err"); return; }
+      if (!chest || chest.chest !== "man-the-helm-intake" || typeof chest.answers !== "object") {
+        plunderSay("That be no intake chest, ye been swindled.", "err"); return;
+      }
+      // Merge only known questions/options; ignore any unknown or malformed booty.
+      let taken = 0;
+      QUESTIONS.forEach(q => {
+        const val = chest.answers[q.id];
+        if (q.type === "single") {
+          if (typeof val === "string" && getOpt(q.id, val)) { state.answers[q.id] = val; taken++; }
+          else state.answers[q.id] = null;
+        } else {
+          if (Array.isArray(val)) {
+            const clean = val.filter(l => typeof l === "string" && getOpt(q.id, l));
+            state.answers[q.id] = clean;
+            if (clean.length) taken++;
+          } else state.answers[q.id] = [];
+        }
+      });
+      state.current = N; // stay on the harbor screen showing the plundered manifest
+      renderAll();
+      plunderSay(taken ? `Raid successful — plundered ${taken} answer${taken === 1 ? "" : "s"} onto yer manifest.` : "Chest was empty, naught to plunder.", taken ? "ok" : "err");
+    };
+    reader.onerror = () => plunderSay("Couldn't haul that chest aboard.", "err");
+    reader.readAsText(file);
+  }
+
+  function renderAll() { renderStage(); renderLog(); }
+
+  // ---- Theme toggle ----
+  themeBtn.onclick = () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = cur ? (cur === "dark" ? "light" : "dark") : (dark ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", next);
+  };
+
+  renderAll();
+
+  // ---- Pirate emoji mouse trail (fades away) ----
+  (() => {
+    const BOOTY = ["🏴‍☠️", "☠️", "⚓", "🦜", "🗺️", "💰", "🪙", "⚔️", "🧭", "🍺", "🦑", "🐙"];
+    let last = 0;
+    const spawn = (x, y) => {
+      const now = performance.now();
+      if (now - last < 45) return; // throttle so we don't flood the deck
+      last = now;
+      const s = document.createElement("span");
+      s.className = "trail-booty";
+      s.textContent = BOOTY[(Math.random() * BOOTY.length) | 0];
+      const drift = (Math.random() * 24 - 12).toFixed(1);
+      const spin = (Math.random() * 60 - 30).toFixed(1);
+      s.style.left = x + "px";
+      s.style.top = y + "px";
+      s.style.setProperty("--drift", drift + "px");
+      s.style.setProperty("--spin", spin + "deg");
+      document.body.appendChild(s);
+      s.addEventListener("animationend", () => s.remove());
+    };
+    window.addEventListener("pointermove", (e) => spawn(e.clientX, e.clientY), { passive: true });
+  })();
+})();
+</script>
+</body>
+</html>
