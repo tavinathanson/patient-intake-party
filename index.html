@@ -134,7 +134,7 @@
     .controls p { margin: 0 0 0 auto; font-size: .82rem; opacity: .65; }
     kbd { border: 1px solid var(--ink); border-bottom-width: 3px; padding: 2px 6px; background: white; }
 
-    .primary-button, .jump-button, .restart-game {
+    .primary-button, .jump-button, .restart-game, .version-link {
       border: 2px solid var(--ink);
       background: var(--ink);
       color: white;
@@ -152,6 +152,13 @@
       box-shadow: none;
     }
     .restart-game:hover { background: #ededed; box-shadow: 3px 3px 0 var(--ink); transform: translate(-1px, -1px); }
+    .version-link {
+      margin-left: 4px;
+      background: var(--ink);
+      color: white;
+      text-decoration: none;
+    }
+    .version-link:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
     .jump-button span { font-size: 1.2rem; }
     .primary-button:hover, .jump-button:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 var(--ink); }
     .primary-button:active, .jump-button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
@@ -183,7 +190,7 @@
       .answer-gate { transform: scale(.86); transform-origin: bottom right; }
       .runner { left: 9%; transform: scale(.82); transform-origin: bottom left; }
       .controls { flex-wrap: wrap; }
-      .restart-game { margin-left: 0; }
+      .restart-game, .version-link { margin-left: 0; }
       .controls p { width: 100%; margin-left: 0; }
       .time-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -198,7 +205,6 @@
       <header class="masthead">
         <div>
           <p class="eyebrow">OFFLINE INTAKE // PRIMARY CARE</p>
-          <h1>Intake Runner</h1>
         </div>
         <div class="status" aria-label="Game progress">
           <span id="progress">QUESTION 0 / 12</span>
@@ -243,6 +249,7 @@
             <span>↑</span> Jump
           </button>
           <button id="restart-game" class="restart-game" type="button">↻ Restart run</button>
+          <a class="version-link" href="https://super-intake-bros-intake-oop.fly.dev" target="_blank" rel="noopener noreferrer">Mario Version ↗</a>
           <p><kbd>Space</kbd> / <kbd>↑</kbd> / tap to jump</p>
         </div>
       </section>
