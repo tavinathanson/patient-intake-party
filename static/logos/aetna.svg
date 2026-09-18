@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <rect width="200" height="60" rx="6" fill="#7d1373"/>
+  <circle cx="36" cy="30" r="14" fill="#d22630"/>
+  <text x="65" y="37" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="bold" font-size="20">aetna</text>
+</svg>

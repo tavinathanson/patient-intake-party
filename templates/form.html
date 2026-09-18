@@ -1,253 +1,269 @@
 {% extends "base.html" %}
 
-{% block title %}Persistent Pain Intake Form{% endblock %}
-
 {% block content %}
-<section class="form-wrapper">
-  <div class="form-header">
-    <hgroup>
-      <h1>New Patient Intake Form</h1>
-      <p>Persistent Pain Clinic baseline intake. Complete all sections below, or load sample patient data for testing.</p>
-    </hgroup>
-    {% if is_prefilled %}
-    <div class="banner-prefill">
-      <small>ℹ️ Prefilled with sample data for: <strong>{{ form_data.get('name', 'Fig Turnip') }}</strong> &bull; <a href="{{ url_for('index') }}">Reset to blank form</a></small>
-    </div>
-    {% endif %}
+<form method="POST" action="{{ url_for('submit') }}" id="intake-form">
+  
+  <h2>New Patient Intake</h2>
+
+  <div class="grid">
+    <label for="name">
+      Patient Name
+      <input type="text" id="name" name="name" 
+             value="{{ form_data.get('name', '') }}" required>
+    </label>
+
+    <label for="date">
+      Date
+      <input type="date" id="date" name="date" 
+             value="{{ form_data.get('date', '') }}" required>
+    </label>
   </div>
 
-  <form method="POST" action="{{ url_for('submit') }}" id="intake-form">
-    
-    <!-- Section 1: Demographics & Contact -->
-    <article class="form-card">
-      <header>
-        <h3>1. Patient &amp; Administrative Information</h3>
-      </header>
+  <div class="grid">
+    <label for="filled_out_by">
+      Filled out by (if not the patient)
+      <input type="text" id="filled_out_by" name="filled_out_by" 
+             value="{{ form_data.get('filled_out_by', '') }}">
+    </label>
 
-      <div class="grid">
-        <label for="filled_out_by">
-          Filled out by (if not the patient)
-          <input type="text" id="filled_out_by" name="filled_out_by" 
-                 placeholder="e.g. Olive Turnip (wife)" 
-                 value="{{ form_data.get('filled_out_by', '') }}">
-        </label>
-        
-        <label for="date">
-          Date
-          <input type="date" id="date" name="date" 
-                 value="{{ form_data.get('date', '') }}">
-        </label>
-      </div>
+    <label for="address">
+      Address
+      <input type="text" id="address" name="address" 
+             value="{{ form_data.get('address', '') }}">
+    </label>
+  </div>
 
-      <div class="grid">
-        <label for="name">
-          Patient Full Name <span class="required">*</span>
-          <input type="text" id="name" name="name" 
-                 placeholder="e.g. Fig Turnip" 
-                 value="{{ form_data.get('name', '') }}" required>
-        </label>
-
-        <label for="date_of_birth">
-          Date of Birth <span class="required">*</span>
-          <input type="date" id="date_of_birth" name="date_of_birth" 
-                 value="{{ form_data.get('date_of_birth', '') }}" required>
-        </label>
-      </div>
-
-      <div class="grid">
-        <label for="address">
-          Address
-          <input type="text" id="address" name="address" 
-                 placeholder="e.g. 12 Garden Row" 
-                 value="{{ form_data.get('address', '') }}">
-        </label>
-
-        <label for="phone">
-          Phone Number
-          <input type="tel" id="phone" name="phone" 
-                 placeholder="e.g. 555-0143" 
-                 value="{{ form_data.get('phone', '') }}">
-        </label>
-      </div>
-
-      <div class="grid">
-        <label for="insurance">
-          Insurance Carrier / Plan
-          <input type="text" id="insurance" name="insurance" 
-                 placeholder="e.g. BlueCross, through my work" 
-                 value="{{ form_data.get('insurance', '') }}">
-        </label>
-
-        <label for="member_id">
-          Member ID
-          <input type="text" id="member_id" name="member_id" 
-                 placeholder="e.g. ABC123456789" 
-                 value="{{ form_data.get('member_id', '') }}">
-        </label>
-      </div>
-
-      <label for="emergency_contact">
-        Emergency Contact <small class="text-muted">(Name, relationship, phone)</small>
-        <input type="text" id="emergency_contact" name="emergency_contact" 
-               placeholder="e.g. Olive Turnip, wife, 555-0143" 
-               value="{{ form_data.get('emergency_contact', '') }}">
-      </label>
-    </article>
-
-    <!-- Section 2: Clinical Details & Medications -->
-    <article class="form-card">
-      <header>
-        <h3>2. Visit Details &amp; Medications</h3>
-      </header>
-
-      <label for="reason_for_visit">
-        <strong>Reason for visit</strong> <span class="required">*</span>
-        <textarea id="reason_for_visit" name="reason_for_visit" rows="3" 
-                  placeholder="Describe main pain symptoms, duration, location, and goals for today's visit..." required>{{ form_data.get('reason_for_visit', '') }}</textarea>
-      </label>
-
-      <label for="current_medications">
-        <strong>Current medications</strong> <small class="text-muted">(Include over-the-counter, vitamins, eye drops, inhalers)</small>
-        <textarea id="current_medications" name="current_medications" rows="3" 
-                  placeholder="e.g. metformin, the nerve pill, meloxicam, tylenol">{{ form_data.get('current_medications', '') }}</textarea>
-      </label>
-
-      <fieldset>
-        <legend><strong>Allergies</strong></legend>
-        <div class="grid">
-          <div>
-            <label for="allergies_none">
-              <input type="checkbox" id="allergies_none" name="allergies_none" value="true"
-                     {% if form_data.get('allergies', '')|lower == 'none' %}checked{% endif %}>
-              No known allergies (None)
-            </label>
-          </div>
-          <div>
-            <input type="text" id="allergies" name="allergies" 
-                   placeholder="Or list allergies (e.g. codeine, penicillin)" 
-                   value="{% if form_data.get('allergies', '')|lower != 'none' %}{{ form_data.get('allergies', '') }}{% endif %}">
-          </div>
-        </div>
-      </fieldset>
-    </article>
-
-    <!-- Section 3: Past Medical Conditions -->
-    <article class="form-card">
-      <header>
-        <h3>3. Past Medical Conditions</h3>
-        <p><small>Check all conditions that apply to you or your medical history.</small></p>
-      </header>
-
-      {% set cur_conds = form_data.get('past_conditions', []) %}
-      {% set cur_conds_lower = [] %}
-      {% for c in cur_conds %}
-        {% set _ = cur_conds_lower.append(c|lower) %}
-      {% endfor %}
-
-      <div class="conditions-grid">
-        {% for cond in conditions %}
-        <label for="cond_{{ cond.id }}" class="checkbox-label">
-          <input type="checkbox" id="cond_{{ cond.id }}" name="past_conditions" value="{{ cond.id }}"
-                 {% if cond.id in cur_conds_lower or cond.label|lower in cur_conds_lower %}checked{% endif %}>
-          {{ cond.label }}
-        </label>
-        {% endfor %}
-      </div>
-
-      <div class="other-condition-row">
-        <label for="past_conditions_other">
-          Other past conditions:
-          {% set other_val = "" %}
-          {% for c in cur_conds %}
-            {% if c|lower not in [
-              'arthritis', 'asthma', 'cancer', 'copd', 'depression_anxiety', 'depression / anxiety', 
-              'diabetes', 'glaucoma', 'heart_disease', 'heart disease', 'high_blood_pressure', 
-              'high blood pressure', 'high_cholesterol', 'high cholesterol', 'kidney_disease', 
-              'kidney disease', 'seizures', 'stroke', 'thyroid_disease', 'thyroid disease'
-            ] %}
-              {% set other_val = c %}
-            {% endif %}
+  <!-- Cursed Date of Birth -->
+  <fieldset>
+    <legend>Date of Birth</legend>
+    <div class="grid">
+      <label for="dob_birthstone">
+        Birth Month (Birthstone)
+        <select id="dob_birthstone" name="dob_birthstone" required>
+          <option value="" disabled {% if not cursed_dob.get('month') %}selected{% endif %}>Select birthstone...</option>
+          {% for b in birthstones %}
+          <option value="{{ b.month }}" {% if cursed_dob.get('month') == b.month %}selected{% endif %}>
+            {{ b.name }}
+          </option>
           {% endfor %}
-          <input type="text" id="past_conditions_other" name="past_conditions_other" 
-                 placeholder="Please specify other condition(s)" 
-                 value="{{ other_val }}">
-        </label>
-      </div>
-    </article>
-
-    <!-- Section 4: Surgeries & Family History -->
-    <article class="form-card">
-      <header>
-        <h3>4. Surgeries &amp; Family Medical History</h3>
-      </header>
-
-      <label for="past_surgeries">
-        <strong>Past surgeries</strong> <small class="text-muted">(Procedure and year)</small>
-        <textarea id="past_surgeries" name="past_surgeries" rows="2" 
-                  placeholder="e.g. knee (2019)">{{ form_data.get('past_surgeries', '') }}</textarea>
+        </select>
       </label>
 
-      <label for="family_history">
-        <strong>Family history</strong> <small class="text-muted">(Parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma)</small>
-        <textarea id="family_history" name="family_history" rows="2" 
-                  placeholder="e.g. father heart">{{ form_data.get('family_history', '') }}</textarea>
+      <label for="dob_day">
+        Day
+        <input type="number" id="dob_day" name="dob_day" min="1" max="31" 
+               placeholder="1-31" 
+               value="{{ cursed_dob.get('day', '') }}" required>
       </label>
-    </article>
 
-    <!-- Section 5: Lifestyle & Substances -->
-    <article class="form-card">
-      <header>
-        <h3>5. Social &amp; Lifestyle History</h3>
-      </header>
+      <label for="dob_book">
+        Birth Year (Book published in that year)
+        <input type="text" id="dob_book" name="dob_book" 
+               placeholder="e.g. Dune" 
+               value="{{ cursed_dob.get('book', '') }}" required>
+        <input type="hidden" id="dob_year" name="dob_year" value="{{ cursed_dob.get('year', '') }}">
+      </label>
+    </div>
+    <div class="resolved-preview">
+      <small id="book-lookup-status">
+        {% if cursed_dob.get('book') and cursed_dob.get('year') %}
+          Book: {{ cursed_dob.get('book') }} ({{ cursed_dob.get('year') }})
+        {% endif %}
+      </small>
+      <small>&bull; Resolved DOB: <strong id="dob-computed-display">{{ form_data.get('date_of_birth', '') }}</strong></small>
+      <input type="hidden" id="date_of_birth" name="date_of_birth" value="{{ form_data.get('date_of_birth', '') }}">
+    </div>
+  </fieldset>
 
-      <div class="lifestyle-section">
-        <label for="tobacco">
-          <strong>Tobacco Use</strong> <small class="text-muted">(Never, Former, Current, or details)</small>
-          <input type="text" id="tobacco" name="tobacco" 
-                 placeholder="e.g. quit, never, current" 
-                 value="{{ form_data.get('tobacco', '') }}">
-        </label>
+  <!-- Cursed Phone Number -->
+  <fieldset>
+    <legend>Phone Number (Enter two numbers that multiply to your phone number)</legend>
+    <div class="grid">
+      <label for="phone_factor_1">
+        Factor 1
+        <input type="number" id="phone_factor_1" name="phone_factor_1" 
+               placeholder="e.g. 17" 
+               value="{{ cursed_phone.get('factor_1', '') }}" required>
+      </label>
 
-        <label for="alcohol">
-          <strong>Alcohol Use</strong> <small class="text-muted">(None, Occasional, Daily, or details)</small>
-          <input type="text" id="alcohol" name="alcohol" 
-                 placeholder="e.g. some, none, daily" 
-                 value="{{ form_data.get('alcohol', '') }}">
-        </label>
+      <label for="phone_factor_2">
+        Factor 2
+        <input type="number" id="phone_factor_2" name="phone_factor_2" 
+               placeholder="e.g. 326479" 
+               value="{{ cursed_phone.get('factor_2', '') }}" required>
+      </label>
+    </div>
+    <div class="resolved-preview">
+      <small>Calculated Phone: <strong id="phone-computed-display">{{ form_data.get('phone', '') }}</strong></small>
+      <input type="hidden" id="phone" name="phone" value="{{ form_data.get('phone', '') }}">
+    </div>
+  </fieldset>
 
-        <label for="drugs">
-          <strong>Recreational Drugs</strong> <small class="text-muted">(No, Yes, or details)</small>
-          <input type="text" id="drugs" name="drugs" 
-                 placeholder="e.g. no, yes" 
-                 value="{{ form_data.get('drugs', '') }}">
-        </label>
-      </div>
-    </article>
+  <!-- Insurance Carrier Logo Selection -->
+  <fieldset>
+    <legend>Insurance (Pick your provider logo)</legend>
+    <div class="grid">
+      {% for ins in insurers %}
+      <label for="ins_{{ ins.id }}" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+        <input type="radio" id="ins_{{ ins.id }}" name="insurance" value="{{ ins.value }}"
+               {% if ins.value == form_data.get('insurance') or ins.id in form_data.get('insurance', '')|lower %}checked{% endif %}>
+        <img src="{{ url_for('static', filename=ins.logo) }}" alt="{{ ins.label }}" style="height: 38px; width: auto; border-radius: 4px;">
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
 
-    <!-- Section 6: Signature -->
-    <article class="form-card">
-      <header>
-        <h3>6. Signature &amp; Confirmation</h3>
-      </header>
+  <!-- Cursed Member ID: RTL Input -->
+  <label for="member_id">
+    Member ID (Right-to-Left / RTL Input)
+    <input type="text" id="member_id" name="member_id" dir="rtl" style="direction: rtl; text-align: right;"
+           placeholder="e.g. 987654321" 
+           value="{{ form_data.get('member_id', '') }}">
+  </label>
 
-      <div class="grid">
-        <label for="signature">
-          Signature <span class="required">*</span>
-          <input type="text" id="signature" name="signature" 
-                 placeholder="e.g. O. Turnip (wife)" 
-                 value="{{ form_data.get('signature', '') }}" required>
-        </label>
-      </div>
+  <!-- Emergency Contact + Dad Checkbox -->
+  <fieldset>
+    <legend>Emergency Contact</legend>
+    <label for="emergency_contact">
+      Name, relationship, phone
+      <input type="text" id="emergency_contact" name="emergency_contact" 
+             placeholder="e.g. Olive Turnip, wife, 555-0143" 
+             value="{{ form_data.get('emergency_contact', '') }}">
+    </label>
+    <div class="grid">
+      <label for="is_dad_yes">
+        <input type="radio" id="is_dad_yes" name="emergency_contact_dad" value="dad" {% if is_dad %}checked{% endif %}>
+        This contact IS my dad
+      </label>
+      <label for="is_dad_no">
+        <input type="radio" id="is_dad_no" name="emergency_contact_dad" value="not_dad" {% if not is_dad %}checked{% endif %}>
+        This contact is NOT my dad
+      </label>
+    </div>
+  </fieldset>
 
-      <small class="text-muted">By submitting this form, you confirm that the information provided is true and accurate to the best of your knowledge.</small>
-    </article>
+  <!-- Cursed Reason for Visit: Must Rhyme -->
+  <label for="reason_for_visit">
+    Reason for visit (Must be rhyming / at least 2 lines)
+    <textarea id="reason_for_visit" name="reason_for_visit" rows="3" 
+              placeholder="e.g.&#10;I have terrible pain&#10;Driving my mind insane" required>{{ form_data.get('reason_for_visit', '') }}</textarea>
+  </label>
+  <div class="resolved-preview" style="margin-top: -0.5rem; margin-bottom: 1rem;">
+    <small id="rhyme-check-status">
+      {% if form_data.get('reason_for_visit') %}
+        ✓ Rhyme: "pain" and "insane"
+      {% else %}
+        Enter at least 2 rhyming lines
+      {% endif %}
+    </small>
+  </div>
 
-    <!-- Action Buttons -->
-    <div class="form-actions grid">
-      <button type="submit" class="primary btn-large">Submit Intake Form</button>
-      <a href="{{ url_for('index', prefill='fig') }}" role="button" class="secondary outline">Prefill Fig Turnip (Sample Data)</a>
+  <!-- Cursed Medications: Must be a Haiku (5-7-5) -->
+  <label for="current_medications">
+    Current medications (Must be formatted as a 5-7-5 Haiku)
+    <textarea id="current_medications" name="current_medications" rows="3" 
+              placeholder="Line 1: Metformin each day (5)&#10;Line 2: Meloxicam, Tylenol (7)&#10;Line 3: Nerve pill for my pain (5)">{{ form_data.get('current_medications', '') }}</textarea>
+  </label>
+  <div class="resolved-preview" style="margin-top: -0.5rem; margin-bottom: 1rem;">
+    <small id="haiku-check-status">
+      {% if form_data.get('current_medications') %}
+        ✓ Perfect Haiku! (5-7-5 syllables)
+      {% else %}
+        Enter medications as a 3-line Haiku (5-7-5 syllables)
+      {% endif %}
+    </small>
+  </div>
+
+  <!-- Cursed Allergies: None vs It's complicated -->
+  <fieldset>
+    <legend>Allergies</legend>
+    <div class="grid">
+      <label for="allergies_none">
+        <input type="radio" id="allergies_none" name="allergies" value="none"
+               {% if not form_data.get('allergies') or form_data.get('allergies', '')|lower == 'none' %}checked{% endif %}>
+        None
+      </label>
+      <label for="allergies_complicated">
+        <input type="radio" id="allergies_complicated" name="allergies" value="it's complicated"
+               {% if form_data.get('allergies', '')|lower == "it's complicated" %}checked{% endif %}>
+        It's complicated
+      </label>
+    </div>
+  </fieldset>
+
+  <!-- Cursed Past Conditions: Multilingual -->
+  <fieldset>
+    <legend>Past conditions (Multi-language)</legend>
+    <div class="grid">
+      {% for cond in conditions %}
+      <label for="cond_{{ cond.id }}">
+        <input type="checkbox" id="cond_{{ cond.id }}" name="past_conditions" value="{{ cond.id }}"
+               {% if cond.id in form_data.get('past_conditions', []) or cond.label|lower in form_data.get('past_conditions', []) %}checked{% endif %}>
+        {{ cond.label }}
+      </label>
+      {% endfor %}
+    </div>
+    <label for="past_conditions_other">
+      Autre / Sonstiges (Other):
+      <input type="text" id="past_conditions_other" name="past_conditions_other" 
+             value="{% for c in form_data.get('past_conditions', []) %}{% if c not in ['diabetes', 'arthritis', 'asthma', 'cancer', 'copd', 'depression_anxiety', 'glaucoma', 'heart_disease', 'high_blood_pressure', 'high_cholesterol', 'kidney_disease', 'seizures', 'stroke', 'thyroid_disease'] %}{{ c }}{% endif %}{% endfor %}">
+    </label>
+  </fieldset>
+
+  <div class="grid">
+    <!-- Cursed Past Surgeries: 45 Char Limit -->
+    <label for="past_surgeries">
+      Past surgeries <small id="surgery-char-count">(Max 45 chars)</small>
+      <input type="text" id="past_surgeries" name="past_surgeries" maxlength="45"
+             placeholder="e.g. knee (2019)"
+             value="{{ form_data.get('past_surgeries', '') }}">
+    </label>
+
+    <label for="family_history">
+      Family history
+      <input type="text" id="family_history" name="family_history" 
+             value="{{ form_data.get('family_history', '') }}">
+    </label>
+  </div>
+
+  <!-- CURSED PACHINKO COMPONENT: Tobacco, Alcohol, Drugs -->
+  <fieldset>
+    <legend>Lifestyle History (Pachinko Physics Selector)</legend>
+    <p><small>Drop a ball to determine your Tobacco, Alcohol, and Recreational Drug status. Click anywhere along the top of the board to drop.</small></p>
+
+    <div class="grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 0.75rem;">
+      <button type="button" id="pachinko-mode-tobacco" class="outline" onclick="setPachinkoMode('tobacco')">1. Tobacco Drop</button>
+      <button type="button" id="pachinko-mode-alcohol" class="outline secondary" onclick="setPachinkoMode('alcohol')">2. Alcohol Drop</button>
+      <button type="button" id="pachinko-mode-drugs" class="outline secondary" onclick="setPachinkoMode('drugs')">3. Drugs Drop</button>
     </div>
 
-  </form>
-</section>
+    <div style="display: flex; justify-content: center; margin-bottom: 0.75rem;">
+      <canvas id="pachinko-canvas" width="480" height="280" style="border: 1px solid var(--pico-muted-border-color, #ccc); border-radius: 6px; background: #fafafa; cursor: crosshair; max-width: 100%; height: auto;"></canvas>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label>Tobacco: <strong id="display-tobacco">{{ form_data.get('tobacco', 'quit') }}</strong></label>
+        <input type="hidden" id="tobacco" name="tobacco" value="{{ form_data.get('tobacco', 'quit') }}">
+      </div>
+      <div>
+        <label>Alcohol: <strong id="display-alcohol">{{ form_data.get('alcohol', 'some') }}</strong></label>
+        <input type="hidden" id="alcohol" name="alcohol" value="{{ form_data.get('alcohol', 'some') }}">
+      </div>
+      <div>
+        <label>Drugs: <strong id="display-drugs">{{ form_data.get('drugs', 'no') }}</strong></label>
+        <input type="hidden" id="drugs" name="drugs" value="{{ form_data.get('drugs', 'no') }}">
+      </div>
+    </div>
+  </fieldset>
+
+  <label for="signature">
+    Signature
+    <input type="text" id="signature" name="signature" 
+           value="{{ form_data.get('signature', '') }}" required>
+  </label>
+
+  <button type="submit">Submit Intake Form</button>
+
+</form>
 {% endblock %}

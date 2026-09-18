@@ -1,139 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Submission Received - Patient Intake Portal{% endblock %}
-
 {% block content %}
-<section class="submission-wrapper">
-  
-  <div class="success-banner">
-    <h2>✅ Patient Intake Submitted</h2>
-    <p>The clinical intake information has been received and processed.</p>
-  </div>
+<article>
+  <header>
+    <h2>Submission Received</h2>
+  </header>
 
-  <div class="grid">
-    <!-- Human-Readable Summary Card -->
-    <div>
-      <article class="review-card">
-        <header>
-          <h3>📋 Submission Summary</h3>
-        </header>
+  <p><strong>Patient Name:</strong> {{ data.name }}</p>
+  <p><strong>Date:</strong> {{ data.date }}</p>
+  <p><strong>Date of Birth:</strong> {{ data.date_of_birth }}</p>
+  <p><strong>Phone:</strong> {{ data.phone }}</p>
+  <p><strong>Reason for Visit:</strong> {{ data.reason_for_visit }}</p>
 
-        <div class="summary-section">
-          <h4>Patient Demographics</h4>
-          <dl class="summary-dl">
-            <dt>Patient Name:</dt>
-            <dd><strong>{{ data.name or '—' }}</strong></dd>
+  <h3>JSON Output</h3>
+  <pre><code>{{ json_output }}</code></pre>
 
-            <dt>Date of Birth:</dt>
-            <dd>{{ data.date_of_birth or '—' }}</dd>
-
-            <dt>Date Submitted:</dt>
-            <dd>{{ data.date or '—' }}</dd>
-
-            <dt>Filled Out By:</dt>
-            <dd>{{ data.filled_out_by or 'Self (Patient)' }}</dd>
-
-            <dt>Address:</dt>
-            <dd>{{ data.address or '—' }}</dd>
-
-            <dt>Phone:</dt>
-            <dd>{{ data.phone or '—' }}</dd>
-
-            <dt>Insurance / Member ID:</dt>
-            <dd>{{ data.insurance or '—' }} {% if data.member_id %}(ID: {{ data.member_id }}){% endif %}</dd>
-
-            <dt>Emergency Contact:</dt>
-            <dd>{{ data.emergency_contact or '—' }}</dd>
-          </dl>
-        </div>
-
-        <hr>
-
-        <div class="summary-section">
-          <h4>Clinical Information</h4>
-          <dl class="summary-dl">
-            <dt>Reason for Visit:</dt>
-            <dd class="highlight-text">{{ data.reason_for_visit or '—' }}</dd>
-
-            <dt>Current Medications:</dt>
-            <dd>{{ data.current_medications or 'None listed' }}</dd>
-
-            <dt>Allergies:</dt>
-            <dd>
-              {% if data.allergies|lower == 'none' %}
-                <span class="badge badge-success">No Known Allergies</span>
-              {% else %}
-                <span class="badge badge-warning">{{ data.allergies }}</span>
-              {% endif %}
-            </dd>
-
-            <dt>Past Conditions:</dt>
-            <dd>
-              {% if data.past_conditions and data.past_conditions|length > 0 %}
-                <div class="tag-cloud">
-                  {% for cond in data.past_conditions %}
-                    <span class="tag">{{ cond }}</span>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <em>None reported</em>
-              {% endif %}
-            </dd>
-
-            <dt>Past Surgeries:</dt>
-            <dd>{{ data.past_surgeries or 'None reported' }}</dd>
-
-            <dt>Family History:</dt>
-            <dd>{{ data.family_history or 'None reported' }}</dd>
-          </dl>
-        </div>
-
-        <hr>
-
-        <div class="summary-section">
-          <h4>Social & Lifestyle History</h4>
-          <dl class="summary-dl">
-            <dt>Tobacco:</dt>
-            <dd>{{ data.tobacco or '—' }}</dd>
-
-            <dt>Alcohol:</dt>
-            <dd>{{ data.alcohol or '—' }}</dd>
-
-            <dt>Recreational Drugs:</dt>
-            <dd>{{ data.drugs or '—' }}</dd>
-
-            <dt>Signature:</dt>
-            <dd class="signature-text">{{ data.signature or '—' }}</dd>
-          </dl>
-        </div>
-
-        <footer>
-          <a href="{{ url_for('index') }}" role="button" class="secondary outline">← Fill Out Another Form</a>
-        </footer>
-      </article>
-    </div>
-
-    <!-- JSON Payload Card -->
-    <div>
-      <article class="json-card">
-        <header class="json-header">
-          <h3>📦 JSON Data Output</h3>
-          <div class="json-actions">
-            <button id="copy-json-btn" class="outline secondary btn-sm" onclick="copyJsonPayload()">Copy JSON</button>
-            <button id="download-json-btn" class="outline secondary btn-sm" onclick="downloadJsonPayload()">Download</button>
-          </div>
-        </header>
-
-        <pre><code id="json-content">{{ json_output }}</code></pre>
-
-        <footer>
-          <small class="text-muted">
-            This JSON object mirrors the structure of <code>patients/persistent-pain/intake-form.json</code>.
-          </small>
-        </footer>
-      </article>
-    </div>
-  </div>
-
-</section>
+  <footer>
+    <a href="{{ url_for('index') }}" role="button">Back to Form</a>
+  </footer>
+</article>
 {% endblock %}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <rect width="200" height="60" rx="6" fill="#005596"/>
+  <!-- Cross -->
+  <path d="M 28 15 L 36 15 L 36 24 L 45 24 L 45 32 L 36 32 L 36 41 L 28 41 L 28 32 L 19 32 L 19 24 L 28 24 Z" fill="#ffffff"/>
+  <!-- Shield -->
+  <path d="M 52 16 L 68 16 L 68 28 C 68 36 60 41 60 41 C 60 41 52 36 52 28 Z" fill="#ffffff"/>
+  <text x="80" y="36" fill="#ffffff" font-family="system-ui, sans-serif" font-weight="bold" font-size="16">BlueCross</text>
+</svg>
