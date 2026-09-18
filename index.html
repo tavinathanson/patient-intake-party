@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Point Intake: GLP-1 follow-up</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0b1020; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: #f2f5ff; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); filter: saturate(0.8) brightness(0.75); }
+  #overlay { position: absolute; inset: 0; }
+
+  #question {
+    position: absolute; top: 3vh; left: 50%; transform: translateX(-50%);
+    width: min(900px, 92vw); text-align: center; padding: 14px 22px;
+    background: rgba(8, 12, 30, 0.72); border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 18px; backdrop-filter: blur(8px);
+  }
+  #question h1 { margin: 0; font-size: clamp(20px, 3.2vw, 34px); line-height: 1.2; }
+  #question p { margin: 6px 0 0; font-size: 14px; opacity: 0.7; }
+
+  .bubble {
+    position: absolute; width: 22vw; min-width: 170px; max-width: 270px; padding: 16px 14px;
+    border-radius: 22px; border: 2px solid rgba(255,255,255,0.35);
+    background: rgba(12, 18, 44, 0.62); backdrop-filter: blur(6px);
+    text-align: center; font-size: clamp(16px, 2.1vw, 24px); font-weight: 600;
+    overflow: hidden; cursor: pointer; transition: border-color 120ms, transform 120ms;
+  }
+  .bubble .label { position: relative; z-index: 2; }
+  .bubble .fill { position: absolute; left: 0; bottom: 0; width: 100%; height: 0%; background: linear-gradient(180deg, #3ddc97, #1c9e6b); opacity: 0.55; z-index: 1; }
+  .bubble .dbg { display: none; position: absolute; z-index: 3; right: 8px; bottom: 6px; font: 12px monospace; opacity: 0.8; }
+  body.debugging .bubble .dbg { display: block; }
+  .bubble.hot { border-color: #3ddc97; transform: scale(1.04); }
+  .bubble.picked { border-color: #3ddc97; background: rgba(29, 158, 107, 0.85); }
+
+  #hint.bad { background: rgba(120, 20, 20, 0.9); border: 1px solid #ff6b6b; padding: 12px 18px; border-radius: 14px; opacity: 1; max-width: 90vw; }
+  #hint button { margin-left: 10px; padding: 6px 14px; font-size: 14px; }
+  #hud { position: absolute; top: 12px; left: 12px; font: 12px/1.45 monospace; background: rgba(0,0,0,0.85);
+         color: #7bdc9a; border: 1px solid #7bdc9a; min-width: 260px; min-height: 60px;
+         padding: 8px 10px; border-radius: 8px; white-space: pre; display: none; z-index: 9; }
+  body.debugging #hud { display: block; }
+  #hint { position: absolute; bottom: 3vh; left: 50%; transform: translateX(-50%); font-size: 15px; opacity: 0.75; text-align: center; }
+
+  #danceCard {
+    position: absolute; top: 3vh; left: 50%; transform: translateX(-50%);
+    width: min(620px, 92vw); text-align: center; padding: 16px 22px; z-index: 6;
+    background: rgba(8, 12, 30, 0.78); border: 1px solid rgba(255,255,255,0.18); border-radius: 18px;
+  }
+  #danceCard h1 { margin: 0; font-size: clamp(22px, 3.4vw, 34px); }
+  #danceCard p { margin: 8px 0; font-size: 16px; }
+  #danceBar { height: 10px; background: rgba(255,255,255,0.16); border-radius: 6px; overflow: hidden; }
+  #danceBar i { display: block; height: 100%; width: 0%; background: #3ddc97; }
+  .zone {
+    position: absolute; border: 3px dashed rgba(255,255,255,0.5); border-radius: 20px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    font-size: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: rgba(255,255,255,0.75);
+  }
+  .zone.on { border-color: #3ddc97; border-style: solid; background: rgba(61, 220, 151, 0.22); color: #eaffef; }
+
+  [hidden] { display: none !important; }
+  .panel {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(5, 8, 20, 0.88); padding: 4vh 4vw; overflow: auto;
+  }
+  .card { width: min(880px, 94vw); background: #101736; border: 1px solid rgba(255,255,255,0.14); border-radius: 22px; padding: 28px 30px; }
+  .card h2 { margin: 0 0 6px; font-size: 26px; }
+  .card h3 { margin: 22px 0 8px; font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.6; }
+  .card p { line-height: 1.5; }
+  button {
+    font: inherit; font-weight: 600; padding: 12px 22px; border-radius: 12px; border: 0;
+    background: #3ddc97; color: #06251a; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: #f2f5ff; border: 1px solid rgba(255,255,255,0.3); }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td { padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.08); vertical-align: top; }
+  td.q { opacity: 0.65; width: 58%; padding-right: 16px; }
+  td.a { font-weight: 600; }
+  .flag { padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid; background: rgba(255,255,255,0.05); }
+  .flag.high { border-color: #ff6b6b; }
+  .flag.med { border-color: #ffc861; }
+  .flag b { display: block; margin-bottom: 2px; }
+  .meta { font-size: 14px; opacity: 0.7; }
+  #err { color: #ffc861; margin-top: 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+<audio id="music" src="macarena.mp3" preload="auto" loop></audio>
+<div id="stage">
+  <video id="cam" playsinline muted></video>
+  <div id="overlay" hidden>
+    <div id="question"><h1></h1><p></p></div>
+    <div id="bubbles"></div>
+    <div id="macarena" hidden>
+      <div id="danceCard">
+        <h1>Macarena break</h1>
+        <p id="danceStep"></p>
+        <div id="danceBar"><i></i></div>
+        <p class="meta" id="danceMeta"></p>
+      </div>
+      <div id="zones"></div>
+    </div>
+    <div id="hud"></div>
+    <div id="hint">Point at an answer and hold until it fills. Press r to reread the background, d for scores, l to copy the log.</div>
+  </div>
+</div>
+
+<div class="panel" id="start">
+  <div class="card">
+    <h2>Point Intake</h2>
+    <p class="meta">Papaya Radish, 38F. Six-month follow-up on semaglutide with Dr. Pepper.</p>
+    <p>Seven questions, no typing. Your camera turns on and answers float over your picture at the left and
+      right edges. Reach an arm out to one and hold it there. Keep your hands down between questions while the
+      app rereads the scene. Every two questions there is a macarena break, so turn your sound up. The care
+      team gets a one-screen summary at the end.</p>
+    <div class="row">
+      <button id="go">Turn on camera and start</button>
+      <button class="ghost" id="goNoCam">Skip camera, use clicks</button>
+    </div>
+    <div id="err"></div>
+  </div>
+</div>
+
+<div class="panel" id="done" hidden></div>
+
+<script>
+const QUESTIONS = [
+  { q: "Which dose are you taking right now?",
+    sub: "The chart says 1.0 mg weekly since June.",
+    options: [
+      { label: "0.25 mg", value: "0.25 mg" },
+      { label: "0.5 mg", value: "0.5 mg" },
+      { label: "1.0 mg", value: "1.0 mg" },
+      { label: "Not sure", value: "unsure" } ] },
+  { q: "How is the nausea on that dose?",
+    options: [
+      { label: "None", value: "none" },
+      { label: "A little", value: "mild" },
+      { label: "Rough some days", value: "rough" },
+      { label: "Throwing up", value: "vomiting" } ] },
+  { q: "Weekly shots missed in the last two months?",
+    options: [
+      { label: "None", value: "0" },
+      { label: "One or two", value: "1-2" },
+      { label: "Three or more", value: "3+" } ] },
+  { q: "Where did your current pen come from?",
+    options: [
+      { label: "My pharmacy", value: "pharmacy" },
+      { label: "Family or a friend", value: "gift" },
+      { label: "Bought it online", value: "online" },
+      { label: "Not sure", value: "unsure" } ] },
+  { q: "What has the scale done this past month?",
+    sub: "Connected scale shows 191.9 lb in July, 195.3 lb on September 1.",
+    options: [
+      { label: "Still dropping", value: "down" },
+      { label: "Holding steady", value: "steady" },
+      { label: "Creeping up", value: "up" },
+      { label: "I stopped weighing", value: "unknown" } ] },
+  { q: "Pregnancy plans in the next year?",
+    options: [
+      { label: "Trying soon", value: "soon" },
+      { label: "Maybe later", value: "maybe" },
+      { label: "No", value: "no" },
+      { label: "Rather not say", value: "skip" } ] },
+  { q: "What do you most want out of this visit?",
+    options: [
+      { label: "Get the dose right", value: "dose" },
+      { label: "Keep losing weight", value: "weight" },
+      { label: "Answer my pregnancy question", value: "pregnancy" },
+      { label: "Supply and cost", value: "supply" } ] }
+];
+
+// Slot layout per option count: left/top/width/height as viewport percentages.
+const SLOTS = {
+  2: [[4, 40], [74, 40]],
+  3: [[4, 20], [74, 20], [4, 56]],
+  4: [[4, 20], [74, 20], [4, 54], [74, 54]]
+};
+
+const music = document.getElementById('music');
+let muted = false, fadeTimer = null;
+
+function fadeTo(target, ms) {
+  clearInterval(fadeTimer);
+  const from = music.volume, steps = Math.max(1, Math.round(ms / 40));
+  let n = 0;
+  fadeTimer = setInterval(() => {
+    n++;
+    music.volume = Math.min(1, Math.max(0, from + (target - from) * n / steps));
+    if (n >= steps) {
+      clearInterval(fadeTimer);
+      if (target === 0) music.pause();
+    }
+  }, 40);
+}
+
+// Chrome only unblocks the element after a play() inside a user gesture, so the
+// start button primes it and the dance breaks can start it on their own later.
+function primeMusic() {
+  music.volume = 0;
+  music.play().then(() => { music.pause(); }).catch(e => log('audio prime failed', e.name));
+}
+
+function startMusic() {
+  music.volume = 0;
+  music.play().then(() => fadeTo(muted ? 0 : 0.75, 400)).catch(e => log('audio play failed', e.name, e.message));
+}
+
+function stopMusic() {
+  fadeTo(0, 400);
+}
+
+// Each step is either zones that must all be filled at once, or raw movement
+// across the whole frame. Coordinates are left/top/width/height in vw and vh.
+const DANCE = [
+  { text: "Both arms straight out.", zones: [[2, 32, 20, 28, "arm"], [78, 32, 20, 28, "arm"]], hold: 700 },
+  { text: "Hands up over your head.", zones: [[32, 3, 36, 19, "hands up"]], hold: 700 },
+  { text: "Hands on your hips, elbows out.", zones: [[14, 46, 18, 24, "elbow"], [68, 46, 18, 24, "elbow"]], hold: 700 },
+  { text: "Wiggle those hips.", motion: 0.05, hold: 1200 },
+  { text: "Jump and turn around. Heeey Macarena!", motion: 0.11, hold: 800 }
+];
+
+const video = document.getElementById('cam');
+const overlay = document.getElementById('overlay');
+const bubbleHost = document.getElementById('bubbles');
+const qTitle = document.querySelector('#question h1');
+const qSub = document.querySelector('#question p');
+const hud = document.getElementById('hud');
+const logs = [];
+function log(...args) {
+  const line = '[intake ' + (performance.now() / 1000).toFixed(1) + 's] ' + args.join(' ');
+  logs.push(line);
+  if (logs.length > 400) logs.shift();
+  console.log(line);
+}
+window.addEventListener('error', e => log('ERROR', e.message, e.filename + ':' + e.lineno));
+window.addEventListener('unhandledrejection', e => log('REJECTION', e.reason && e.reason.message));
+
+function dump() {
+  const text = logs.join('\n');
+  console.log('===== COPY FROM HERE =====\n' + text + '\n===== COPY TO HERE =====');
+  if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => log('log copied to clipboard'), () => {});
+}
+const HINT = 'Reach out to an answer and hold until it fills. Press r to reread the background, d for scores, l to copy the log.';
+
+const sample = document.createElement('canvas');
+const sctx = sample.getContext('2d', { willReadFrequently: true });
+const SW = 160;
+let SH = 90, bg = null, seedUntil = 0, camOn = false, debug = false;
+
+const answers = [];
+let index = 0, lockUntil = 0;
+let dancing = false, danceStep = 0, danceHold = 0, danceCount = 0, prevGray = null;
+
+const macarena = document.getElementById('macarena');
+const zoneHost = document.getElementById('zones');
+const questionCard = document.getElementById('question');
+
+function sizeSample() {
+  SH = Math.max(60, Math.round(SW * window.innerHeight / window.innerWidth));
+  sample.width = SW; sample.height = SH; bg = null;
+}
+window.addEventListener('resize', sizeSample);
+sizeSample();
+
+function render() {
+  const item = QUESTIONS[index];
+  qTitle.textContent = item.q;
+  qSub.textContent = item.sub || ("Question " + (index + 1) + " of " + QUESTIONS.length);
+  bubbleHost.innerHTML = '';
+  const slots = SLOTS[item.options.length];
+  item.options.forEach((opt, i) => {
+    const el = document.createElement('div');
+    el.className = 'bubble';
+    el.style.left = slots[i][0] + 'vw';
+    el.style.top = slots[i][1] + 'vh';
+    el.innerHTML = '<div class="fill"></div><div class="label">' + opt.label + '</div><div class="dbg"></div>';
+    el.addEventListener('click', () => choose(el, opt));
+    el._opt = opt; el._progress = 0;
+    bubbleHost.appendChild(el);
+  });
+  reseed();
+  log('question', index + 1, 'of', QUESTIONS.length, 'options', item.options.length);
+}
+
+// Relearn the empty scene so only a newly raised hand counts as presence.
+function reseed() {
+  bg = null;
+  seedUntil = performance.now() + 1000;
+  if (camOn) setHint('Hands down, reading the background.');
+}
+
+function startDance() {
+  dancing = true; danceStep = 0; danceHold = 0; prevGray = null;
+  questionCard.hidden = true; bubbleHost.hidden = true; macarena.hidden = false;
+  renderDanceStep();
+  reseed();
+  startMusic();
+  log('macarena start, break', danceCount + 1);
+}
+
+function renderDanceStep() {
+  const step = DANCE[danceStep];
+  document.getElementById('danceStep').textContent = step.text;
+  document.getElementById('danceMeta').textContent =
+    'Step ' + (danceStep + 1) + ' of ' + DANCE.length + '. Press s to skip, m to mute.';
+  zoneHost.innerHTML = '';
+  (step.zones || []).forEach(z => {
+    const el = document.createElement('div');
+    el.className = 'zone';
+    el.style.left = z[0] + 'vw'; el.style.top = z[1] + 'vh';
+    el.style.width = z[2] + 'vw'; el.style.height = z[3] + 'vh';
+    el.textContent = z[4];
+    zoneHost.appendChild(el);
+  });
+}
+
+function endDance() {
+  dancing = false; danceCount++;
+  stopMusic();
+  macarena.hidden = true; questionCard.hidden = false; bubbleHost.hidden = false;
+  zoneHost.innerHTML = '';
+  log('macarena done, break', danceCount);
+  render();
+}
+
+function runDance(now, dt, gray) {
+  const step = DANCE[danceStep];
+  let met = false, score = 0;
+
+  if (step.motion) {
+    if (prevGray) {
+      let hits = 0;
+      for (let i = 0; i < gray.length; i++) if (Math.abs(gray[i] - prevGray[i]) > 20) hits++;
+      score = hits / gray.length;
+      met = score > step.motion;
+    }
+    prevGray = gray.slice();
+  } else {
+    const zones = [...zoneHost.children];
+    const scores = zones.map(el => presence(gray, el));
+    zones.forEach((el, i) => el.classList.toggle('on', scores[i] > 0.22));
+    score = Math.min(...scores);
+    met = scores.every(v => v > 0.22);
+  }
+
+  danceHold = met ? danceHold + dt : Math.max(0, danceHold - dt * 1.5);
+  document.querySelector('#danceBar i').style.width =
+    Math.min(100, danceHold / step.hold * 100) + '%';
+  hud.textContent = 'macarena step ' + (danceStep + 1) + '/' + DANCE.length +
+    '\nscore ' + score.toFixed(2) + ' met ' + met + '\nhold ' + danceHold.toFixed(0) + '/' + step.hold;
+
+  if (danceHold >= step.hold) {
+    danceStep++; danceHold = 0; prevGray = null;
+    document.getElementById('danceCard').animate(
+      [{ transform: 'translateX(-50%) scale(1)' },
+       { transform: 'translateX(-50%) scale(1.07)' },
+       { transform: 'translateX(-50%) scale(1)' }], { duration: 280 });
+    if (danceStep >= DANCE.length) endDance(); else renderDanceStep();
+  }
+}
+
+function choose(el, opt) {
+  if (performance.now() < lockUntil) return;
+  log('picked', opt.label);
+  el.classList.add('picked');
+  answers.push({ q: QUESTIONS[index].q, label: opt.label, value: opt.value });
+  lockUntil = performance.now() + 900;
+  setTimeout(() => {
+    index++;
+    if (index >= QUESTIONS.length) finish();
+    else if (index % 2 === 0) startDance();
+    else render();
+  }, 550);
+}
+
+// Copies the same cover-cropped, mirrored region the user sees, so bubble
+// screen coordinates map straight onto the sample canvas.
+function grabFrame() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw) return false;
+  const cw = window.innerWidth, ch = window.innerHeight;
+  const scale = Math.max(cw / vw, ch / vh);
+  const sw = cw / scale, sh = ch / scale;
+  const sx = (vw - sw) / 2, sy = (vh - sh) / 2;
+  sctx.save();
+  sctx.translate(SW, 0); sctx.scale(-1, 1);
+  sctx.drawImage(video, sx, sy, sw, sh, 0, 0, SW, SH);
+  sctx.restore();
+  return true;
+}
+
+let grayBuf = null;
+function grayFrame() {
+  const data = sctx.getImageData(0, 0, SW, SH).data;
+  if (!grayBuf || grayBuf.length !== SW * SH) grayBuf = new Uint8Array(SW * SH);
+  for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+    grayBuf[p] = (data[i] * 3 + data[i + 1] * 6 + data[i + 2]) / 10;
+  }
+  return grayBuf;
+}
+
+function regionOf(el) {
+  const r = el.getBoundingClientRect();
+  return [
+    Math.max(0, Math.floor(r.left / window.innerWidth * SW)),
+    Math.min(SW, Math.ceil(r.right / window.innerWidth * SW)),
+    Math.max(0, Math.floor(r.top / window.innerHeight * SH)),
+    Math.min(SH, Math.ceil(r.bottom / window.innerHeight * SH))
+  ];
+}
+
+function presence(gray, el) {
+  const [x0, x1, y0, y1] = regionOf(el);
+  let hits = 0, total = 0;
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      const p = y * SW + x;
+      if (Math.abs(gray[p] - bg[p]) > 24) hits++;
+      total++;
+    }
+  }
+  return total ? hits / total : 0;
+}
+
+let last = performance.now();
+let seeding = true;
+const ENTER = 0.24, HOLD = 0.15, DWELL = 1400, MARGIN = 1.7;
+
+let nextDetect = 0, lastLog = 0;
+function loop(now) {
+  requestAnimationFrame(loop);
+  if (now < nextDetect) return;
+  const dt = Math.min(200, now - last); last = now;
+  nextDetect = now + 60;
+  const fps = (1000 / Math.max(1, dt)).toFixed(0);
+
+  if (!camOn) { hud.textContent = 'camera: OFF (click mode)\nfps ' + fps; return; }
+  if (index >= QUESTIONS.length) { hud.textContent = 'finished'; return; }
+  const bubbles = [...bubbleHost.children];
+  if (!bubbles.length) { hud.textContent = 'no bubbles'; return; }
+  if (!grabFrame()) {
+    hud.textContent = 'waiting for video\nvideoWidth ' + video.videoWidth + ' readyState ' + video.readyState;
+    return;
+  }
+
+  const gray = grayFrame();
+  if (!bg || now < seedUntil) {
+    bg = gray.slice(); seeding = true;
+    hud.textContent = 'seeding background ' + Math.max(0, seedUntil - now).toFixed(0) + 'ms\nvideo ' +
+      video.videoWidth + 'x' + video.videoHeight + ' sample ' + SW + 'x' + SH + '\nfps ' + fps;
+    return;
+  }
+  if (seeding) { seeding = false; setHint(dancing ? 'Follow the steps.' : HINT); log('background seeded, detection live'); }
+  if (dancing) { runDance(now, dt, gray); return; }
+
+  const scores = bubbles.map(el => presence(gray, el));
+  let best = -1, bestScore = 0, runnerUp = 0;
+  scores.forEach((s, i) => {
+    const gate = bubbles[i]._progress > 0 ? HOLD : ENTER;
+    if (s > gate && s > bestScore) { runnerUp = bestScore; bestScore = s; best = i; }
+    else if (s > runnerUp) runnerUp = s;
+  });
+  // One reaching arm lights up one target. A shift in the chair lights up
+  // several at once, so the winner has to stand clear of the runner-up.
+  if (best !== -1 && bestScore < runnerUp * MARGIN) best = -1;
+  if (now < lockUntil) best = -1;
+
+  const hotRegion = best === -1 ? null : regionOf(bubbles[best]);
+  for (let y = 0; y < SH; y++) {
+    if (hotRegion && y >= hotRegion[2] && y < hotRegion[3]) {
+      for (let x = 0; x < SW; x++) {
+        if (x >= hotRegion[0] && x < hotRegion[1]) continue;
+        const i = y * SW + x;
+        bg[i] = (bg[i] * 31 + gray[i]) >> 5;
+      }
+    } else {
+      for (let x = 0; x < SW; x++) {
+        const i = y * SW + x;
+        bg[i] = (bg[i] * 31 + gray[i]) >> 5;
+      }
+    }
+  }
+
+  bubbles.forEach((el, i) => {
+    el._progress = i === best
+      ? Math.min(1, el._progress + dt / DWELL)
+      : Math.max(0, el._progress - dt / 220);
+    el.classList.toggle('hot', i === best);
+    el.querySelector('.fill').style.height = (el._progress * 100) + '%';
+    el.querySelector('.dbg').textContent = scores[i].toFixed(2);
+    if (el._progress >= 1 && !el.classList.contains('picked')) choose(el, el._opt);
+  });
+
+  if (now - lastLog > 1000) {
+    lastLog = now;
+    log('q' + (index + 1), 'scores', scores.map(v => v.toFixed(2)).join(','),
+        'best', best, 'runnerUp', runnerUp.toFixed(2), 'progress', bubbles.map(b => b._progress.toFixed(2)).join(','), 'fps', fps);
+  }
+
+  hud.textContent = 'video ' + video.videoWidth + 'x' + video.videoHeight + ' sample ' + SW + 'x' + SH +
+    '\nscores ' + scores.map(v => v.toFixed(2)).join('  ') +
+    '\nbest ' + (best === -1 ? 'none' : best + ' @ ' + bestScore.toFixed(2)) + '  2nd ' + runnerUp.toFixed(2) +
+    '  gate ' + ENTER + '/' + HOLD +
+    '\nlock ' + Math.max(0, lockUntil - now).toFixed(0) + 'ms  fps ' + fps;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'd') {
+    debug = !debug;
+    document.body.classList.toggle('debugging', debug);
+  }
+  if (e.key === 'r') reseed();
+  if (e.key === 'l') dump();
+  if (e.key === 's' && dancing) endDance();
+  if (e.key === 'm') {
+    muted = !muted;
+    music.muted = muted;
+    setHint(muted ? 'Music muted. Press m to unmute.' : 'Music on.');
+  }
+});
+
+requestAnimationFrame(loop);
+
+function finish() {
+  const a = Object.fromEntries(answers.map((x, i) => [i, x.value]));
+  const flags = [];
+  if (a[0] && a[0] !== '1.0 mg') {
+    flags.push(['high', 'Dose on the chart is wrong',
+      'Chart says 1.0 mg weekly since June. She reports ' + (a[0] === 'unsure' ? 'she is not sure' : a[0]) + '. Reconcile before refilling.']);
+  }
+  if (a[1] === 'vomiting' || a[1] === 'rough') {
+    flags.push(['high', 'Ongoing side effects', 'Reports ' + (a[1] === 'vomiting' ? 'vomiting' : 'rough days') + '. A June portal message about this was forwarded and never answered.']);
+  }
+  if (a[3] === 'gift' || a[3] === 'online' || a[3] === 'unsure') {
+    flags.push(['high', 'Pen is from outside the pharmacy',
+      'Source: ' + ({ gift: 'family or a friend', online: 'an online seller', unsure: 'unknown' })[a[3]] + '. Strength and product may not match the prescription. Ask to see the pen.']);
+  }
+  if (a[2] === '1-2' || a[2] === '3+') {
+    flags.push(['med', 'Missed doses', 'Missed ' + a[2] + ' weekly doses in the last two months. Check for a pharmacy backorder or a coverage gap.']);
+  }
+  if (a[4] === 'up' || a[4] === 'unknown') {
+    flags.push(['med', 'Weight trending back up', 'Scale: 191.9 lb on July 21, 195.3 lb on September 1, up 3.4 lb. Lines up with the missed doses and the dose drop.']);
+  }
+  if (a[5] === 'soon' || a[5] === 'maybe') {
+    flags.push(['high', 'Pregnancy planning on semaglutide',
+      'Plans: ' + (a[5] === 'soon' ? 'trying soon' : 'maybe later') + '. Semaglutide is stopped before conception, and she is on metformin plus a prenatal vitamin. She has not asked anyone yet.']);
+  }
+
+  const rows = answers.map(x => '<tr><td class="q">' + x.q + '</td><td class="a">' + x.label + '</td></tr>').join('');
+  const flagHtml = flags.length
+    ? flags.map(f => '<div class="flag ' + f[0] + '"><b>' + f[1] + '</b>' + f[2] + '</div>').join('')
+    : '<p>Nothing new since the last note.</p>';
+
+  const done = document.getElementById('done');
+  done.innerHTML = '<div class="card">' +
+    '<h2>Papaya Radish, 38F</h2>' +
+    '<p class="meta">Six-month semaglutide follow-up. Collected by pointing, ' + QUESTIONS.length +
+      ' answers, no typing. Macarena breaks completed: ' + danceCount + '.</p>' +
+    '<h3>Read this first</h3>' + flagHtml +
+    '<h3>What she answered</h3><table>' + rows + '</table>' +
+    '<div class="row"><button onclick="location.reload()">Start over</button></div></div>';
+  done.hidden = false;
+  overlay.hidden = true;
+}
+
+async function start(useCam) {
+  document.getElementById('start').hidden = true;
+  overlay.hidden = false;
+  render();
+  if (!useCam) {
+    setHint('No camera. Click an answer.');
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    // Safari blocks capture on plain http, including localhost.
+    fail('This browser will not expose a camera on ' + location.origin + '. Open the page in Chrome, or serve it over https. Clicking answers still works.');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+    video.srcObject = stream;
+    await video.play();
+    camOn = true;
+    log('camera granted', video.videoWidth + 'x' + video.videoHeight, 'track', stream.getVideoTracks()[0].label);
+    setHint(HINT);
+  } catch (e) {
+    log('getUserMedia failed', e.name, e.message);
+    fail('Camera request failed: ' + e.name + '. ' + (e.message || '') + ' Clicking answers still works.');
+  }
+}
+
+function setHint(text) {
+  const hint = document.getElementById('hint');
+  hint.textContent = text;
+  hint.className = '';
+}
+
+function fail(text) {
+  const hint = document.getElementById('hint');
+  hint.innerHTML = '<span>' + text + '</span> <button class="ghost" id="retry">Retry camera</button>';
+  hint.className = 'bad';
+  document.getElementById('retry').addEventListener('click', () => start(true));
+}
+
+// The audio context has to be created inside a user gesture or it starts suspended.
+document.getElementById('go').addEventListener('click', () => { primeMusic(); start(true); });
+document.getElementById('goNoCam').addEventListener('click', () => { primeMusic(); start(false); });
+</script>
+</body>
+</html>
