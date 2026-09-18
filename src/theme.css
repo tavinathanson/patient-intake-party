@@ -1,0 +1,250 @@
+/* Global theme. Owned by the JRPG-form agent. Token names below are shared:
+   keep them (values may change).
+
+   Look: 16-bit JRPG battle screen (SNES FF6 / Chrono Trigger). Deep-blue
+   gradient menu windows with a bevelled white pixel border, pixel fonts,
+   a pixel glove cursor, hard-edged drop shadows. CSS/SVG only, no images. */
+
+:root {
+  --font-display: 'Press Start 2P', monospace;
+  --font-body: 'VT323', monospace;
+
+  --c-bg: #0b0f2e;
+  --c-window: #1c2f9c;
+  --c-window-deep: #0d1760;
+  --c-window-top: #2c4bd0; /* lighter top of the window gradient */
+  --c-border: #f4f4f4;
+  --c-border-shadow: #6b7bd6;
+  --c-outline: #05081c; /* 1-2px dark outline around windows/buttons */
+  --c-text: #ffffff;
+  --c-text-dim: #b8c1ff;
+  --c-accent: #ffd84a;
+  --c-accent-deep: #b8860b;
+  --c-danger: #ff5a5a;
+  --c-good: #6bff8f;
+  --c-magic: #c98bff; /* "enemy is casting" purple */
+
+  --board-light: #e8d9a8;
+  --board-dark: #7a5a3a;
+  --board-letter: #141414;
+
+  /* Body text in VT323 runs small: never below 18px. */
+  --fs-body: 22px;
+  --fs-body-sm: 20px;
+  --fs-label: 10px; /* Press Start 2P sizes */
+  --fs-label-lg: 12px;
+  --fs-title: 22px;
+
+  --window-radius: 6px;
+  --shadow-hard: 4px 4px 0 rgba(0, 0, 0, 0.55);
+
+  /* Pixel glove cursor (16x11). Also used by the intake panel. */
+  --cursor-hand: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 11' shape-rendering='crispEdges'%3E%3Cpath fill='%2314172e' d='M4 0h11v1h-11zM3 1h1v1h-1zM15 1h1v1h-1zM2 2h1v1h-1zM15 2h1v1h-1zM1 3h1v1h-1zM5 3h1v1h-1zM15 3h1v1h-1zM1 4h1v1h-1zM6 4h9v1h-9zM1 5h1v1h-1zM12 5h1v1h-1zM1 6h1v1h-1zM13 6h1v1h-1zM1 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM3 9h1v1h-1zM12 9h1v1h-1zM4 10h8v1h-8z'/%3E%3Cpath fill='%23ffffff' d='M4 1h11v1h-11zM3 2h12v1h-12zM2 3h3v1h-3zM6 3h9v1h-9zM2 4h4v1h-4zM2 5h10v1h-10zM2 6h11v1h-11zM2 7h11v1h-11zM3 8h10v1h-10zM4 9h8v1h-8z'/%3E%3C/svg%3E");
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.15;
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+  text-rendering: optimizeSpeed;
+  overflow-x: hidden;
+}
+
+/* Pixel fonts look best without antialiasing on high-DPI screens, but VT323
+   needs a little to stay legible at body sizes. */
+body,
+.jrpg-btn {
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--c-accent);
+  color: var(--c-window-deep);
+}
+
+/* ---------------------------------------------------------------------------
+   Menu window: deep-blue gradient, bevelled white pixel border, dark outline.
+   --------------------------------------------------------------------------- */
+.jrpg-window {
+  position: relative;
+  background: linear-gradient(180deg, var(--c-window-top) 0%, var(--c-window) 42%, var(--c-window-deep) 100%);
+  border: 3px solid var(--c-border);
+  border-radius: var(--window-radius);
+  padding: 12px 14px;
+  color: var(--c-text);
+  box-shadow:
+    0 0 0 2px var(--c-outline),
+    var(--shadow-hard),
+    inset 0 0 0 2px var(--c-border-shadow),
+    inset 0 0 0 3px var(--c-outline);
+}
+
+/* ---------------------------------------------------------------------------
+   Command button
+   --------------------------------------------------------------------------- */
+.jrpg-btn {
+  --btn-bg: var(--c-window-deep);
+  --btn-bg-top: var(--c-window);
+  --btn-fg: var(--c-text);
+  --btn-border: var(--c-border);
+  --btn-shadow: rgba(0, 0, 0, 0.55);
+
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 10px 14px;
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--btn-fg);
+  background: linear-gradient(180deg, var(--btn-bg-top) 0%, var(--btn-bg) 100%);
+  border: 2px solid var(--btn-border);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 0 0 2px var(--c-outline),
+    3px 3px 0 var(--btn-shadow);
+  transform: translate(0, 0);
+  transition:
+    transform 60ms steps(2, end),
+    box-shadow 60ms steps(2, end),
+    filter 120ms linear;
+}
+
+.jrpg-btn:hover:not(:disabled) {
+  --btn-border: var(--c-accent);
+  filter: brightness(1.12);
+}
+
+.jrpg-btn:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 3px;
+}
+
+.jrpg-btn:active:not(:disabled),
+.jrpg-btn.is-pressed:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow:
+    0 0 0 2px var(--c-outline),
+    0 0 0 var(--btn-shadow);
+  filter: brightness(0.92);
+}
+
+.jrpg-btn:disabled,
+.jrpg-btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  --btn-fg: var(--c-text-dim);
+  --btn-border: var(--c-border-shadow);
+  opacity: 0.55;
+  filter: saturate(0.4);
+  box-shadow:
+    0 0 0 2px var(--c-outline),
+    2px 2px 0 var(--btn-shadow);
+}
+
+.jrpg-btn--primary {
+  --btn-bg: #e2b400;
+  --btn-bg-top: #ffe870;
+  --btn-fg: #2b1c00;
+  --btn-border: #fff6c4;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.jrpg-btn--primary:hover:not(:disabled) {
+  --btn-border: #ffffff;
+}
+
+.jrpg-btn--primary:disabled,
+.jrpg-btn--primary[aria-disabled='true'] {
+  --btn-fg: #3a2a00;
+  --btn-border: #e6d38a;
+  opacity: 0.7;
+  filter: saturate(0.5);
+}
+
+.jrpg-btn--danger {
+  --btn-bg: #6b0f1a;
+  --btn-bg-top: #b8202f;
+  --btn-fg: #ffe4e4;
+  --btn-border: #ffb3b3;
+}
+
+.jrpg-btn--danger:hover:not(:disabled) {
+  --btn-border: #ffffff;
+}
+
+/* ---------------------------------------------------------------------------
+   Shared bits: pixel glove cursor and blinking caret
+   --------------------------------------------------------------------------- */
+.jrpg-cursor {
+  display: inline-block;
+  width: 32px;
+  height: 22px;
+  background: var(--cursor-hand) no-repeat center / contain;
+  image-rendering: pixelated;
+  filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.6));
+  animation: jrpg-cursor-bob 0.7s steps(2, end) infinite;
+}
+
+@keyframes jrpg-cursor-bob {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jrpg-cursor {
+    animation: none;
+  }
+
+  .jrpg-btn {
+    transition: none;
+  }
+}

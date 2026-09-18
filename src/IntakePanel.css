@@ -1,0 +1,237 @@
+/* Intake panel: JRPG command menu. All classes are namespaced ip-. */
+
+.ip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 12px 14px 14px;
+}
+
+.ip--disabled {
+  filter: saturate(0.55);
+}
+
+/* Header ------------------------------------------------------------------ */
+.ip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 2px dotted var(--c-border-shadow);
+}
+
+.ip-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-label-lg);
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.7);
+}
+
+.ip-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 5px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  line-height: 1;
+  background: rgba(0, 0, 0, 0.35);
+  border: 2px solid var(--c-border-shadow);
+  white-space: nowrap;
+}
+
+.ip-now-label {
+  color: var(--c-text-dim);
+}
+
+.ip-now-field {
+  color: var(--c-accent);
+}
+
+.ip--disabled .ip-now-field {
+  color: #9ff3ff;
+}
+
+/* Menu rows --------------------------------------------------------------- */
+.ip-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ip-row {
+  appearance: none;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  column-gap: 6px;
+  align-items: start;
+  width: 100%;
+  padding: 8px 10px 8px 6px;
+  text-align: left;
+  color: var(--c-text);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 80ms steps(2, end);
+}
+
+.ip-row:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--c-border-shadow);
+}
+
+.ip-row:focus-visible {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 0;
+}
+
+.ip-row--active,
+.ip-row--active:hover:not(:disabled) {
+  background: linear-gradient(90deg, rgba(255, 216, 74, 0.22) 0%, rgba(255, 216, 74, 0.06) 100%);
+  border-color: var(--c-accent);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.ip-row:disabled {
+  cursor: default;
+}
+
+.ip-row-cursor {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 22px;
+  margin-top: 6px;
+}
+
+.ip-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ip-row-question {
+  font-family: var(--font-display);
+  font-size: var(--fs-label);
+  line-height: 1.5;
+  color: var(--c-text-dim);
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.7);
+}
+
+.ip-row--active .ip-row-question {
+  color: var(--c-accent);
+}
+
+/* The answer: a little dialogue box */
+.ip-row-answer {
+  display: block;
+  min-height: 40px;
+  padding: 6px 10px;
+  font-size: 24px;
+  line-height: 1.15;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  color: var(--c-text);
+  background: rgba(0, 0, 0, 0.38);
+  border: 2px solid var(--c-border-shadow);
+  border-radius: 3px;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+.ip-row--active .ip-row-answer {
+  border-color: var(--c-border);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.ip-row-empty {
+  color: var(--c-text-dim);
+  opacity: 0.8;
+}
+
+.ip-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.15em;
+  background: var(--c-accent);
+  animation: ip-blink 1s steps(2, end) infinite;
+}
+
+@keyframes ip-blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Controls ---------------------------------------------------------------- */
+.ip-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.ip-submit {
+  margin-left: auto;
+  min-width: 140px;
+}
+
+/* Rules blurb ------------------------------------------------------------- */
+.ip-rules {
+  font-size: var(--fs-body-sm);
+  line-height: 1.15;
+  color: var(--c-text-dim);
+  padding-top: 10px;
+  border-top: 2px dotted var(--c-border-shadow);
+}
+
+.ip--disabled .ip-row {
+  opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+  .ip {
+    padding: 10px 10px 12px;
+  }
+
+  .ip-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 4px;
+    padding-left: 4px;
+  }
+
+  .ip-row-answer {
+    font-size: 22px;
+  }
+
+  .ip-header {
+    flex-wrap: wrap;
+  }
+
+  .ip-submit {
+    flex: 1 1 100%;
+    margin-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ip-caret {
+    animation: none;
+  }
+
+  .ip-row {
+    transition: none;
+  }
+}

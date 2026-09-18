@@ -1,0 +1,268 @@
+/* Chess board (owned by the board agent). Every class is namespaced cb-.
+   Each square is a size container, so all square internals scale in cqmin. */
+
+.cb-board {
+  --cb-light: var(--board-light, #e8d9a8);
+  --cb-dark: var(--board-dark, #7a5a3a);
+  --cb-letter: var(--board-letter, #141414);
+  --cb-accent: var(--c-accent, #ffd84a);
+  --cb-edge: var(--c-border, #f4f4f4);
+  --cb-danger: var(--c-danger, #ff5a5a);
+  --cb-ink: #0b0914;
+  --cb-tile-bg: #fffaf0;
+  --cb-last: rgba(107, 123, 214, 0.55);
+  --cb-selected: rgba(255, 216, 74, 0.5);
+  --cb-select-tint: color-mix(in srgb, var(--cb-accent) 50%, transparent);
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.cb-grid {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-rows: repeat(8, minmax(0, 1fr));
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--cb-ink);
+  background: var(--cb-ink);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* ---------------------------------------------------------------- squares */
+
+.cb-sq {
+  /* geometry, in % of the square */
+  --tile-inset: 5cqmin;
+  --tile-size: 38cqmin;
+  --piece-size: 76cqmin;
+
+  appearance: none;
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  color: inherit;
+  background-color: var(--cb-light);
+  container-type: size;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cb-sq--dark {
+  background-color: var(--cb-dark);
+}
+
+/* Tint layer: last move, selection, hover ring. */
+.cb-sq::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.cb-sq--last::before {
+  background: var(--cb-last);
+}
+
+.cb-sq--selected::before {
+  background: var(--cb-select-tint);
+}
+
+.cb-sq--capture::before {
+  background: color-mix(in srgb, var(--cb-danger) 30%, transparent);
+}
+
+.cb-sq:not(:disabled):hover::before {
+  box-shadow:
+    inset 0 0 0 2px #fff,
+    inset 0 0 0 3px var(--cb-ink);
+}
+
+.cb-sq:focus {
+  outline: none;
+}
+
+.cb-sq:focus-visible {
+  outline: 3px dashed #fff;
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 5px var(--cb-ink);
+}
+
+/* ----------------------------------------------------------------- pieces */
+
+.cb-piece {
+  position: absolute;
+  right: 0;
+  bottom: -1cqmin;
+  z-index: 1;
+  width: var(--piece-size);
+  height: var(--piece-size);
+  pointer-events: none;
+}
+
+.cb-piece--white {
+  --px-outline: #120f1c;
+  --px-body: #fdfbf3;
+  --px-shade: #b9bfe0;
+  --px-detail: #120f1c;
+  --px-rim: transparent;
+}
+
+.cb-piece--black {
+  --px-outline: #07060c;
+  --px-body: #2e2648;
+  --px-shade: #1a1430;
+  --px-detail: #d9dcff;
+  --px-rim: #d9dcff;
+}
+
+.cb-px-shadow {
+  fill: rgba(0, 0, 0, 0.3);
+}
+.cb-px-rim {
+  fill: var(--px-rim);
+}
+.cb-px-outline {
+  fill: var(--px-outline);
+}
+.cb-px-body {
+  fill: var(--px-body);
+}
+.cb-px-shade {
+  fill: var(--px-shade);
+}
+.cb-px-detail {
+  fill: var(--px-detail);
+}
+
+/* ---------------------------------------------------------- move markers */
+
+/* Quiet move: a gem where the piece would stand. */
+.cb-gem {
+  position: absolute;
+  left: 44cqmin;
+  top: 45cqmin;
+  z-index: 1;
+  width: 32cqmin;
+  height: 32cqmin;
+  pointer-events: none;
+}
+.cb-gem-o {
+  fill: var(--cb-ink);
+}
+.cb-gem-a {
+  fill: var(--cb-accent);
+}
+.cb-gem-h {
+  fill: #fff;
+}
+
+/* Capture: a red frame around the enemy piece. */
+.cb-capture {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 max(2px, 5cqmin) var(--cb-danger),
+    inset 0 0 0 max(3px, 7cqmin) var(--cb-ink);
+}
+
+/* ------------------------------------------------------------ letter tile */
+
+.cb-tile {
+  position: absolute;
+  left: var(--tile-inset);
+  top: var(--tile-inset);
+  z-index: 4;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tile-size);
+  height: var(--tile-size);
+  padding-top: 1cqmin;
+  border: max(1px, 3cqmin) solid var(--cb-letter);
+  background: var(--cb-tile-bg);
+  box-shadow: max(1px, 2cqmin) max(1px, 2cqmin) 0 rgba(0, 0, 0, 0.45);
+  color: var(--cb-letter);
+  font-family: var(--font-display, 'Press Start 2P', monospace);
+  font-size: max(8px, 22cqmin);
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Letters that the next move can type light up. */
+.cb-sq--move .cb-tile,
+.cb-sq--capture .cb-tile {
+  background: var(--cb-accent);
+}
+
+/* --------------------------------------------------------- JRPG cursor */
+
+.cb-cursor {
+  --arm: 30cqmin;
+  --bar: max(2px, 6cqmin);
+
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--cb-accent) 0 0) left top / var(--arm) var(--bar),
+    linear-gradient(var(--cb-accent) 0 0) left top / var(--bar) var(--arm),
+    linear-gradient(var(--cb-accent) 0 0) right top / var(--arm) var(--bar),
+    linear-gradient(var(--cb-accent) 0 0) right top / var(--bar) var(--arm),
+    linear-gradient(var(--cb-accent) 0 0) left bottom / var(--arm) var(--bar),
+    linear-gradient(var(--cb-accent) 0 0) left bottom / var(--bar) var(--arm),
+    linear-gradient(var(--cb-accent) 0 0) right bottom / var(--arm) var(--bar),
+    linear-gradient(var(--cb-accent) 0 0) right bottom / var(--bar) var(--arm);
+  background-repeat: no-repeat;
+  filter: drop-shadow(1px 0 0 var(--cb-ink)) drop-shadow(0 1px 0 var(--cb-ink)) drop-shadow(-1px 0 0 var(--cb-ink))
+    drop-shadow(0 -1px 0 var(--cb-ink));
+  animation: cb-cursor-blink 0.9s steps(1, end) infinite;
+}
+
+@keyframes cb-cursor-blink {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-cursor {
+    animation: none;
+  }
+}
+
+/* --------------------------------------------------------------- disabled */
+
+.cb-board--disabled .cb-sq {
+  cursor: not-allowed;
+}
+
+.cb-board--disabled .cb-sq::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: rgba(11, 15, 46, 0.45);
+  pointer-events: none;
+}
+
+.cb-board--disabled .cb-tile {
+  background: #d9dbea;
+}
