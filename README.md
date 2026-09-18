@@ -78,6 +78,39 @@ Every push redeploys.
 
 **Example:** the [tic-tac-toe branch](https://github.com/tavinathanson/patient-intake-party/tree/tic-tac-toe) is one `index.html` at the root, live at [tic-tac-toe-intake-oop.fly.dev](https://tic-tac-toe-intake-oop.fly.dev).
 
+## Team projects
+
+One link per branch:
+
+* [23andme](https://23andme-intake-oop.fly.dev)
+* [bad-vibes-intake](https://bad-vibes-intake-intake-oop.fly.dev)
+* [bk610-test](https://bk610-test-intake-oop.fly.dev)
+* [black-rabbit](https://black-rabbit-intake-oop.fly.dev)
+* [chris-look-test](https://chris-look-test-intake-oop.fly.dev)
+* [dino-intake2](https://dino-intake2-intake-oop.fly.dev)
+* [down-under](https://down-under-intake-oop.fly.dev)
+* [dragon](https://dragon-intake-oop.fly.dev)
+* [elo-3000-d5](https://elo-3000-d5-intake-oop.fly.dev)
+* [feature/macarena](https://feature-macarena-intake-oop.fly.dev)
+* [fifty-percent-chris](https://fifty-percent-chris-intake-oop.fly.dev)
+* [fill-or-die](https://fill-or-die-intake-oop.fly.dev)
+* [glp1-small-dose-big-goals](https://glp1-small-dose-big-intake-oop.fly.dev)
+* [hot-or-not](https://hot-or-not-intake-oop.fly.dev)
+* [intake-at-the-oche](https://intake-at-the-oche-intake-oop.fly.dev)
+* [macarena](https://macarena-intake-oop.fly.dev)
+* [super-intake-bros](https://super-intake-bros-intake-oop.fly.dev)
+* [team-20-pirates](https://team-20-pirates-intake-oop.fly.dev)
+* [team-21](https://team-21-intake-oop.fly.dev)
+* [team-22](https://team-22-intake-oop.fly.dev)
+* [team-24](https://team-24-intake-oop.fly.dev)
+* [team-5-gone-fishin](https://team-5-gone-fishin-intake-oop.fly.dev)
+* [team-6](https://team-6-intake-oop.fly.dev)
+* [team-make-no-mistakes](https://team-make-no-mistak-intake-oop.fly.dev)
+* [team-winner](https://team-winner-intake-oop.fly.dev)
+* [team3](https://team3-intake-oop.fly.dev)
+* [tic-tac-toe](https://tic-tac-toe-intake-oop.fly.dev)
+* [vibe-diagnosis](https://vibe-diagnosis-intake-oop.fly.dev)
+
 ## Example patients (not required to use)
 
 Five made-up patients in [`patients/`](patients), or all on one page in [patients.md](patients.md). Each folder has two files: **what the clinic knows** and **what's actually going on**.
