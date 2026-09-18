@@ -12,6 +12,7 @@ drawing. The findings are hard-coded. That is the point.
 
 import hashlib
 import io
+import os
 import random
 import time
 import uuid
@@ -228,9 +229,21 @@ def not_found(e):
     return render_template("gone.html", msg=msg), 404
 
 
+def reel_images():
+    """Demo photos dropped in static/reel/ -- the "feed" the app pretends to read."""
+    folder = os.path.join(app.static_folder, "reel")
+    if not os.path.isdir(folder):
+        return []
+    names = sorted(
+        f for f in os.listdir(folder)
+        if f.lower().endswith((".jpg", ".jpeg", ".png", ".gif", ".webp"))
+    )
+    return ["/static/reel/" + n for n in names]
+
+
 @app.get("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", reel=reel_images())
 
 
 @app.post("/api/session")
