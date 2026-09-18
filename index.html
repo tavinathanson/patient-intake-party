@@ -34,8 +34,8 @@
   .who b{color:var(--ink); font-weight:600}
 
   /* progress pips */
-  .pips{display:flex; gap:6px; justify-content:center; margin:16px 0 14px}
-  .pip{width:26px; height:4px; border-radius:99px; background:var(--edge); transition:background .3s}
+  .pips{display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin:16px 0 14px; max-width:420px; margin-inline:auto}
+  .pip{flex:1 1 14px; max-width:22px; height:4px; border-radius:99px; background:var(--edge); transition:background .3s}
   .pip.done{background:var(--gold)}
   .pip.now{background:var(--ink)}
 
@@ -267,8 +267,7 @@ function render(){
     </div>
     <p class="printed ${q.not_on_paper_form?'ghost':''}">
       ${q.not_on_paper_form ? '★ not on the paper form' : 'paper form: ' + q.printed_as}
-    </p>
-    <div class="machine">
+    </p>    <div class="machine">
       <div class="window"><div class="payline"></div><div class="strip" id="strip"></div></div>
       <button class="lever" id="lever" aria-label="Pull the lever">
         <div class="rod"></div><div class="knob"></div><div class="levlabel">PULL</div>
@@ -425,7 +424,7 @@ function buildReceipt(intake){
     const a = intake.answers[q.id];
     if(!a) continue;
     const star = a.missed_on_paper || q.not_on_paper_form;
-    L.push((star ? '* ' : '') + q.id.replace(/_/g,' ').toUpperCase());
+    L.push((star ? '* ' : '') + (q.label || q.id.replace(/_/g,' ').toUpperCase()));
     L.push(wrap(String(a.value).replace(/_/g,' ')));
     L.push('');
   }

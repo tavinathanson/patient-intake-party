@@ -23,8 +23,11 @@ A reel cannot be skimmed. It shows options **one at a time, alone, in big type**
 worded the way the patient would say them. `Depression / anxiety` is a phrase Fig
 skims past. *"Something for my mood or nerves"* is a phrase he answers.
 
-**Seven questions, seven pulls.** One pull gives one answer, then the form moves
-on — no grinding through a list. So each question has to be the *right* question:
+**One pull, one answer, then the form moves on.** It asks every question on the
+clinic's real paper form — all 19 fields of
+[`intake-form.json`](https://github.com/tavinathanson/patient-intake-party/blob/main/patients/persistent-pain/intake-form.json) —
+plus three the form forgot. Because each field gets exactly one pull, each one has
+to be the *right* question:
 
 | instead of asking | it asks |
 |---|---|
@@ -34,6 +37,16 @@ on — no grinding through a list. So each question has to be the *right* questi
 That second one is the whole trick. "What are you taking?" gets a list that
 matches the chart. "Which did you stop?" gets the sertraline — the one fact
 nobody at the clinic has.
+
+### Coverage
+
+All 19 fields of the paper form, in form order. `name`, `date_of_birth`,
+`address` and `phone` are confirmed together in one pull (a lever can't spell a
+surname, and the clinic already holds them); `date` is stamped automatically.
+
+Three questions are **not** on the paper form and are marked ★ — a pain score
+(the form has none, on a form handed to a man with 18 months of pain visits),
+how he's sleeping, and what he actually wants to talk about.
 
 ## Pull the lever
 

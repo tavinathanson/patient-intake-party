@@ -6,15 +6,17 @@
     "patient_slug": "persistent-pain",
     "deploy": "static index.html at repo root, branch auto-deploys to <branch>-intake-oop.fly.dev",
     "disclaimer": "Fiction. LLM-generated parody patient. Not medical advice.",
-    "constraint": "The patient cannot type and will not read a list. Every question is one reel, one lever, one answer at a time.",
-    "why_a_reel_beats_a_checkbox": "A 15-box grid is skimmed in two seconds and answered wrong. A reel shows one option, alone, in 48px type, and will not advance until it gets an answer."
+    "constraint": "The patient cannot type and will not read a list. Every question is one pull and one answer.",
+    "covers": "Every field on the clinic's paper form (patients/persistent-pain/intake-form.json). name, date_of_birth, address and phone are confirmed together as one pull, since a lever cannot spell. date is stamped automatically.",
+    "why_a_reel_beats_a_checkbox": "A 15-box grid is skimmed in two seconds and answered wrong. A reel shows one option, alone, in big type, worded the way the patient would say it — and one pull commits it."
   },
 
   "patient_context": {
     "name": "Fig Turnip",
     "age": 61,
     "answering": "wife (Olive) usually does the talking",
-    "chart_source": "patients/persistent-pain/what-the-clinic-knows.md"
+    "chart_source": "patients/persistent-pain/what-the-clinic-knows.md",
+    "paper_source": "patients/persistent-pain/intake-form.json"
   },
 
   "reel_modes": {
@@ -22,12 +24,95 @@
     "spin_scale": "Reel is 0-10. Lands on a number."
   },
 
-  "one_question_one_pull": "Every question takes exactly one pull and gives exactly one answer. Seven pulls, whole intake. Nothing to grind through.",
+  "one_question_one_pull": "Every question takes exactly one pull and gives exactly one answer.",
 
   "questions": [
     {
-      "id": "reason_for_visit",
+      "id": "filled_out_by",
       "order": 1,
+      "label": "FILLED OUT BY",
+      "printed_as": "Filled out by (if not the patient)",
+      "prompt": "Who's answering today?",
+      "mode": "spin_to_pick",
+      "paper_answer": "Olive Turnip (wife)",
+      "reel": [
+        { "value": "my_wife", "label": "My wife is doing it", "emoji": "👩", "chart_match": true },
+        { "value": "me", "label": "Me, myself", "emoji": "🙋" },
+        { "value": "both", "label": "Both of us", "emoji": "👫" }
+      ],
+      "care_team_note": "Paper says the wife filled it in and signed it. He is sitting right there. At some point in eighteen months he stopped answering for himself."
+    },
+
+    {
+      "id": "details_on_file",
+      "order": 2,
+      "label": "NAME / DOB / ADDRESS / PHONE",
+      "printed_as": "Name, Date of birth, Address, Phone",
+      "prompt": "We have you as Fig Turnip, born 14 March 1965, 12 Garden Row, 555-0143. Still right?",
+      "mode": "spin_to_pick",
+      "paper_answer": "Fig Turnip / 1965-03-14 / 12 Garden Row / 555-0143",
+      "covers_paper_fields": ["name", "date_of_birth", "address", "phone"],
+      "reel": [
+        { "value": "all_correct", "label": "That's all still right", "emoji": "✅", "chart_match": true },
+        { "value": "phone_changed", "label": "The phone's changed", "emoji": "📞" },
+        { "value": "address_changed", "label": "We've moved", "emoji": "🏠" }
+      ],
+      "care_team_note": "A lever can't spell a surname. The clinic already holds these four, so the pull confirms them instead of collecting them. The phone on file is his wife's."
+    },
+
+    {
+      "id": "insurance",
+      "order": 3,
+      "label": "INSURANCE",
+      "printed_as": "Insurance",
+      "prompt": "Whose insurance are you on?",
+      "mode": "spin_to_pick",
+      "paper_answer": "BlueCross, through my work",
+      "reel": [
+        { "value": "wifes_work", "label": "My wife's work", "emoji": "💼", "chart_match": true, "paper_caught_it": false, "flag": "Paper says 'through my work'. The plan is his wife's, through her employer." },
+        { "value": "my_work", "label": "My work", "emoji": "🏢" },
+        { "value": "medicare", "label": "Medicare", "emoji": "🏛️" },
+        { "value": "dont_know", "label": "I don't know", "emoji": "🤷" }
+      ],
+      "care_team_note": "His wife wrote 'through my work' on a form she was filling in for him, so the words came out of her mouth about her job. Billing finds out eleven days later."
+    },
+
+    {
+      "id": "member_id",
+      "order": 4,
+      "label": "MEMBER ID",
+      "printed_as": "Member ID",
+      "prompt": "Do you have the insurance card with you?",
+      "mode": "spin_to_pick",
+      "paper_answer": "",
+      "reel": [
+        { "value": "card_at_home", "label": "It's at home", "emoji": "🏠", "chart_match": true },
+        { "value": "have_it_here", "label": "Yes, it's right here", "emoji": "💳" },
+        { "value": "whats_that", "label": "What card?", "emoji": "❓" }
+      ],
+      "care_team_note": "Left blank on paper. A blank tells you nothing; 'it's at home' tells the front desk to stop waiting for it."
+    },
+
+    {
+      "id": "emergency_contact",
+      "order": 5,
+      "label": "EMERGENCY CONTACT",
+      "printed_as": "Emergency contact (name, relationship, phone)",
+      "prompt": "If something happened, who should we call?",
+      "mode": "spin_to_pick",
+      "paper_answer": "Olive Turnip, wife, 555-0143",
+      "reel": [
+        { "value": "wife", "label": "My wife, Olive", "emoji": "👩", "chart_match": true },
+        { "value": "child", "label": "One of the kids", "emoji": "🧑" },
+        { "value": "neighbour", "label": "The neighbour", "emoji": "🏡" }
+      ],
+      "care_team_note": "Her number is also the number on file for him. In an emergency the clinic rings the person already in the room."
+    },
+
+    {
+      "id": "reason_for_visit",
+      "order": 6,
+      "label": "REASON FOR VISIT",
       "printed_as": "Reason for visit",
       "prompt": "What brought you in today?",
       "mode": "spin_to_pick",
@@ -37,105 +122,201 @@
         { "value": "new_pain", "label": "This is something new", "emoji": "⚡" },
         { "value": "meds_question", "label": "Question about my pills", "emoji": "💊" },
         { "value": "someone_made_me", "label": "Somebody made me come", "emoji": "👉" },
-        { "value": "cant_sleep", "label": "I can't sleep", "emoji": "🌙", "hidden_gold": true }
+        { "value": "cant_sleep", "label": "I can't sleep", "emoji": "🌙" }
       ],
-      "care_team_note": "On paper he wrote one word: 'pain'. The reel gets a sentence out of him because a sentence is the only thing on offer."
+      "care_team_note": "Six lines of space on paper, four characters used. The reel only offers sentences, so a sentence is what comes back."
     },
 
     {
       "id": "pain_now",
-      "order": 2,
-      "printed_as": "Rate your pain 0-10",
+      "order": 7,
+      "label": "PAIN RIGHT NOW",
+      "printed_as": null,
       "prompt": "Where's the pain right now?",
       "mode": "spin_scale",
-      "paper_answer": 8,
+      "not_on_paper_form": true,
       "reel_range": [0, 10],
       "chart_says": 8,
-      "care_team_note": "He has said 6-9 on every visit for 18 months. The number stopped carrying information a year ago. Kept because the form wants it."
+      "care_team_note": "The paper form has no pain scale at all, on a form handed to a man with eighteen months of pain visits. His scores have sat between 6 and 9 the whole time."
     },
 
     {
-      "id": "past_conditions",
-      "order": 3,
-      "printed_as": "Past conditions (check all that apply)",
-      "prompt": "Besides the diabetes — what else are you being treated for?",
+      "id": "current_medications",
+      "order": 8,
+      "label": "CURRENT MEDICATIONS",
+      "printed_as": "Current medications (include over-the-counter, vitamins, eye drops, inhalers)",
+      "prompt": "Of the pills you were given — which one have you stopped, or skip?",
       "mode": "spin_to_pick",
-      "paper_answer": ["diabetes"],
-      "is_the_whole_point": true,
+      "paper_answer": "metformin, the nerve pill, meloxicam, tylenol",
+      "reel_from_chart": true,
       "reel": [
-        { "value": "depression_anxiety", "label": "Something for my mood or nerves", "plain_language": "he would never call this 'depression / anxiety'", "emoji": "🌧️", "chart_match": true, "paper_caught_it": false, "flag": "He is prescribed sertraline. He did not tick this box on paper — it is printed one row below the box he did tick." },
-        { "value": "arthritis", "label": "My joints", "emoji": "🦴" },
-        { "value": "heart_disease", "label": "My heart", "emoji": "❤️" },
-        { "value": "high_blood_pressure", "label": "Blood pressure", "emoji": "🩺" },
-        { "value": "thyroid", "label": "Thyroid", "emoji": "🦋" },
-        { "value": "nothing_else", "label": "Nothing else", "emoji": "🚫" }
+        { "value": "sertraline", "label": "The mood one", "plain_language": "small white pill — stopped months ago", "emoji": "💊", "chart_match": true, "paper_caught_it": false, "flag": "STOPPED. Nobody at the clinic knows. He listed four medications, the chart has five, this is the missing one." },
+        { "value": "gabapentin", "label": "The nerve one", "plain_language": "three a day, makes him foggy", "emoji": "💊", "flag": "Skips it on days he has things to do. Reads as non-response to treatment." },
+        { "value": "cyclobenzaprine", "label": "The muscle one at night", "plain_language": "ran out in 2025", "emoji": "💊", "flag": "Finished it in 2025. Still listed Active on the med list." },
+        { "value": "meloxicam", "label": "The one for swelling", "emoji": "💊" },
+        { "value": "none", "label": "I take all of them", "emoji": "✅" }
       ],
-      "care_team_note": "The paper form offered 15 boxes, got 1 tick, and 2 were true. One pull, one answer — and the option is worded the way he'd say it, not the way the form prints it. 'Depression / anxiety' is a phrase he skims past. 'Something for my mood or nerves' is a phrase he answers."
+      "care_team_note": "The highest-value pull on the form. Asking what he takes returns a list that matches the chart. Asking which one he STOPPED returns the sertraline — the one fact nobody has. He keeps every pill in one bottle, so the reel names them the way he does."
     },
 
     {
       "id": "allergies",
-      "order": 4,
+      "order": 9,
+      "label": "ALLERGIES",
       "printed_as": "Allergies",
       "prompt": "Any medicine that's ever made you feel bad?",
       "mode": "spin_to_pick",
       "paper_answer": "none",
       "chart_says": "codeine",
       "reel": [
-        { "value": "codeine", "label": "Codeine — made me sick", "emoji": "🤢", "chart_match": true },
+        { "value": "codeine", "label": "Codeine — made me sick", "emoji": "🤢", "chart_match": true, "paper_caught_it": false, "flag": "Wrote 'none' on paper. Chart has CODEINE — NAUSEA in red at the top." },
         { "value": "penicillin", "label": "Penicillin", "emoji": "💊" },
         { "value": "none", "label": "Nothing I know of", "emoji": "🚫" },
         { "value": "dont_know", "label": "I don't remember", "emoji": "🤷" }
       ],
-      "flag_if_mismatch": {
-        "when": "none",
-        "severity": "high",
-        "message": "Wrote 'none'. Chart has CODEINE — NAUSEA in red at the top. The word 'allergy' didn't land; 'made you feel bad' does."
-      },
-      "care_team_note": "He doesn't think nausea counts as an allergy. Most people don't. Asking in plain words recovers it."
+      "care_team_note": "He doesn't think nausea counts as an allergy. Most people don't. The word 'allergy' loses it; 'made you feel bad' recovers it."
     },
 
     {
-      "id": "medications_taken",
-      "order": 5,
-      "printed_as": "Current medications",
-      "prompt": "Of the pills you were given — which one have you stopped, or skip?",
+      "id": "past_conditions",
+      "order": 10,
+      "label": "PAST CONDITIONS",
+      "printed_as": "Past conditions (check all that apply)",
+      "prompt": "Besides the diabetes — what else are you being treated for?",
       "mode": "spin_to_pick",
-      "paper_answer": "metformin, the nerve pill, meloxicam, tylenol",
-      "reel_from_chart": true,
+      "paper_answer": ["diabetes"],
+      "is_the_whole_point": true,
       "reel": [
-        { "value": "sertraline", "label": "The mood one", "plain_language": "small white pill — he stopped it months ago", "emoji": "💊", "truth": "stopped_months_ago", "chart_match": true, "paper_caught_it": false, "flag": "STOPPED. Nobody at the clinic knows. Not on his paper list — he listed four, the chart has five, this is the missing one." },
-        { "value": "gabapentin", "label": "The nerve one", "plain_language": "three a day, makes him foggy", "emoji": "💊", "truth": "skips_some_days", "flag": "Skips it on days he has things to do. Reads as non-response to treatment." },
-        { "value": "cyclobenzaprine", "label": "The muscle one at night", "plain_language": "ran out in 2025", "emoji": "💊", "truth": "ran_out_in_2025", "flag": "Finished it in 2025. Still listed Active on the med list." },
-        { "value": "meloxicam", "label": "The one for swelling", "emoji": "💊", "truth": "taking_daily" },
-        { "value": "none", "label": "I take all of them", "emoji": "✅" }
+        { "value": "depression_anxiety", "label": "Something for my mood or nerves", "plain_language": "he would never call this 'depression / anxiety'", "emoji": "🌧️", "chart_match": true, "paper_caught_it": false, "flag": "He is prescribed sertraline. He did not tick this box — it is printed one row below the box he did tick." },
+        { "value": "arthritis", "label": "My joints", "emoji": "🦴" },
+        { "value": "heart_disease", "label": "My heart", "emoji": "❤️" },
+        { "value": "high_blood_pressure", "label": "Blood pressure", "emoji": "🩺" },
+        { "value": "thyroid", "label": "Thyroid", "emoji": "🦋" },
+        { "value": "nothing_else", "label": "Nothing else", "emoji": "🚫" }
       ],
-      "care_team_note": "The highest-value pull here. Asking 'which are you taking' gets a list that matches the chart. Asking which one he STOPPED gets the sertraline — the one answer nobody at the clinic has. The reel names pills the way he does, because he keeps them all in one bottle and can't tell them apart."
+      "care_team_note": "15 boxes offered, 1 ticked, 2 true. 'Depression / anxiety' is a phrase he skims past. 'Something for my mood or nerves' is a phrase he answers."
+    },
+
+    {
+      "id": "past_surgeries",
+      "order": 11,
+      "label": "PAST SURGERIES",
+      "printed_as": "Past surgeries (procedure and year)",
+      "prompt": "Have you had an operation?",
+      "mode": "spin_to_pick",
+      "paper_answer": "knee",
+      "reel": [
+        { "value": "knee_2019", "label": "My knee, a few years back", "plain_language": "chart says 2019", "emoji": "🦵", "chart_match": true },
+        { "value": "back", "label": "My back", "emoji": "🔙" },
+        { "value": "other", "label": "Something else", "emoji": "🏥" },
+        { "value": "none", "label": "Never had one", "emoji": "🚫" }
+      ],
+      "care_team_note": "Paper asked for procedure AND year and got 'knee'. The year was in the chart the whole time, four feet away."
+    },
+
+    {
+      "id": "family_history",
+      "order": 12,
+      "label": "FAMILY HISTORY",
+      "printed_as": "Family history (parents, siblings, children)",
+      "prompt": "Anything that runs in the family?",
+      "mode": "spin_to_pick",
+      "paper_answer": "father heart",
+      "reel": [
+        { "value": "father_heart", "label": "My father's heart", "emoji": "❤️", "chart_match": true },
+        { "value": "mother_diabetes", "label": "My mother's diabetes", "emoji": "🩸" },
+        { "value": "nothing_known", "label": "Nothing I know of", "emoji": "🚫" },
+        { "value": "dont_know", "label": "I never asked", "emoji": "🤷" }
+      ],
+      "care_team_note": "Two words on paper for a question about an entire family. One pull gets the same fact without the blank space that shames people into writing less."
+    },
+
+    {
+      "id": "tobacco",
+      "order": 13,
+      "label": "TOBACCO",
+      "printed_as": "Tobacco — Never / Former (quit ____) / Current",
+      "prompt": "Smoking?",
+      "mode": "spin_to_pick",
+      "paper_answer": "quit",
+      "reel": [
+        { "value": "quit_long_ago", "label": "Gave up years ago", "emoji": "🚭", "chart_match": true },
+        { "value": "quit_recently", "label": "Gave up recently", "emoji": "🚭" },
+        { "value": "never", "label": "Never smoked", "emoji": "🚫" },
+        { "value": "current", "label": "Still do", "emoji": "🚬" }
+      ],
+      "care_team_note": "The paper form prints a blank line for the quit date and he walked straight past it. The reel splits 'quit' into long-ago and recent, which is the only part of the date that changes anything."
+    },
+
+    {
+      "id": "alcohol",
+      "order": 14,
+      "label": "ALCOHOL",
+      "printed_as": "Alcohol — None / Occasional / Daily",
+      "prompt": "Drinking?",
+      "mode": "spin_to_pick",
+      "paper_answer": "some",
+      "reel": [
+        { "value": "occasional", "label": "Now and then", "emoji": "🍺", "chart_match": true },
+        { "value": "none", "label": "None", "emoji": "🚫" },
+        { "value": "daily", "label": "Most days", "emoji": "🍷" }
+      ],
+      "care_team_note": "Paper offered three boxes and he invented a fourth answer: 'some'. On a reel there is no margin to write in, so the answer lands inside the options the clinic can actually use."
+    },
+
+    {
+      "id": "drugs",
+      "order": 15,
+      "label": "RECREATIONAL DRUGS",
+      "printed_as": "Recreational drugs — No / Yes",
+      "prompt": "Anything else you take that a doctor didn't give you?",
+      "mode": "spin_to_pick",
+      "paper_answer": "no",
+      "reel": [
+        { "value": "no", "label": "No", "emoji": "🚫", "chart_match": true },
+        { "value": "yes", "label": "Yes", "emoji": "✋" }
+      ],
+      "care_team_note": "The one question on the paper form he answered exactly as designed."
+    },
+
+    {
+      "id": "signature",
+      "order": 16,
+      "label": "SIGNATURE",
+      "printed_as": "Signature (if not the patient, relationship: ____)",
+      "prompt": "Last one. Are these your answers?",
+      "mode": "spin_to_pick",
+      "paper_answer": "O. Turnip (wife)",
+      "reel": [
+        { "value": "mine", "label": "Yes — mine", "emoji": "✍️", "chart_match": true, "paper_caught_it": false, "flag": "Paper was signed by his wife. These answers he gave himself." },
+        { "value": "wife_should_sign", "label": "My wife should sign", "emoji": "👩" }
+      ],
+      "care_team_note": "The paper form was signed 'O. Turnip (wife)'. If he pulls this one himself, it is the first thing in eighteen months that is his own answer, in his own hand, so to speak."
     },
 
     {
       "id": "sleep",
-      "order": 6,
-      "printed_as": "NOT ON THE PAPER FORM",
+      "order": 17,
+      "label": "SLEEP",
+      "printed_as": null,
       "prompt": "How are you sleeping?",
       "mode": "spin_to_pick",
-      "paper_answer": null,
       "not_on_paper_form": true,
       "reel": [
         { "value": "badly", "label": "Badly. For a long time now.", "emoji": "🌙", "chart_match": true },
         { "value": "ok", "label": "Fine", "emoji": "😴" },
         { "value": "wake_in_pain", "label": "Pain wakes me up", "emoji": "😖" }
       ],
-      "care_team_note": "He isn't sleeping and has never been asked, because the paper form has no box for it. One reel, eight seconds, and it's in the chart."
+      "care_team_note": "He isn't sleeping and has never been asked, because the paper form has no box for it. One pull and it's in the chart."
     },
 
     {
       "id": "one_thing",
-      "order": 7,
-      "printed_as": "NOT ON THE PAPER FORM",
-      "prompt": "Last one. What do you actually want to talk about?",
+      "order": 18,
+      "label": "WHAT HE WANTS",
+      "printed_as": null,
+      "prompt": "What do you actually want to talk about?",
       "mode": "spin_to_pick",
-      "paper_answer": null,
       "not_on_paper_form": true,
       "reel": [
         { "value": "sleep", "label": "Sleeping through the night", "emoji": "🌙" },
@@ -151,10 +332,11 @@
     "title": "Three seconds before you walk in",
     "rule": "Only mismatches print. Agreement is silent.",
     "lines": [
-      { "severity": "high", "text": "CODEINE allergy — he just told the machine 'nothing I know of' on paper" },
+      { "severity": "high", "text": "CODEINE allergy — the paper form says 'none'" },
       { "severity": "high", "text": "SERTRALINE stopped months ago. Not on his list. Still Active in your chart." },
       { "severity": "medium", "text": "GABAPENTIN skipped on active days (foggy) — not a treatment failure, a dosing problem" },
       { "severity": "medium", "text": "Depression/anxiety never ticked on paper. Reel caught it." },
+      { "severity": "medium", "text": "Insurance is his wife's plan, not his — paper says 'through my work'" },
       { "severity": "low", "text": "Cyclobenzaprine finished 2025, still listed Active" },
       { "severity": "low", "text": "Not sleeping. Never asked before today." },
       { "severity": "info", "text": "He wants to talk about the fence." }
