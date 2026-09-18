@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Intake Run</title>
+<meta name="description" content="A cursed patient intake form disguised as an endless runner. Answer by bonking blocks. Die and you lose your appointment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ece7d8;
+    --ink: #2b2b2b;
+    --panel: #fffdf6;
+    --gold: #f2b134;
+    --red: #d64545;
+    --green: #3aa655;
+    --blue: #4a90d9;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: 'Press Start 2P', monospace; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 12px 16px; }
+  #wrap { position: relative; width: 100%; max-width: 960px; aspect-ratio: 900 / 380; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; border: 4px solid var(--ink); border-radius: 6px; background: #fdfaf0; box-shadow: 8px 8px 0 var(--ink); touch-action: manipulation; }
+  .screen { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; }
+  .screen.on { display: flex; }
+  .card { background: var(--panel); border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 20px 22px; max-width: 560px; width: 100%; max-height: 100%; overflow: auto; font-size: 11px; line-height: 1.7; }
+  .card h1 { font-size: 18px; margin: 0 0 10px; line-height: 1.4; }
+  .card h1.lose { color: var(--red); }
+  .card h1.win { color: var(--green); }
+  .card p { margin: 8px 0; }
+  .muted { opacity: .7; font-size: 9px; }
+  .terms { border: 2px dashed var(--ink); padding: 8px 10px; margin: 12px 0; font-size: 9px; background: #fff4d6; }
+  label { display: block; font-size: 9px; margin: 12px 0 4px; }
+  input[type=text] { width: 100%; font: inherit; font-size: 12px; padding: 10px; border: 3px solid var(--ink); background: #fff; outline: none; }
+  input[type=text]:focus { border-color: var(--blue); }
+  button { font: inherit; font-size: 11px; padding: 12px 16px; border: 3px solid var(--ink); background: var(--gold); box-shadow: 4px 4px 0 var(--ink); cursor: pointer; margin-top: 14px; }
+  button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+  button.secondary { background: #fff; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9px; }
+  td { border: 2px solid var(--ink); padding: 6px; vertical-align: top; }
+  td:first-child { width: 42%; background: #f4efe2; }
+  .appt { background: var(--green); color: #fff; padding: 10px; border: 3px solid var(--ink); margin: 10px 0; font-size: 10px; }
+  .appt.lost { background: var(--red); }
+  .controls { font-size: 9px; opacity: .8; margin-top: 14px; text-align: center; }
+  kbd { border: 2px solid var(--ink); padding: 1px 5px; background: #fff; font: inherit; }
+  @media (max-width: 600px) {
+    .card { padding: 14px; font-size: 9px; }
+    .card h1 { font-size: 14px; }
+    button { font-size: 9px; padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game" width="900" height="380"></canvas>
+
+  <div id="title" class="screen on">
+    <div class="card">
+      <h1>INTAKE RUN</h1>
+      <p>New patient intake. As a platformer. Questions come at you as signs. Answers are <b>? blocks</b>. Jump and bonk the one that's true.</p>
+      <div class="terms">
+        TERMS OF CARE: Hit an obstacle, fall in a coverage gap, or skip a question and <b>you lose your appointment</b>. No refunds. Every death pushes the next slot out 3 weeks.
+      </div>
+      <label for="name">PLAYER 1 &mdash; ENTER NAME</label>
+      <input id="name" type="text" maxlength="24" placeholder="e.g. Kiwi Parsnip" autocomplete="off">
+      <button id="start">PRESS START</button>
+      <div class="controls"><kbd>SPACE</kbd> / <kbd>&uarr;</kbd> / tap = jump &nbsp; <kbd>&darr;</kbd> = drop fast</div>
+    </div>
+  </div>
+
+  <div id="dead" class="screen">
+    <div class="card">
+      <h1 class="lose">GAME OVER</h1>
+      <p id="deadReason"></p>
+      <div class="appt lost" id="deadAppt"></div>
+      <p class="muted" id="deadProgress"></p>
+      <button id="retry">TRY AGAIN (REBOOK)</button>
+    </div>
+  </div>
+
+  <div id="win" class="screen">
+    <div class="card">
+      <h1 class="win">APPOINTMENT SECURED</h1>
+      <div class="appt" id="winAppt"></div>
+      <p>Here's what reception now knows about you:</p>
+      <table id="summary"></table>
+      <p class="muted" id="winStats"></p>
+      <button id="again" class="secondary">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- Intake questions (adapted from the clinic's paper form) ----------
+const QUESTIONS = [
+  { id: 'reason',     label: 'Reason for visit',   text: 'Why are you here today?',                      opts: ['Back pain', 'Rash / itch', 'Eye pressure', 'Weight meds', 'Pain flare'] },
+  { id: 'duration',   label: 'How long',           text: 'How long has this been going on?',             opts: ['Days', 'Weeks', 'Months', 'Years'] },
+  { id: 'pain',       label: 'Pain (0-10)',        text: 'Pain right now? Higher block = more pain.',    opts: ['0', '2', '4', '6', '8', '10'], scale: true },
+  { id: 'meds',       label: 'Medications',        text: 'Current medications?',                         opts: ['None', 'OTC only', '1 Rx', 'Several Rx'] },
+  { id: 'allergies',  label: 'Allergies',          text: 'Any allergies?',                               opts: ['None', 'Penicillin', 'Latex', 'Other'] },
+  { id: 'conditions', label: 'Past conditions',    text: 'Past conditions? Bonk ALL that apply.',        opts: ['None', 'Diabetes', 'High BP', 'Asthma', 'Anxiety'], multi: true },
+  { id: 'redflags',   label: 'Red flags',          text: 'Any numbness, weakness or bladder trouble?',   opts: ['No', 'Yes'] },
+  { id: 'tobacco',    label: 'Tobacco',            text: 'Tobacco?',                                     opts: ['Never', 'Former', 'Current'] },
+  { id: 'alcohol',    label: 'Alcohol',            text: 'Alcohol?',                                     opts: ['None', 'Occasional', 'Daily'] },
+];
+
+// ---------- Constants ----------
+const W = 900, H = 380;
+const GROUND = H - 64;             // y of the ground line
+const GRAVITY = 1600;
+const JUMP_V = -640;
+const HOLD_GRAVITY = 1000;         // lighter gravity while holding jump
+const BLOCK = 44;
+const PLAYER_W = 26, PLAYER_H = 44;
+const PLAYER_SX = 130;             // player's fixed screen x
+
+const OBSTACLES = {
+  syringe:   { w: 46, h: 30, kill: 'You ran straight into a syringe.' },
+  bottle:    { w: 30, h: 52, kill: 'Flattened by a pill bottle.' },
+  clipboard: { w: 40, h: 40, kill: 'Tripped over a stack of paperwork.' },
+  ivpole:    { w: 16, h: 84, kill: 'Impaled on an IV pole. Ironic.' },
+};
+
+// ---------- DOM ----------
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+const screens = { title: $('title'), dead: $('dead'), win: $('win') };
+function show(name) { for (const k in screens) screens[k].classList.toggle('on', k === name); }
+
+// ---------- Audio (tiny beeps) ----------
+let actx = null;
+function beep(freq, dur = 0.08, type = 'square', vol = 0.04) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = vol; g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+  } catch (e) { /* audio is optional */ }
+}
+const sfx = {
+  jump: () => beep(520, 0.09),
+  bonk: () => { beep(880, 0.06); setTimeout(() => beep(1320, 0.1), 60); },
+  die:  () => { beep(220, 0.25, 'sawtooth', 0.06); setTimeout(() => beep(110, 0.4, 'sawtooth', 0.06), 150); },
+  win:  () => [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.18), i * 120)),
+};
+
+// ---------- Game state ----------
+const G = {
+  mode: 'title',        // title | play | dying | dead | win
+  name: '',
+  deaths: 0,
+  camera: 0,
+  speed: 280,
+  time: 0,
+  player: null,
+  level: [],
+  answers: {},
+  currentQ: -1,
+  holdJump: false,
+  deathReason: '',
+  deathTimer: 0,
+  finishX: 0,
+  clouds: [],
+};
+
+function nextTuesday(weeksOut) {
+  const d = new Date();
+  d.setHours(10, 15, 0, 0);
+  const add = ((2 - d.getDay()) + 7) % 7 || 7;
+  d.setDate(d.getDate() + add + weeksOut * 7);
+  return d;
+}
+function fmtAppt(d) {
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase() + ' 10:15 AM';
+}
+
+// ---------- Level generation ----------
+function buildLevel() {
+  const L = [];
+  let x = 700;
+  let speed = G.speed;
+  for (let qi = 0; qi < QUESTIONS.length; qi++) {
+    const q = QUESTIONS[qi];
+    // 1. question sign
+    L.push({ type: 'sign', x, w: 280, q: qi });
+    x += 280 + 260;
+    // 2. answer blocks
+    const spacing = q.multi ? 230 : 190;
+    q.opts.forEach((opt, i) => {
+      const bottom = q.scale ? 62 + i * 20 : 96;   // height of block bottom above ground
+      L.push({ type: 'block', x, y: GROUND - bottom - BLOCK, w: BLOCK, h: BLOCK, label: opt, q: qi, idx: i, hop: 0, state: 'idle' });
+      x += spacing;
+    });
+    x += 120;
+    // 3. reception gate: closed unless the question was answered
+    L.push({ type: 'gate', x, w: 60, q: qi });
+    x += 60 + 260;
+    // 4. obstacle run
+    const n = 2 + Math.min(2, Math.floor(qi / 3));
+    for (let i = 0; i < n; i++) {
+      const roll = Math.random();
+      if (roll < 0.28) {
+        const w = 80 + Math.random() * 40;
+        L.push({ type: 'pit', x, w });
+        x += w;
+      } else {
+        const kinds = Object.keys(OBSTACLES);
+        const kind = kinds[Math.floor(Math.random() * (qi < 2 ? 3 : kinds.length))];
+        const o = OBSTACLES[kind];
+        L.push({ type: 'obstacle', x, w: o.w, h: o.h, kind });
+        x += o.w;
+      }
+      x += 300 + Math.random() * 140 + (speed - 280) * 0.6;
+    }
+    x += 160;
+    speed += 12;
+  }
+  L.push({ type: 'finish', x: x + 100 });
+  G.finishX = x + 100;
+  return L;
+}
+
+// ---------- Reset / start ----------
+function startGame() {
+  G.mode = 'play';
+  G.camera = 0;
+  G.speed = 280;
+  G.time = 0;
+  G.answers = {};
+  G.currentQ = -1;
+  G.deathReason = '';
+  G.player = { y: GROUND - PLAYER_H, vy: 0, onGround: true, frame: 0, rot: 0, dead: false };
+  G.level = buildLevel();
+  G.clouds = Array.from({ length: 6 }, (_, i) => ({ x: i * 220 + Math.random() * 100, y: 30 + Math.random() * 90, w: 40 + Math.random() * 50 }));
+  show(null);
+  canvas.focus();
+}
+
+function die(reason) {
+  if (G.mode !== 'play') return;
+  G.mode = 'dying';
+  G.deathReason = reason;
+  G.deathTimer = 0;
+  G.player.vy = -420;
+  G.player.dead = true;
+  sfx.die();
+}
+
+function finishDeath() {
+  G.mode = 'dead';
+  G.deaths++;
+  const answered = Object.keys(G.answers).length;
+  $('deadReason').textContent = G.deathReason;
+  $('deadAppt').textContent = 'APPOINTMENT LOST. Next available: ' + fmtAppt(nextTuesday(G.deaths * 3));
+  $('deadProgress').textContent = `You answered ${answered} of ${QUESTIONS.length} questions before dying. Reception has discarded them.`;
+  show('dead');
+}
+
+function winGame() {
+  G.mode = 'win';
+  sfx.win();
+  $('winAppt').textContent = 'BOOKED: ' + fmtAppt(nextTuesday(G.deaths * 3)) + ' - EXAM ROOM 3';
+  const rows = [['Name', G.name || 'Player 1'], ['Filled out by', 'Patient (via platformer)']];
+  for (const q of QUESTIONS) {
+    const a = G.answers[q.id];
+    rows.push([q.label, Array.isArray(a) ? a.join(', ') : (a ?? '-')]);
+  }
+  rows.push(['Signature', G.name ? G.name.toUpperCase() + ' (jumped)' : '(jumped)']);
+  $('summary').innerHTML = rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('');
+  $('winStats').textContent = `Completed in ${G.time.toFixed(1)}s after ${G.deaths} death${G.deaths === 1 ? '' : 's'}.` + (G.deaths ? ' Your appointment was pushed ' + (G.deaths * 3) + ' weeks.' : ' Flawless intake.');
+  show('win');
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+
+// ---------- Input ----------
+function jump() {
+  if (G.mode === 'title' || G.mode === 'dead' || G.mode === 'win') return;
+  if (G.mode !== 'play') return;
+  const p = G.player;
+  if (p.onGround) { p.vy = JUMP_V; p.onGround = false; sfx.jump(); }
+  G.holdJump = true;
+}
+function drop() {
+  if (G.mode !== 'play') return;
+  const p = G.player;
+  if (!p.onGround && p.vy < 300) p.vy = 420;
+}
+window.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); if (!e.repeat) jump(); }
+  if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); drop(); }
+  if (e.code === 'Enter') {
+    if (G.mode === 'dead') startGame();
+    else if (G.mode === 'win') { show('title'); G.mode = 'title'; }
+  }
+});
+window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') G.holdJump = false; });
+canvas.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
+canvas.addEventListener('pointerup', () => { G.holdJump = false; });
+canvas.addEventListener('pointercancel', () => { G.holdJump = false; });
+
+$('start').addEventListener('click', () => { G.name = $('name').value.trim(); startGame(); });
+$('name').addEventListener('keydown', e => { if (e.key === 'Enter') { G.name = $('name').value.trim(); startGame(); } });
+$('retry').addEventListener('click', startGame);
+$('again').addEventListener('click', () => { G.mode = 'title'; show('title'); });
+
+// ---------- Update ----------
+function playerWorldX() { return G.camera + PLAYER_SX; }
+function overlap(ax, ay, aw, ah, bx, by, bw, bh) { return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by; }
+
+function update(dt) {
+  const p = G.player;
+  if (!p) return;
+  G.time += dt;
+
+  if (G.mode === 'dying') {
+    G.deathTimer += dt;
+    p.vy += GRAVITY * dt;
+    p.y += p.vy * dt;
+    p.rot += 6 * dt;
+    if (G.deathTimer > 1.1) finishDeath();
+    return;
+  }
+  if (G.mode !== 'play') return;
+
+  // speed ramps a little with each question answered
+  G.speed = 280 + Math.max(0, G.currentQ) * 12;
+  G.camera += G.speed * dt;
+
+  // physics
+  const g = (G.holdJump && p.vy < 0) ? HOLD_GRAVITY : GRAVITY;
+  p.vy += g * dt;
+  p.y += p.vy * dt;
+  if (p.onGround) p.frame += dt * 14;
+
+  const px = playerWorldX();
+  const pxc = px + PLAYER_W / 2;
+
+  // ground / pits
+  let overPit = false;
+  for (const e of G.level) {
+    if (e.type === 'pit' && pxc > e.x + 6 && pxc < e.x + e.w - 6) { overPit = true; break; }
+  }
+  if (!overPit && p.y >= GROUND - PLAYER_H) {
+    p.y = GROUND - PLAYER_H; p.vy = 0; p.onGround = true;
+  } else {
+    p.onGround = false;
+  }
+  if (p.y > H + 40) { die('You fell into a gap in your coverage.'); return; }
+
+  // entities
+  for (const e of G.level) {
+    if (e.x > G.camera + W + 100 || e.x + (e.w || 0) < G.camera - 200) continue;
+
+    if (e.type === 'sign') {
+      if (px > e.x && G.currentQ < e.q) G.currentQ = e.q;
+    }
+    else if (e.type === 'block') {
+      if (e.hop > 0) e.hop = Math.max(0, e.hop - dt * 4);
+      if (e.state === 'inert') continue;
+      if (overlap(px + 4, p.y, PLAYER_W - 8, PLAYER_H, e.x, e.y, e.w, e.h)) {
+        if (e.state === 'hit' && !QUESTIONS[e.q].multi) continue;
+        selectBlock(e);
+        // Mario bonk: push the player back down so one jump = one block
+        if (p.vy < 0) p.vy = 320;
+      }
+    }
+    else if (e.type === 'gate') {
+      const q = QUESTIONS[e.q];
+      const answered = G.answers[q.id] !== undefined;
+      if (!answered && px + PLAYER_W - 6 > e.x + 20) die(`Form incomplete: you skipped "${q.text}" Reception won't let you through.`);
+    }
+    else if (e.type === 'obstacle') {
+      const ob = OBSTACLES[e.kind];
+      if (overlap(px + 6, p.y + 4, PLAYER_W - 12, PLAYER_H - 4, e.x + 4, GROUND - e.h + 4, e.w - 8, e.h - 4)) { die(ob.kill); return; }
+    }
+    else if (e.type === 'finish') {
+      if (px > e.x) { winGame(); return; }
+    }
+  }
+
+  // clouds
+  for (const c of G.clouds) { c.x -= G.speed * 0.15 * dt; if (c.x + c.w < 0) { c.x = W + 40; c.y = 30 + Math.random() * 90; } }
+}
+
+function selectBlock(e) {
+  const q = QUESTIONS[e.q];
+  if (q.multi) {
+    if (e.state === 'hit') return;   // already counted this one
+    let arr = Array.isArray(G.answers[q.id]) ? G.answers[q.id] : [];
+    if (e.label === 'None') {
+      arr = ['None'];
+      for (const o of G.level) if (o.type === 'block' && o.q === e.q && o !== e) { o.state = 'inert'; }
+    } else {
+      arr = arr.filter(a => a !== 'None').concat(e.label);
+      for (const o of G.level) if (o.type === 'block' && o.q === e.q && o.label === 'None') o.state = 'inert';
+    }
+    G.answers[q.id] = arr;
+  } else {
+    G.answers[q.id] = e.label;
+    for (const o of G.level) if (o.type === 'block' && o.q === e.q && o !== e) o.state = 'inert';
+  }
+  e.state = 'hit';
+  e.hop = 1;
+  sfx.bonk();
+}
+
+// ---------- Drawing helpers ----------
+const INK = '#2b2b2b';
+function px(x) { return Math.round(x); }
+function rect(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(px(x), px(y), px(w), px(h)); }
+function text(s, x, y, size, c = INK, align = 'left') {
+  ctx.fillStyle = c; ctx.font = `${size}px 'Press Start 2P', monospace`; ctx.textAlign = align; ctx.textBaseline = 'top';
+  ctx.fillText(s, px(x), px(y));
+}
+function wrap(s, size, maxW) {
+  ctx.font = `${size}px 'Press Start 2P', monospace`;
+  const words = s.split(' '), lines = []; let cur = '';
+  for (const w of words) {
+    const t = cur ? cur + ' ' + w : w;
+    if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+// ---------- Draw ----------
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  // sky
+  rect(0, 0, W, H, '#fdfaf0');
+  // clouds
+  for (const c of G.clouds) { rect(c.x, c.y, c.w, 10, '#e6e0cf'); rect(c.x + 10, c.y - 8, c.w - 20, 8, '#e6e0cf'); }
+  // distant hospital silhouette
+  const par = -(G.camera * 0.3) % 400;
+  for (let i = -1; i < 4; i++) {
+    const bx = par + i * 400;
+    rect(bx, GROUND - 70, 120, 70, '#efe9d9'); rect(bx + 140, GROUND - 100, 80, 100, '#efe9d9'); rect(bx + 170, GROUND - 118, 20, 18, '#e2ddca');
+    rect(bx + 172, GROUND - 90, 16, 5, '#d9c9c9'); rect(bx + 177, GROUND - 95, 6, 15, '#d9c9c9');
+  }
+
+  const cam = G.camera;
+
+  // ground
+  rect(0, GROUND, W, 3, INK);
+  rect(0, GROUND + 3, W, H - GROUND, '#f3eedf');
+  for (let i = 0; i < 30; i++) {
+    const gx = ((i * 97 - cam) % (W + 100) + W + 100) % (W + 100) - 50;
+    rect(gx, GROUND + 10 + (i % 3) * 9, 6 + (i % 4) * 3, 2, '#cfc7b0');
+  }
+  // pits cut into the ground
+  for (const e of G.level) {
+    if (e.type !== 'pit') continue;
+    const sx = e.x - cam; if (sx > W || sx + e.w < 0) continue;
+    rect(sx, GROUND, e.w, H - GROUND, '#fdfaf0');
+    rect(sx, GROUND, 3, H - GROUND, INK); rect(sx + e.w - 3, GROUND, 3, H - GROUND, INK);
+    rect(sx, H - 14, e.w, 14, '#d64545');
+    text('COVERAGE GAP', sx + e.w / 2, GROUND + 22, 6, '#b03a3a', 'center');
+  }
+
+  // entities
+  for (const e of G.level) {
+    const sx = e.x - cam;
+    if (sx > W + 60 || sx + (e.w || 100) < -60) continue;
+    if (e.type === 'sign') drawSign(e, sx);
+    else if (e.type === 'block') drawBlock(e, sx);
+    else if (e.type === 'gate') drawGate(e, sx);
+    else if (e.type === 'obstacle') drawObstacle(e, sx);
+    else if (e.type === 'finish') drawFinish(e, sx);
+  }
+
+  // player
+  if (G.player) drawPlayer();
+
+  // HUD
+  drawHUD();
+}
+
+function drawSign(e, sx) {
+  const q = QUESTIONS[e.q];
+  const lines = wrap(q.text, 9, e.w - 24);
+  const bh = lines.length * 15 + 34;
+  const by = GROUND - 160;
+  rect(sx + e.w / 2 - 5, by + bh, 10, GROUND - by - bh, '#8b5a2b');
+  rect(sx, by, e.w, bh, '#3a3a3a'); rect(sx + 4, by + 4, e.w - 8, bh - 8, '#fff4d6');
+  rect(sx + 4, by + 4, e.w - 8, 14, '#b03a3a');
+  text(`QUESTION ${e.q + 1} OF ${QUESTIONS.length}`, sx + e.w / 2, by + 8, 6, '#fff', 'center');
+  lines.forEach((l, i) => text(l, sx + e.w / 2, by + 24 + i * 15, 9, INK, 'center'));
+}
+
+function drawBlock(e, sx) {
+  const hopY = -Math.sin(e.hop * Math.PI) * 14;
+  const y = e.y + hopY;
+  let fill = '#f2b134', mark = '?';
+  if (e.state === 'hit') { fill = '#3aa655'; mark = '✓'; }
+  if (e.state === 'inert') { fill = '#c9c4b4'; mark = ''; }
+  rect(sx, y, e.w, e.h, INK);
+  rect(sx + 3, y + 3, e.w - 6, e.h - 6, fill);
+  if (e.state !== 'inert') { rect(sx + 5, y + 5, 6, 6, '#fff6d6'); rect(sx + e.w - 11, y + e.h - 11, 6, 6, 'rgba(0,0,0,.25)'); }
+  if (mark) text(mark, sx + e.w / 2, y + 14, 16, e.state === 'hit' ? '#fff' : INK, 'center');
+  // label tag
+  const labelSize = 8;
+  ctx.font = `${labelSize}px 'Press Start 2P', monospace`;
+  const tw = ctx.measureText(e.label).width + 12;
+  const ty = y - 22;
+  rect(sx + e.w / 2 - tw / 2, ty, tw, 16, e.state === 'inert' ? '#d9d4c5' : INK);
+  text(e.label, sx + e.w / 2, ty + 4, labelSize, e.state === 'inert' ? '#f4f0e3' : '#fff4d6', 'center');
+}
+
+function drawGate(e, sx) {
+  const q = QUESTIONS[e.q];
+  const open = G.answers[q.id] !== undefined;
+  const top = GROUND - 120;
+  rect(sx, top, 8, 120, INK); rect(sx + e.w - 8, top, 8, 120, INK);
+  rect(sx - 6, top - 22, e.w + 12, 24, INK); rect(sx - 3, top - 19, e.w + 6, 18, open ? '#3aa655' : '#d64545');
+  text(open ? 'RECEPTION' : 'INCOMPLETE', sx + e.w / 2, top - 14, 6, '#fff', 'center');
+  if (open) {
+    rect(sx + 8, top, e.w - 16, 8, '#3aa655');
+  } else {
+    for (let i = 0; i < 5; i++) rect(sx + 8, top + 14 + i * 22, e.w - 16, 8, '#d64545');
+  }
+}
+
+function drawObstacle(e, sx) {
+  const y = GROUND - e.h;
+  if (e.kind === 'syringe') {
+    rect(sx, y + 10, e.w - 14, 12, INK); rect(sx + 2, y + 12, e.w - 18, 8, '#e8f4ff');
+    rect(sx + 8, y + 14, 12, 4, '#4a90d9');
+    rect(sx + e.w - 14, y + 14, 14, 3, INK);
+    rect(sx - 4, y + 6, 4, 20, INK); rect(sx - 10, y + 14, 6, 4, INK);
+    rect(sx, y + 22, e.w - 14, 8, '#fdfaf0');
+  } else if (e.kind === 'bottle') {
+    rect(sx, y, e.w, e.h, INK); rect(sx + 3, y + 12, e.w - 6, e.h - 15, '#f0862c');
+    rect(sx + 2, y, e.w - 4, 10, '#fff'); rect(sx + 5, y + 22, e.w - 10, 16, '#fff');
+    text('Rx', sx + e.w / 2, y + 26, 7, INK, 'center');
+  } else if (e.kind === 'clipboard') {
+    rect(sx, y, e.w, e.h, INK); rect(sx + 3, y + 3, e.w - 6, e.h - 6, '#a5713a');
+    rect(sx + 7, y + 8, e.w - 14, e.h - 12, '#fff'); rect(sx + e.w / 2 - 6, y - 4, 12, 8, INK);
+    for (let i = 0; i < 4; i++) rect(sx + 10, y + 14 + i * 6, e.w - 20, 2, '#bbb');
+  } else if (e.kind === 'ivpole') {
+    rect(sx + 6, y, 4, e.h, INK);
+    rect(sx - 8, GROUND - 4, e.w + 16, 4, INK);
+    rect(sx - 10, y - 8, e.w + 20, 4, INK);
+    rect(sx - 8, y + 4, 12, 22, INK); rect(sx - 6, y + 6, 8, 18, '#dff2ff');
+    rect(sx + 12, y + 4, 12, 22, INK); rect(sx + 14, y + 6, 8, 18, '#dff2ff');
+  }
+}
+
+function drawFinish(e, sx) {
+  rect(sx, GROUND - 130, 70, 130, INK); rect(sx + 5, GROUND - 125, 60, 125, '#4a90d9');
+  rect(sx + 52, GROUND - 68, 8, 8, '#f2b134');
+  rect(sx - 4, GROUND - 150, 78, 22, INK); rect(sx - 1, GROUND - 147, 72, 16, '#fff4d6');
+  text('EXAM RM 3', sx + 35, GROUND - 143, 7, INK, 'center');
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 2; j++) rect(sx - 30 + i * 6, GROUND - 40 + j * 6, 6, 6, (i + j) % 2 ? INK : '#fff');
+  rect(sx - 34, GROUND - 60, 4, 60, INK);
+}
+
+function drawPlayer() {
+  const p = G.player;
+  const x = PLAYER_SX, y = p.y;
+  ctx.save();
+  if (p.dead) { ctx.translate(x + PLAYER_W / 2, y + PLAYER_H / 2); ctx.rotate(p.rot); ctx.translate(-(x + PLAYER_W / 2), -(y + PLAYER_H / 2)); }
+  // legs
+  const step = p.onGround && !p.dead ? Math.floor(p.frame) % 2 : 0;
+  const legY = y + PLAYER_H - 10;
+  if (p.onGround && !p.dead) {
+    rect(x + 4 + (step ? 6 : 0), legY, 6, 10, INK);
+    rect(x + 16 - (step ? 6 : 0), legY, 6, 10, INK);
+  } else {
+    rect(x + 4, legY, 6, 8, INK); rect(x + 16, legY + 2, 6, 8, INK);
+  }
+  // gown
+  rect(x, y + 14, PLAYER_W, 20, INK);
+  rect(x + 2, y + 16, PLAYER_W - 4, 16, '#a9d6f5');
+  for (let i = 0; i < 3; i++) rect(x + 5 + i * 7, y + 20 + (i % 2) * 6, 2, 2, '#4a90d9');
+  // wristband
+  rect(x + PLAYER_W - 2, y + 24, 5, 6, '#f2b134');
+  // head
+  rect(x + 4, y, 18, 16, INK);
+  rect(x + 6, y + 2, 14, 12, '#f1c27d');
+  rect(x + 6, y + 2, 14, 4, '#5a3b1e');
+  rect(x + 15, y + 7, 3, 3, INK);
+  if (!p.dead) rect(x + 12, y + 11, 6, 1, INK); else text('x', x + 13, y + 5, 7, INK);
+  ctx.restore();
+}
+
+function drawHUD() {
+  const qn = Math.max(0, G.currentQ);
+  const answered = Object.keys(G.answers).length;
+  // progress bar
+  const pw = 200, pxx = 14, py = 12;
+  rect(pxx, py, pw, 10, INK);
+  const prog = G.finishX ? Math.min(1, playerWorldX() / G.finishX) : 0;
+  rect(pxx + 2, py + 2, (pw - 4) * prog, 6, '#3aa655');
+  text(`FORM ${answered}/${QUESTIONS.length}`, pxx + pw + 12, py + 1, 8);
+  // appointment
+  const appt = 'APPT: ' + fmtAppt(nextTuesday(G.deaths * 3));
+  text(appt, W - 14, py + 1, 8, G.mode === 'dying' ? '#d64545' : INK, 'right');
+  text('LIVES: ♥', W - 14, py + 16, 8, '#d64545', 'right');
+  // current question
+  if (G.currentQ >= 0 && G.mode !== 'win') {
+    const q = QUESTIONS[G.currentQ];
+    const done = G.answers[q.id] !== undefined;
+    const label = `Q${G.currentQ + 1}: ${q.text}` + (done ? `  -> ${Array.isArray(G.answers[q.id]) ? G.answers[q.id].join(', ') : G.answers[q.id]}` : '');
+    text(label, pxx, py + 22, 8, done ? '#3aa655' : INK);
+  } else if (G.mode === 'play') {
+    text('RUN. JUMP AT THE BLOCKS YOU MEAN. DON\'T DIE.', pxx, py + 22, 8, '#777');
+  }
+  if (G.mode === 'dying') {
+    text('YOUR APPOINTMENT IS SLIPPING AWAY', W / 2, H / 2 - 40, 12, '#d64545', 'center');
+  }
+}
+
+// ---------- Loop ----------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(1 / 30, (now - last) / 1000);
+  last = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// Draw an idle scene behind the title screen even before starting.
+G.player = { y: GROUND - PLAYER_H, vy: 0, onGround: true, frame: 0, rot: 0, dead: false };
+G.clouds = Array.from({ length: 6 }, (_, i) => ({ x: i * 220, y: 30 + Math.random() * 90, w: 40 + Math.random() * 50 }));
+
+window.INTAKE_RUN = G; // debug handle
+const startLoop = () => requestAnimationFrame(loop);
+if (document.fonts && document.fonts.load) {
+  document.fonts.load("10px 'Press Start 2P'").then(startLoop, startLoop);
+} else startLoop();
+
+})();
+</script>
+</body>
+</html>
