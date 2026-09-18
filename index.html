@@ -95,6 +95,30 @@
     .two{grid-template-columns:1fr}
     .stats{grid-template-columns:1fr}
   }
+
+  /* ---- pushback modal ---- */
+  .modal{position:fixed;inset:0;background:rgba(6,8,7,.72);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;animation:fade .2s ease both}
+  .modal[hidden]{display:none}
+  .sheet{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:28px;max-width:470px;width:100%;
+    box-shadow:0 30px 80px rgba(0,0,0,.6);animation:pop .28s cubic-bezier(.2,.9,.3,1.2) both}
+  @keyframes pop{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:none}}
+  .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.11em;color:var(--accent);font-weight:700}
+  .sheet h4{font-size:22px;letter-spacing:-.02em;margin:10px 0 10px}
+  .sheet p{color:var(--dim);margin:0 0 16px}
+  .evidence{background:#0b0d0c;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--dim);margin-bottom:18px}
+  .modal-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .modal-actions .btn{padding:13px 22px}
+  #mEdit{font-size:14px;padding:9px 14px;color:var(--dim);transition:font-size .3s ease,opacity .3s ease}
+  #mEdit[disabled]{opacity:.45;cursor:progress}
+  .songs{list-style:none;margin:0 0 18px;padding:0}
+  .songs li{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+  .songs li:first-child{border-top:0}
+  .songs .art{width:34px;height:34px;border-radius:6px;flex:none;
+    background:linear-gradient(135deg,var(--accent-dim),#0b0d0c)}
+  .songs .t{font-size:14px;font-weight:600;line-height:1.25}
+  .songs .a{font-size:12px;color:var(--dim)}
+  .songs .why{margin-left:auto;font-size:11px;color:var(--accent);text-align:right;max-width:40%}
 </style>
 </head>
 <body>
@@ -197,6 +221,21 @@
     </div>
     <p class="fine foot">Every value above is randomly generated. Nothing here is real, stored, or sent anywhere.</p>
   </section>
+
+  <!-- pushback modal -->
+  <div class="modal" id="modal" hidden>
+    <div class="sheet">
+      <div class="eyebrow" id="mEyebrow">Edit request</div>
+      <h4 id="mTitle"></h4>
+      <p id="mBody"></p>
+      <div class="evidence mono" id="mEvidence"></div>
+      <ul class="songs" id="mSongs" hidden></ul>
+      <div class="modal-actions">
+        <button class="btn" id="mKeep"></button>
+        <button class="btn ghost" id="mEdit"></button>
+      </div>
+    </div>
+  </div>
 
 </div>
 
@@ -348,6 +387,7 @@ function formValues(){
 
 function fillForm(){
   const vals = formValues();
+  overrides = 0; unlocked = false; formReady = false; granted.clear(); closeModal();
   $("#conf").innerHTML = `Autofill confidence: <strong>${vibe.confidence}</strong>. Source: vibes.`;
 
   // conditions grid
@@ -367,8 +407,127 @@ function fillForm(){
     tag.textContent = "✦ vibes";
     tag.title = src;
     f.classList.add("filled");
+    if(i === fields.length - 1) setTimeout(()=> formReady = true, 250);
   }, 140 * i));
 }
+
+/* ---------- the form fights back ---------- */
+const SONG_TITLES = ["Sunday, But Fine","Vitamin D (Extended Mix)","Walk Outside","Eight Hours (Sleep Edit)",
+  "Nobody Is Watching You Parallel Park","Hydration","Call Your Mother Back","Leg Day, Emotionally",
+  "A Room With A Window","Texture Of A Normal Week","Low Stakes Tuesday","Fine, Actually","Morning, Unforced"];
+const SONG_WHY = ["for your cortisol","3x daily, with food","replaces two sad songs","may reduce 3am sessions",
+  "clinically upbeat","prescribed","gateway to a walk","contains no saxophone"];
+
+const STAGES = [
+  { eyebrow:"Edit request",        title:"Are you sure?",
+    body:"We think this is the right thing for you given your listening history.",
+    keep:"Keep what the vibes said", edit:"Edit anyway" },
+  { eyebrow:"Edit request (2)",    title:"Are you really sure?",
+    body:"We re-checked. Your listening history has not changed in the last four seconds. We still think this is the right thing for you.",
+    keep:"You're right, keep it", edit:"Edit anyway" },
+  { eyebrow:"Second opinion",      title:"We consulted another playlist.",
+    body:"It agrees with the first playlist. Given your listening history, we think this is the right thing for you.",
+    keep:"Defer to the playlists", edit:"Edit it anyway" },
+  { eyebrow:"Pattern detected",    title:"That's three edits.",
+    body:"People who edit three times are usually editing away from what's right for them. Given your listening history, we think this is the right thing for you.",
+    keep:"Fine, keep it", edit:"I'd still like to edit this" },
+];
+
+let overrides = 0, unlocked = false, formReady = false, pending = null;
+const granted = new Set();
+
+const modal = $("#modal");
+function openModal(){ modal.hidden = false; }
+function closeModal(){ modal.hidden = true; $("#mSongs").hidden = true; $("#mEvidence").hidden = false; pending = null; }
+
+function evidenceLine(){
+  return "evidence: " + rint(9,96) + " plays of “" + pick(SONG_TITLES) + "” — " +
+         pick(vibe.artists) + ", mostly after " + rint(1,4) + "am";
+}
+
+function showStage(stage){
+  const st = STAGES[stage];
+  $("#mEyebrow").textContent = st.eyebrow;
+  $("#mTitle").textContent = st.title;
+  $("#mBody").textContent = st.body;
+  $("#mEvidence").textContent = evidenceLine();
+  $("#mKeep").textContent = st.keep;
+  const ed = $("#mEdit");
+  ed.textContent = st.edit;
+  ed.style.fontSize = (14 - stage * 1.2) + "px";
+  ed.style.opacity = 1 - stage * 0.12;
+
+  // later stages make you wait while it "reconsiders"
+  if(stage >= 2){
+    ed.disabled = true;
+    const was = st.edit;
+    ed.textContent = "reviewing your request…";
+    setTimeout(()=>{ ed.disabled = false; ed.textContent = was; }, 900 + stage * 700);
+  } else {
+    ed.disabled = false;
+  }
+  openModal();
+}
+
+function showSongs(){
+  $("#mEyebrow").textContent = "Recommendation";
+  $("#mTitle").textContent = "Maybe you should change your listening habits.";
+  $("#mBody").textContent = "You have now tried to edit this form " + overrides +
+    " times. The form is not the problem. Start here:";
+  $("#mEvidence").hidden = true;
+  const songs = picks(SONG_TITLES, 5).map(t => ({ t, a: pick(ARTISTS), why: pick(SONG_WHY) }));
+  const ul = $("#mSongs");
+  ul.innerHTML = songs.map(s => `<li><span class="art"></span>
+      <span><span class="t">${s.t}</span><br><span class="a">${s.a} · ${rint(2,4)}:${String(rint(10,59))}</span></span>
+      <span class="why">${s.why}</span></li>`).join("");
+  ul.hidden = false;
+  $("#mKeep").textContent = "Add to my playlist";
+  const ed = $("#mEdit");
+  ed.disabled = false; ed.style.fontSize = "14px"; ed.style.opacity = 1;
+  ed.textContent = "Fine. Let me edit the form.";
+  openModal();
+}
+
+function challenge(field, apply){
+  pending = { field, apply };
+  if(overrides >= STAGES.length) showSongs();
+  else showStage(overrides);
+}
+
+$("#mKeep").onclick = () => closeModal();
+
+$("#mEdit").onclick = () => {
+  if(overrides >= STAGES.length){
+    unlocked = true;
+    $("#conf").innerHTML = "Editing unlocked. We've noted the resistance in your chart. " +
+      "<strong>Autofill confidence: " + vibe.confidence + "</strong>.";
+  } else {
+    overrides++;
+    if(pending && pending.field) granted.add(pending.field);
+  }
+  const p = pending;
+  closeModal();
+  if(p && p.apply) p.apply();
+  if(p && p.field){ const el = p.field.querySelector("input,textarea"); if(el) el.focus(); }
+};
+
+// intercept any attempt to touch a pre-filled field
+document.addEventListener("focusin", e => {
+  const f = e.target.closest(".f");
+  if(!formReady || unlocked || !f || !f.classList.contains("filled") || granted.has(f)) return;
+  e.target.blur();
+  challenge(f, null);
+});
+
+document.addEventListener("change", e => {
+  if(!formReady || unlocked) return;
+  const box = e.target.closest("#conds input");
+  if(!box || granted.has(box)) return;
+  const wanted = box.checked;
+  box.checked = !wanted;           // snap back until they win the argument
+  challenge(box, () => { granted.add(box); box.checked = wanted;
+                         box.closest("label").classList.toggle("hit", wanted); });
+}, true);
 
 /* ---------- wiring ---------- */
 $("#go").onclick = () => { buildVibe(); runScan(); };
