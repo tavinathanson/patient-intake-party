@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Intake at the Oche</title>
+  <style>
+    :root {
+      --ink: #142019;
+      --paper: #f5efdf;
+      --cream: #fffaf0;
+      --red: #e8493f;
+      --green: #1c7358;
+      --gold: #f4b63c;
+      --blue: #4b7bec;
+      --muted: #667269;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: ui-rounded, "SF Pro Rounded", "Avenir Next", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(244,182,60,.23), transparent 28rem),
+        radial-gradient(circle at 90% 80%, rgba(28,115,88,.17), transparent 32rem),
+        var(--paper);
+    }
+
+    button { font: inherit; }
+    .shell { min-height: 100vh; padding: 6px 18px; }
+    .topbar {
+      max-width: 1180px;
+      margin: 0 auto 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: -.04em; }
+    .brand-mark {
+      width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--ink); color: var(--cream); border: 4px solid var(--gold); transform: rotate(-7deg);
+    }
+    .brand small { display: block; color: var(--muted); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+    .progress { display: flex; gap: 7px; }
+    .progress i { width: 28px; height: 7px; border-radius: 10px; background: rgba(20,32,25,.15); }
+    .progress i.done { background: var(--green); }
+    .progress i.now { background: var(--gold); box-shadow: 0 0 0 3px rgba(244,182,60,.22); }
+
+    .game {
+      max-width: 1180px;
+      min-height: calc(100vh - 50px);
+      margin: auto;
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) minmax(440px, 1fr);
+      overflow: hidden;
+      border: 2px solid var(--ink);
+      border-radius: 28px;
+      background: rgba(255,250,240,.91);
+      box-shadow: 12px 14px 0 var(--ink);
+    }
+
+    .panel { padding: clamp(14px, 2.2vw, 24px); border-right: 2px solid var(--ink); display: flex; flex-direction: column; }
+    .eyebrow {
+      align-self: flex-start; padding: 6px 10px; border: 1.5px solid var(--ink); border-radius: 999px;
+      background: var(--gold); font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase;
+    }
+    h1 { margin: 8px 0 5px; font-size: clamp(31px, 4vw, 49px); line-height: .94; letter-spacing: -.065em; }
+    h2 { margin: 18px 0 10px; font-size: clamp(26px, 3.2vw, 43px); line-height: 1.02; letter-spacing: -.045em; }
+    .lede { margin: 0; color: var(--muted); line-height: 1.38; }
+    .case-card {
+      margin: 9px 0; padding: 9px 12px; border: 1.5px solid var(--ink); border-radius: 14px; background: #fff;
+      box-shadow: 4px 4px 0 rgba(20,32,25,.16);
+    }
+    .case-card strong { display: block; margin-bottom: 3px; }
+    .case-card span { font-size: 13px; color: var(--muted); line-height: 1.32; }
+    .answer-key { display:grid; grid-template-columns:1fr 1fr; gap:4px; margin:0 0 7px; }
+    .answer-chip { display:flex; align-items:center; gap:6px; min-width:0; padding:3px 7px; border:1px solid rgba(20,32,25,.22); border-radius:9px; background:rgba(255,255,255,.72); font-size:10px; font-weight:800; }
+    .answer-chip b { flex:0 0 17px; width:17px; height:17px; display:grid; place-items:center; border-radius:50%; background:var(--ink); color:white; }
+    .instructions { margin-top: auto; padding-top: 7px; border-top: 1px dashed rgba(20,32,25,.3); font-size: 11px; color: var(--muted); line-height: 1.32; }
+    .instructions b { color: var(--ink); }
+    .throw-button, .primary {
+      appearance: none; border: 2px solid var(--ink); border-radius: 13px; padding: 11px 16px;
+      color: white; background: var(--red); font-weight: 900; cursor: pointer; box-shadow: 4px 5px 0 var(--ink);
+      transition: transform .12s, box-shadow .12s;
+    }
+    .throw-button:hover, .primary:hover { transform: translate(-1px,-1px); box-shadow: 6px 7px 0 var(--ink); }
+    .throw-button:active, .primary:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 var(--ink); }
+    .throw-button:disabled { opacity: .45; cursor: not-allowed; }
+
+    .arena {
+      position: relative; min-height: 0; display: grid; place-items: center; padding: 10px 18px 52px;
+      background-color: #dce9dd;
+      background-image: linear-gradient(rgba(20,32,25,.055) 1px, transparent 1px), linear-gradient(90deg, rgba(20,32,25,.055) 1px, transparent 1px);
+      background-size: 24px 24px;
+      overflow: hidden;
+    }
+    .board-wrap { width: min(94%, 535px, calc(100vh - 92px)); aspect-ratio: 1; position: relative; filter: drop-shadow(8px 9px 0 rgba(20,32,25,.25)); }
+    #board { width: 100%; height: 100%; overflow: visible; touch-action: none; cursor: crosshair; }
+    .wedge { stroke: var(--ink); stroke-width: 1.2; transition: filter .15s, opacity .15s; }
+    .wedge:hover { filter: brightness(1.12); }
+    .ring { fill: none; stroke: var(--ink); pointer-events: none; }
+    .label { fill: var(--cream); font-size: 10px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; pointer-events: none; paint-order: stroke; stroke: rgba(20,32,25,.7); stroke-width: 3px; stroke-linejoin: round; }
+    .number { fill: var(--ink); font-size: 13px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+    .aim {
+      position: absolute; width: 28px; height: 28px; border: 3px solid white; border-radius: 50%; pointer-events: none;
+      transform: translate(-50%,-50%); box-shadow: 0 0 0 2px var(--ink), inset 0 0 0 2px var(--red); transition: opacity .2s;
+    }
+    .aim::before, .aim::after { content:""; position:absolute; background:white; box-shadow: 0 0 0 1px var(--ink); }
+    .aim::before { width: 2px; height: 38px; left: 10px; top: -8px; }
+    .aim::after { height: 2px; width: 38px; top: 10px; left: -8px; }
+    .dart {
+      position: absolute; width: 12px; height: 56px; pointer-events: none; z-index: 8; transform-origin: 50% 80%;
+      filter: drop-shadow(3px 5px 2px rgba(0,0,0,.3)); opacity: 0;
+    }
+    .dart::before { content:""; position:absolute; left:4px; top:10px; width:4px; height:42px; border-radius:4px; background: linear-gradient(#f9d66c 0 45%, #28382e 45%); }
+    .dart::after { content:""; position:absolute; left:-1px; top:0; width:14px; height:18px; background: var(--red); clip-path: polygon(50% 100%,0 0,45% 18%,100% 0); }
+    .result-toast {
+      position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%) translateY(130px);
+      width: min(560px, calc(100% - 36px)); padding: 14px 18px; border: 2px solid var(--ink); border-radius: 15px;
+      background: var(--cream); box-shadow: 5px 6px 0 var(--ink); text-align: center; font-weight: 800; z-index: 20;
+      transition: transform .32s cubic-bezier(.2,.8,.2,1);
+    }
+    .result-toast.show { transform: translateX(-50%) translateY(0); }
+    .result-toast small { display: block; margin-bottom: 3px; color: var(--red); text-transform: uppercase; letter-spacing: .1em; font-size: 10px; }
+    .power-wrap { margin-top: 7px; }
+    .power-label { display:flex; justify-content:space-between; margin-bottom:6px; font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+    .power-track { height: 12px; border: 2px solid var(--ink); border-radius: 999px; overflow:hidden; background:white; }
+    .power-fill { height:100%; width:50%; background: linear-gradient(90deg,var(--green),var(--gold),var(--red)); transition:width .05s linear; }
+    .wind-card { margin:6px 0 0; padding:6px 10px; border:1.5px solid var(--ink); border-radius:11px; background:#eef7ff; }
+    .wind-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
+    .wind-head strong { color:var(--blue); font-size:13px; }
+    .wind-track { position:relative; height:10px; border:1.5px solid var(--ink); border-radius:999px; background:linear-gradient(90deg,#87bfff,#fff 48%,#fff 52%,#87bfff); }
+    .wind-track::after { content:""; position:absolute; left:50%; top:-4px; width:2px; height:15px; background:var(--ink); }
+    .wind-dot { position:absolute; top:50%; left:50%; width:14px; height:14px; border:2px solid var(--ink); border-radius:50%; background:var(--gold); transform:translate(-50%,-50%); transition:left .28s cubic-bezier(.2,.8,.2,1); z-index:2; }
+
+    .summary { display:none; grid-column:1/-1; padding: clamp(28px,5vw,60px); }
+    .summary.show { display:block; }
+    .game.finished .panel, .game.finished .arena { display:none; }
+    .summary-grid { display:grid; grid-template-columns: 1fr 1fr; gap:18px; margin:26px 0; }
+    .summary-card { padding:20px; border:2px solid var(--ink); border-radius:18px; background:white; box-shadow:5px 6px 0 rgba(20,32,25,.16); }
+    .summary-card h3 { margin:0 0 10px; }
+    .summary-card ul { padding-left:20px; color:var(--muted); line-height:1.55; }
+    .answers-log { margin-top:18px; }
+    .answers-log li { margin-bottom:9px; }
+    .disclaimer { padding:12px 15px; background:#fff3cd; border:1px solid #d5a425; border-radius:12px; font-size:13px; }
+
+    @media (max-width: 820px) {
+      .shell { padding: 6px; }
+      .topbar { padding: 2px 3px 4px; }
+      .brand small { display:none; }
+      .game { grid-template-columns:1fr; box-shadow:7px 8px 0 var(--ink); }
+      .panel { border-right:0; border-bottom:2px solid var(--ink); padding:16px; }
+      .instructions { margin-top:8px; }
+      .arena { min-height:460px; padding:12px 8px 54px; }
+      .summary-grid { grid-template-columns:1fr; }
+      h1 { font-size:34px; }
+      .label { font-size:9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">➶</div><div>Intake at the Oche<small>Patient stories, poorly aimed</small></div></div>
+      <div class="progress" id="progress" aria-label="Question progress"></div>
+    </header>
+
+    <section class="game" id="game">
+      <aside class="panel">
+        <div class="eyebrow" id="stepLabel">Throw 1 · Routing</div>
+        <h1 id="question">What brings you in today?</h1>
+        <p class="lede" id="hint">Aim for the answer you mean. The dart may have other plans.</p>
+        <div class="case-card" id="caseCard">
+          <strong>How this works</strong>
+          <span>Every board has exactly 20 answer wedges. Answers repeat evenly around the board, so no answer gets a bigger target.</span>
+        </div>
+        <div class="answer-key" id="answerKey" aria-label="Answers on this board"></div>
+        <button class="throw-button" id="throwButton">Hold to set power</button>
+        <div class="power-wrap">
+          <div class="power-label"><span>Throw power</span><span id="powerText">50%</span></div>
+          <div class="power-track"><div class="power-fill" id="powerFill"></div></div>
+        </div>
+        <div class="wind-card" aria-label="Crosswind for the next throw">
+          <div class="wind-head"><span>Crosswind</span><strong id="windText">→ 0</strong></div>
+          <div class="wind-track"><div class="wind-dot" id="windDot"></div></div>
+        </div>
+        <div class="instructions"><b>Aim</b> with your mouse or finger. <b>Hold</b> the button (or spacebar) to set power, then release. The meter is wildly unstable and the crosswind has no respect for your choices.</div>
+      </aside>
+
+      <div class="arena" id="arena">
+        <div class="board-wrap" id="boardWrap">
+          <svg id="board" viewBox="0 0 600 600" role="img" aria-label="Dartboard with twenty answer wedges"></svg>
+          <div class="aim" id="aim"></div>
+          <div class="dart" id="dart"></div>
+        </div>
+        <div class="result-toast" id="toast" aria-live="polite"><small>Dart landed on</small><span></span></div>
+      </div>
+
+      <section class="summary" id="summary"></section>
+    </section>
+  </main>
+
+  <script>
+    const terminal = (title, priorities, note) => ({ title, priorities, note });
+
+    const trees = {
+      eczema: {
+        name: "Mango · eczema flare", intro: "A recurring rash is worse than last time, and a photo sent weeks ago never got a reply.",
+        start: "eczema_safety",
+        nodes: {
+          eczema_safety: { q: "Is the skin cracked, bleeding, or looking infected?", hint: "Start with the detail that changes urgency.", a: [
+            ["Yes — cracked or bleeding", "eczema_severity"], ["Looks infected", "eczema_severity"], ["No", "eczema_severity"], ["Not sure", "eczema_severity"] ] },
+          eczema_severity: { q: "How bad is the itch right now?", hint: "A scale makes the flare easier to compare over time.", a: [
+            ["0–2 · mild", "eczema_treatment"], ["3–5 · distracting", "eczema_treatment"], ["6–8 · severe", "eczema_treatment"], ["9–10 · unbearable", "eczema_treatment"] ] },
+          eczema_treatment: { q: "What happened with the prescribed cream?", hint: "The chart says prescribed. That does not mean used.", a: [
+            ["Used it; no help", "eczema_change"], ["Never filled it", "eczema_change"], ["Stopped using it", "eczema_change"], ["Not sure which cream", "eczema_change"] ] },
+          eczema_change: { q: "What changed before this flare?", hint: "Triggers can hide in ordinary life changes.", a: [
+            ["New soap", "eczema_goal"], ["New pet", "eczema_goal"], ["New routine or job", "eczema_goal"], ["Nothing I noticed", "eczema_goal"] ] },
+          eczema_goal: { q: "What would help most today?", hint: "End with the patient's actual goal.", a: [
+            ["A cream that works", "end"], ["Advice by message", "end"], ["A video visit", "end"], ["An in-person visit", "end"] ] }
+        },
+        result: terminal("Route: eczema flare review", ["Check cracking, bleeding, and signs of infection", "Reconcile which creams were actually obtained and used", "Address cost and the unanswered photo/message", "Review possible soap and pet triggers plus sleep impact"], "Mango would prefer remote help and wants an affordable treatment that works.")
+      },
+      back: {
+        name: "Kiwi · strained back", intro: "A walk-in patient wants a PT referral after hurting his lower back moving a couch.",
+        start: "back_safety",
+        nodes: {
+          back_safety: { q: "Any numbness, tingling, or weakness?", hint: "The patient may not know this detail matters.", a: [
+            ["Tingling", "back_redflag"], ["Numbness", "back_redflag"], ["Weakness", "back_redflag"], ["None", "back_redflag"] ] },
+          back_redflag: { q: "Any new bowel or bladder trouble?", hint: "A fast yes/no screen can change the next step.", a: [
+            ["Yes", "back_timeline"], ["No", "back_timeline"], ["Not sure", "back_timeline"], ["Prefer to discuss", "back_timeline"] ] },
+          back_timeline: { q: "When did the pain begin?", hint: "Approximate timing is good enough.", a: [
+            ["Today", "back_meds"], ["2–3 days ago", "back_meds"], ["About a week ago", "back_meds"], ["More than a month", "back_meds"] ] },
+          back_meds: { q: "What are you taking for it?", hint: "Include prescriptions from other doctors.", a: [
+            ["Ibuprofen", "back_goal"], ["Acetaminophen", "back_goal"], ["Prescription medicine", "back_goal"], ["Nothing", "back_goal"] ] },
+          back_goal: { q: "What outcome are you hoping for?", hint: "Care starts with what the patient came to accomplish.", a: [
+            ["PT referral", "end"], ["Pain advice", "end"], ["Imaging", "end"], ["A clinician visit", "end"] ] }
+        },
+        result: terminal("Route: back-pain safety screen", ["Clarify right-foot tingling, numbness, and weakness", "Immediately review bowel or bladder symptoms", "Reconcile ibuprofen use and outside lisinopril", "Use prior PT response and activity change in the plan"], "Kiwi wants a PT referral without a visit, but neurologic symptoms need to be surfaced first.")
+      },
+      glp1: {
+        name: "Papaya · GLP-1 follow-up", intro: "The chart says 1 mg semaglutide, but the patient's real dose and supply source have changed.",
+        start: "glp1_dose",
+        nodes: {
+          glp1_dose: { q: "What dose are you actually taking now?", hint: "Ask about reality, not the medication list.", a: [
+            ["0.25 mg", "glp1_effect"], ["0.5 mg", "glp1_effect"], ["1.0 mg", "glp1_effect"], ["I’m not sure", "glp1_effect"] ] },
+          glp1_effect: { q: "What happened at the higher dose?", hint: "Side effects often explain an unreported dose change.", a: [
+            ["Vomiting", "glp1_supply"], ["Nausea", "glp1_supply"], ["Other side effect", "glp1_supply"], ["No problem", "glp1_supply"] ] },
+          glp1_supply: { q: "Where did your current pen come from?", hint: "Medication source can be as important as its label.", a: [
+            ["Usual pharmacy", "glp1_missed"], ["Different pharmacy", "glp1_missed"], ["Friend or family", "glp1_missed"], ["Online or overseas", "glp1_missed"] ] },
+          glp1_missed: { q: "How much treatment did you miss recently?", hint: "Supply interruptions can explain a trend change.", a: [
+            ["None", "glp1_pregnancy"], ["One dose", "glp1_pregnancy"], ["Two weeks", "glp1_pregnancy"], ["Three+ weeks", "glp1_pregnancy"] ] },
+          glp1_pregnancy: { q: "Are you pregnant or planning pregnancy?", hint: "Make space for a goal the routine follow-up may miss.", a: [
+            ["Planning soon", "end"], ["Currently pregnant", "end"], ["No", "end"], ["Prefer to discuss", "end"] ] }
+        },
+        result: terminal("Route: medication and pregnancy review", ["Verify the actual 0.5 mg dose and overseas pen", "Review vomiting at 1 mg and current nausea", "Account for the two-week supply interruption", "Discuss pregnancy plans with the prescribing clinician"], "Papaya's chart is out of date, and her unanswered question is whether to stop before trying for a baby.")
+      },
+      pain: {
+        name: "Fig · persistent pain", intro: "Nine visits and five doctors have produced a medication list that no longer matches what the patient takes.",
+        start: "pain_voice",
+        nodes: {
+          pain_voice: { q: "Who should answer these questions?", hint: "A proxy can help without replacing the patient's voice.", a: [
+            ["Patient", "pain_level"], ["Patient with help", "pain_level"], ["Family caregiver", "pain_level"], ["Clinician together", "pain_level"] ] },
+          pain_level: { q: "How much is pain interfering today?", hint: "Function often says more than a pain label.", a: [
+            ["0–2 · a little", "pain_meds"], ["3–5 · some", "pain_meds"], ["6–8 · a lot", "pain_meds"], ["9–10 · completely", "pain_meds"] ] },
+          pain_meds: { q: "Which best describes your medicines?", hint: "A medication list is only a hypothesis.", a: [
+            ["I take them as listed", "pain_effect"], ["I skip some", "pain_effect"], ["I stopped some", "pain_effect"], ["I can’t identify them", "pain_effect"] ] },
+          pain_effect: { q: "What gets in the way of taking them?", hint: "Side effects and confusion deserve their own question.", a: [
+            ["Brain fog", "pain_sleep"], ["Other side effects", "pain_sleep"], ["Too complicated", "pain_sleep"], ["Nothing", "pain_sleep"] ] },
+          pain_sleep: { q: "How is your sleep lately?", hint: "Sleep can be both a clue and a care goal.", a: [
+            ["Good", "end"], ["Interrupted", "end"], ["Very little", "end"], ["Changes nightly", "end"] ] }
+        },
+        result: terminal("Route: medication reconciliation", ["Let Fig answer directly with supportive help", "Identify every pill in the mixed bottle", "Record stopped sertraline and finished cyclobenzaprine", "Review skipped gabapentin, brain fog, Tylenol amount, and sleep"], "The immediate need is a trustworthy medication picture across multiple clinicians.")
+      },
+      glaucoma: {
+        name: "Plum · glaucoma transfer", intro: "An 83-year-old new patient arrives with old records and a form completed by his daughter because he cannot read it.",
+        start: "eye_access",
+        nodes: {
+          eye_access: { q: "Can you read and complete this form yourself?", hint: "Accessibility is clinical information, not paperwork trivia.", a: [
+            ["Yes", "eye_drops"], ["With large print", "eye_drops"], ["With audio", "eye_drops"], ["I need someone’s help", "eye_drops"] ] },
+          eye_drops: { q: "Which drops are you using now?", hint: "Old records can preserve medicines the patient stopped.", a: [
+            ["Latanoprost", "eye_adherence"], ["Timolol", "eye_adherence"], ["Brimonidine", "eye_adherence"], ["I’m not sure", "eye_adherence"] ] },
+          eye_adherence: { q: "How often do you miss your eye drops?", hint: "Normalize imperfect use to get a useful answer.", a: [
+            ["Never", "eye_effect"], ["Once a month", "eye_effect"], ["Once a week", "eye_effect"], ["Several times a week", "eye_effect"] ] },
+          eye_effect: { q: "Why did you stop any eye drop?", hint: "A side effect may connect to another condition.", a: [
+            ["Wheezing", "eye_function"], ["Other side effect", "eye_function"], ["Ran out", "eye_function"], ["I didn’t stop", "eye_function"] ] },
+          eye_function: { q: "Any trouble navigating or recent falls?", hint: "Function can reveal vision change before the patient reports it.", a: [
+            ["Bumping into things", "end"], ["A recent fall", "end"], ["Both", "end"], ["Neither", "end"] ] }
+        },
+        result: terminal("Route: urgent glaucoma reconciliation", ["Provide an accessible intake method and include Plum directly", "Confirm current bottles and missed latanoprost doses", "Record stopped timolol, wheezing, COPD, and inhaler use", "Assess bumping into doorframes, falls, and overdue eye follow-up"], "Plum says his eyes are fine, but function and medication history suggest important gaps.")
+      }
+    };
+
+    const route = { q: "What brings you in today?", hint: "Aim for the closest match. Each answer appears four times.", a: [
+      ["Rash or itching", "eczema"], ["Back pain", "back"], ["Medication follow-up", "glp1"], ["Pain that won’t go", "pain"], ["Vision or eye care", "glaucoma"]
+    ]};
+
+    const svg = document.querySelector("#board");
+    const boardWrap = document.querySelector("#boardWrap");
+    const aim = document.querySelector("#aim");
+    const dart = document.querySelector("#dart");
+    const throwButton = document.querySelector("#throwButton");
+    const toast = document.querySelector("#toast");
+    const game = document.querySelector("#game");
+    const NS = "http://www.w3.org/2000/svg";
+    const cx = 300, cy = 300, radius = 248;
+    let stage = "route", scenario = null, nodeKey = null, answers = [], history = [];
+    let aimPoint = {x:300, y:135}, power = .5, charging = false, chargeDir = 1, chargeFrame = null, flying = false, step = 0, wind = 0;
+
+    function setWind() {
+      wind = Math.round((Math.random()-.5)*94);
+      const direction = wind < -3 ? "←" : wind > 3 ? "→" : "↔";
+      document.querySelector("#windText").textContent = `${direction} ${Math.abs(wind)} gust`;
+      document.querySelector("#windDot").style.left = (50 + wind/94*86) + "%";
+    }
+
+    function polar(r, angle) { return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) }; }
+    function wedgePath(i) {
+      const a0 = -Math.PI/2 + i*Math.PI/10, a1 = a0 + Math.PI/10;
+      const p0 = polar(radius,a0), p1 = polar(radius,a1);
+      return `M ${cx} ${cy} L ${p0.x} ${p0.y} A ${radius} ${radius} 0 0 1 ${p1.x} ${p1.y} Z`;
+    }
+    function distribute(options) {
+      const slots = [];
+      for (let i=0; i<20; i++) slots.push(options[i % options.length]);
+      // Interleave repeated answers around the board while retaining equal counts.
+      const spread = [];
+      const stride = options.length === 4 ? 7 : 9;
+      for (let i=0; i<20; i++) spread[(i*stride)%20] = slots[i];
+      return spread;
+    }
+    function shortLabel(text) {
+      const clean = text.replace(/ · /g," ").replace(/[^a-zA-Z0-9–+]/g," ");
+      if (clean.length <= 10) return clean;
+      const words = clean.split(/\s+/).filter(Boolean);
+      if (words[0].length <= 9) return words[0];
+      return words[0].slice(0,8)+"…";
+    }
+    function renderBoard(options) {
+      answers = distribute(options);
+      svg.innerHTML = "";
+      const palette = ["#196f55","#e64b42","#27372e","#eab13b"];
+      answers.forEach((ans,i) => {
+        const path = document.createElementNS(NS,"path");
+        path.setAttribute("d",wedgePath(i)); path.setAttribute("class","wedge");
+        path.setAttribute("fill",palette[i%4]); svg.appendChild(path);
+        const ang = -Math.PI/2 + (i+.5)*Math.PI/10;
+        const lp = polar(184,ang), np = polar(276,ang);
+        const label = document.createElementNS(NS,"text");
+        label.setAttribute("x",lp.x); label.setAttribute("y",lp.y); label.setAttribute("class","label");
+        label.setAttribute("transform",`rotate(${ang*180/Math.PI+90} ${lp.x} ${lp.y})`);
+        label.textContent = String.fromCharCode(65 + options.indexOf(ans)); svg.appendChild(label);
+        const num = document.createElementNS(NS,"text"); num.setAttribute("x",np.x); num.setAttribute("y",np.y); num.setAttribute("class","number"); num.textContent=i+1; svg.appendChild(num);
+      });
+      [[252,6],[144,4],[44,4],[16,3]].forEach(([r,w],idx) => {
+        const c=document.createElementNS(NS,"circle"); c.setAttribute("cx",cx);c.setAttribute("cy",cy);c.setAttribute("r",r);c.setAttribute("class","ring");c.setAttribute("stroke-width",w);
+        if(idx===2)c.setAttribute("fill","#eab13b"); if(idx===3)c.setAttribute("fill","#e64b42"); svg.appendChild(c);
+      });
+      moveAim(aimPoint.x,aimPoint.y);
+    }
+    function currentNode() { return stage === "route" ? route : trees[scenario].nodes[nodeKey]; }
+    function renderQuestion() {
+      const node=currentNode();
+      document.querySelector("#question").textContent=node.q;
+      document.querySelector("#hint").textContent=node.hint;
+      document.querySelector("#stepLabel").textContent = stage === "route" ? "Throw 1 · Routing" : `Throw ${step+1} · ${trees[scenario].name}`;
+      const card=document.querySelector("#caseCard");
+      if(stage === "route") card.innerHTML="<strong>How this works</strong><span>Every board has exactly 20 answer wedges. Answers repeat evenly around the board, so no answer gets a bigger target.</span>";
+      else card.innerHTML=`<strong>${trees[scenario].name}</strong><span>${trees[scenario].intro}</span>`;
+      const key=document.querySelector("#answerKey");
+      key.innerHTML=node.a.map((answer,i)=>`<div class="answer-chip"><b>${String.fromCharCode(65+i)}</b><span>${answer[0]}</span></div>`).join("");
+      setWind();
+      renderBoard(node.a); renderProgress();
+    }
+    function renderProgress() {
+      const p=document.querySelector("#progress"); p.innerHTML="";
+      for(let i=0;i<6;i++){ const dot=document.createElement("i"); if(i<step)dot.className="done"; else if(i===step)dot.className="now"; p.appendChild(dot); }
+    }
+    function moveAim(x,y) {
+      const dx=x-cx, dy=y-cy, len=Math.hypot(dx,dy);
+      if(len>radius-10){ x=cx+dx/len*(radius-10); y=cy+dy/len*(radius-10); }
+      aimPoint={x,y}; aim.style.left=(x/6)+"%"; aim.style.top=(y/6)+"%";
+    }
+    svg.addEventListener("pointermove", e => {
+      if(flying)return; const r=svg.getBoundingClientRect(); moveAim((e.clientX-r.left)*600/r.width,(e.clientY-r.top)*600/r.height);
+    });
+    svg.addEventListener("pointerdown", e => {
+      if(flying)return; const r=svg.getBoundingClientRect(); moveAim((e.clientX-r.left)*600/r.width,(e.clientY-r.top)*600/r.height);
+    });
+    function startCharge(e){ if(e)e.preventDefault(); if(flying||charging)return; charging=true; throwButton.textContent="Release to throw!"; tickCharge(); }
+    function tickCharge(){
+      // Intentionally hostile: the meter races, jitters, and occasionally lurches.
+      const lurch = Math.random() < .12 ? (Math.random()-.5)*.24 : 0;
+      power += (.052 + Math.random()*.026)*chargeDir + lurch;
+      if(power>.99){power=.99;chargeDir=-1} if(power<.08){power=.08;chargeDir=1}
+      document.querySelector("#powerFill").style.width=(power*100)+"%";
+      document.querySelector("#powerText").textContent=Math.round(power*100)+"%";
+      chargeFrame=requestAnimationFrame(tickCharge);
+    }
+    function releaseCharge(e){ if(e)e.preventDefault(); if(!charging)return; charging=false; cancelAnimationFrame(chargeFrame); throwButton.textContent="Hold to set power"; throwDart(); }
+    throwButton.addEventListener("pointerdown",startCharge); window.addEventListener("pointerup",releaseCharge);
+    window.addEventListener("keydown",e=>{ if(e.code==="Space"&&!e.repeat){e.preventDefault();startCharge();} });
+    window.addEventListener("keyup",e=>{ if(e.code==="Space"){e.preventDefault();releaseCharge();} });
+
+    function gaussian(){ return (Math.random()+Math.random()+Math.random()+Math.random()-2); }
+    function throwDart(){
+      flying=true; throwButton.disabled=true; aim.style.opacity=.25; toast.classList.remove("show");
+      const rect=boardWrap.getBoundingClientRect();
+      const accuracy = 18 + Math.abs(power-.62)*48;
+      // Crosswind is deliberately much stronger left-to-right than vertically.
+      const crosswind = wind;
+      const driftX=gaussian()*accuracy*1.65 + crosswind, driftY=gaussian()*accuracy*.74;
+      let tx=Math.max(35,Math.min(565,aimPoint.x+driftX)), ty=Math.max(35,Math.min(565,aimPoint.y+driftY));
+      const start={x:300,y:650}, duration=720+Math.abs(power-.62)*250, startTime=performance.now();
+      dart.style.opacity=1;
+      function frame(now){
+        const t=Math.min(1,(now-startTime)/duration), ease=1-Math.pow(1-t,3);
+        const sway=(Math.sin(t*Math.PI*2.4)*34 + Math.sin(t*Math.PI*6.7)*13)*(1-t)*(1.15-power*.45);
+        const x=start.x+(tx-start.x)*ease+sway;
+        const base=start.y+(ty-start.y)*ease;
+        const arc=-Math.sin(Math.PI*t)*(95+power*100);
+        const y=base+arc;
+        dart.style.left=(x/6)+"%";dart.style.top=(y/6)+"%";dart.style.transform=`translate(-50%,-80%) rotate(${10-18*t+sway*.12}deg) scale(${.72+.28*t})`;
+        if(t<1)requestAnimationFrame(frame); else land(tx,ty);
+      }
+      requestAnimationFrame(frame);
+    }
+    function land(x,y){
+      const angle=(Math.atan2(y-cy,x-cx)+Math.PI/2+Math.PI*2)%(Math.PI*2);
+      const index=Math.floor(angle/(Math.PI/10))%20, chosen=answers[index];
+      const q=currentNode().q; history.push({q,answer:chosen[0]});
+      toast.querySelector("span").textContent=chosen[0];toast.classList.add("show");
+      setTimeout(()=>advance(chosen[1]),1050);
+    }
+    function advance(next){
+      dart.style.opacity=0; aim.style.opacity=1; flying=false; throwButton.disabled=false; toast.classList.remove("show"); step++;
+      if(stage==="route") { scenario=next; stage="scenario"; nodeKey=trees[scenario].start; }
+      else if(next==="end") { finish(); return; }
+      else nodeKey=next;
+      renderQuestion();
+    }
+    function finish(){
+      const r=trees[scenario].result; game.classList.add("finished"); const s=document.querySelector("#summary");s.classList.add("show");
+      s.innerHTML=`<div class="eyebrow">Intake complete · ${trees[scenario].name}</div><h2>${r.title}</h2><p class="lede">Your darts created one possible patient story. In real intake, the patient—not chance—should choose every answer.</p><div class="summary-grid"><div class="summary-card"><h3>Priorities to surface</h3><ul>${r.priorities.map(x=>`<li>${x}</li>`).join("")}</ul><p>${r.note}</p></div><div class="summary-card"><h3>Your landed answers</h3><ol class="answers-log">${history.map(x=>`<li><b>${x.q}</b><br>${x.answer}</li>`).join("")}</ol></div></div><p class="disclaimer"><b>Demo only:</b> This game explores intake design. It does not diagnose conditions or recommend medical treatment.</p><p><button class="primary" onclick="location.reload()">Play another intake</button></p>`;
+      document.querySelector("#progress").innerHTML="";
+    }
+    renderQuestion();
+  </script>
+</body>
+</html>
