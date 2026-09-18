@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Man the Helm — Pirate Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Pirata+One&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --sea: #14606b;
+    --sea-2: #0e3f48;
+    --paper: #efe0bd;
+    --paper-edge: #e3cf9f;
+    --ink: #3b2a17;
+    --ink-soft: #6b5637;
+    --plank: #7a5230;
+    --plank-dark: #5c3c22;
+    --brass: #c69a2e;
+    --brass-deep: #9c7519;
+    --rope: #d8c39b;
+    --danger: #9e2b1a;
+    --good: #2f6b3a;
+    --shadow: rgba(0,0,0,.28);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sea: #06171b;
+      --sea-2: #02090b;
+      --paper: #241c10;
+      --paper-edge: #2f2413;
+      --ink: #eaddb9;
+      --ink-soft: #b8a67f;
+      --plank: #3a2716;
+      --plank-dark: #26170b;
+      --brass: #d8b24a;
+      --brass-deep: #b9902c;
+      --rope: #5a4a2e;
+      --danger: #e0674f;
+      --good: #6bbf7a;
+      --shadow: rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --sea: #06171b;
+    --sea-2: #02090b;
+    --paper: #241c10;
+    --paper-edge: #2f2413;
+    --ink: #eaddb9;
+    --ink-soft: #b8a67f;
+    --plank: #3a2716;
+    --plank-dark: #26170b;
+    --brass: #d8b24a;
+    --brass-deep: #b9902c;
+    --rope: #5a4a2e;
+    --danger: #e0674f;
+    --good: #6bbf7a;
+    --shadow: rgba(0,0,0,.5);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--sea) 0%, var(--sea-2) 70%) fixed;
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; }
+
+  header.top { text-align: center; position: relative; }
+  h1 {
+    font-family: "Pirata One", "Atkinson Hyperlegible", cursive;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 7vw, 3.6rem);
+    letter-spacing: .02em;
+    margin: .2em 0 .1em;
+    color: var(--brass);
+    text-shadow: 0 2px 0 var(--brass-deep), 0 3px 8px var(--shadow);
+  }
+  .lede { color: var(--rope); max-width: 62ch; margin: 0 auto; font-size: clamp(.95rem, 2.4vw, 1.08rem); }
+  .lede b { color: var(--paper); }
+
+  .theme-toggle {
+    position: absolute; top: 0; right: 0;
+    background: var(--plank); color: var(--paper);
+    border: 2px solid var(--brass-deep); border-radius: 999px;
+    width: 42px; height: 42px; font-size: 1.1rem; cursor: pointer;
+    box-shadow: 0 2px 6px var(--shadow);
+  }
+  .theme-toggle:hover { border-color: var(--brass); }
+
+  .app {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    gap: 22px;
+    margin-top: 22px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
+
+  /* ---- Deck card (the wheel side) ---- */
+  .deck {
+    background:
+      repeating-linear-gradient(90deg, var(--plank) 0 34px, var(--plank-dark) 34px 36px);
+    border: 3px solid var(--plank-dark);
+    border-radius: 16px;
+    padding: 18px 18px 22px;
+    box-shadow: inset 0 0 0 2px var(--brass-deep), 0 10px 26px var(--shadow);
+    color: var(--paper);
+  }
+  .legband {
+    display: flex; align-items: center; gap: 10px; justify-content: space-between;
+    font-family: "IM Fell English", serif; font-size: .95rem; color: var(--rope);
+  }
+  .pips { display: flex; gap: 6px; }
+  .pip { width: 10px; height: 10px; border-radius: 999px; background: var(--plank-dark); border: 1px solid var(--brass-deep); }
+  .pip.done { background: var(--brass); }
+  .pip.now { background: var(--paper); box-shadow: 0 0 0 2px var(--brass); }
+
+  .prompt { font-family: "Pirata One", cursive; font-size: clamp(1.4rem, 4.4vw, 2rem); color: var(--paper); margin: 10px 0 2px; line-height: 1.15; }
+  .subprompt { color: var(--rope); font-size: .95rem; margin: 0 0 8px; }
+
+  /* ---- The helm ---- */
+  .helm {
+    position: relative;
+    width: min(92%, 460px);
+    margin: 6px auto 4px;
+    aspect-ratio: 1 / 1;
+    touch-action: none;
+  }
+  .helm svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; }
+  .helm svg:active { cursor: grabbing; }
+  .helm:focus-visible { outline: none; }
+  .helm:focus-visible svg { filter: drop-shadow(0 0 0 var(--brass)); }
+  .helm:focus-visible .rim-focus { opacity: 1; }
+
+  #wheelSpin { transform-box: view-box; transform-origin: 100px 100px; }
+  :root:not([data-reduce]) #wheelSpin { transition: transform .28s cubic-bezier(.22,.61,.36,1); }
+  .dragging #wheelSpin { transition: none; }
+
+  .chip {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    max-width: 30%;
+    padding: 6px 9px;
+    border-radius: 10px;
+    border: 2px solid var(--brass-deep);
+    background: var(--paper);
+    color: var(--ink);
+    font: 700 clamp(.68rem, 2.5vw, .92rem)/1.12 "Atkinson Hyperlegible", sans-serif;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px var(--shadow);
+    transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  }
+  .chip:hover { transform: translate(-50%, -50%) scale(1.04); }
+  .chip.aim { background: var(--brass); color: var(--plank-dark); border-color: var(--paper); box-shadow: 0 0 0 3px var(--brass-deep), 0 4px 10px var(--shadow); }
+  .chip.anchored { background: var(--good); color: #fff; border-color: var(--paper); }
+  .chip.anchored::before { content: "⚓ "; }
+
+  .readout {
+    text-align: center;
+    margin: 6px auto 2px;
+    font-family: "IM Fell English", serif;
+    color: var(--paper);
+  }
+  .readout .head { font-family: "Pirata One", cursive; font-size: clamp(1.1rem, 3.6vw, 1.5rem); color: var(--brass); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 10px; }
+  button.act {
+    font: 700 1rem "Atkinson Hyperlegible", sans-serif;
+    border-radius: 10px; padding: 10px 16px; cursor: pointer;
+    border: 2px solid var(--brass-deep);
+    background: var(--brass); color: var(--plank-dark);
+    box-shadow: 0 3px 0 var(--brass-deep);
+  }
+  button.act:hover { background: var(--paper); }
+  button.act:active { transform: translateY(2px); box-shadow: none; }
+  button.ghost { background: transparent; color: var(--rope); box-shadow: none; border-color: var(--rope); }
+  button.ghost:hover { color: var(--paper); border-color: var(--paper); background: transparent; }
+  button.act:disabled { opacity: .4; cursor: not-allowed; box-shadow: none; }
+
+  .anchored-list { text-align: center; margin: 6px 0 0; color: var(--rope); font-size: .9rem; min-height: 1.2em; }
+
+  /* ---- Surgeon's log ---- */
+  .log {
+    background: var(--paper);
+    background-image:
+      radial-gradient(140% 120% at 0% 0%, rgba(0,0,0,.04), transparent 40%),
+      radial-gradient(140% 120% at 100% 100%, rgba(0,0,0,.05), transparent 40%);
+    border: 3px solid var(--paper-edge);
+    border-radius: 14px;
+    padding: 20px 22px;
+    color: var(--ink);
+    box-shadow: 0 10px 26px var(--shadow);
+    position: sticky; top: 16px;
+    font-family: "IM Fell English", serif;
+  }
+  .log h2 { font-family: "Pirata One", cursive; font-weight: 400; margin: 0 0 2px; font-size: 1.5rem; color: var(--plank-dark); }
+  .log .stamp { font-size: .82rem; color: var(--ink-soft); font-style: italic; margin-bottom: 12px; }
+  .log dl { margin: 0; }
+  .log dt { font-weight: 700; font-family: "Atkinson Hyperlegible", sans-serif; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); margin-top: 12px; }
+  .log dd { margin: 2px 0 0; font-size: 1.06rem; }
+  .log dd.pending { color: var(--ink-soft); font-style: italic; }
+  .flags { margin-top: 16px; border-top: 1px dashed var(--paper-edge); padding-top: 12px; display: grid; gap: 8px; }
+  .flag { font-family: "Atkinson Hyperlegible", sans-serif; font-size: .9rem; border-radius: 8px; padding: 8px 10px; }
+  .flag.warn { background: color-mix(in srgb, var(--danger) 16%, var(--paper)); border: 1px solid var(--danger); color: var(--danger); }
+  .flag.note { background: color-mix(in srgb, var(--good) 14%, var(--paper)); border: 1px solid var(--good); color: var(--good); }
+
+  /* ---- Voyage end ---- */
+  .done-card { text-align: center; color: var(--paper); padding: 10px 4px; }
+  .done-card .big { font-family: "Pirata One", cursive; font-size: clamp(1.6rem, 5vw, 2.4rem); color: var(--brass); }
+
+  footer { text-align: center; margin-top: 26px; color: var(--rope); font-size: .85rem; }
+  footer a { color: var(--brass); }
+
+  @media (prefers-reduced-motion: reduce) {
+    #wheelSpin, .chip { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <button class="theme-toggle" id="themeBtn" type="button" aria-label="Toggle dark and light">🌗</button>
+    <h1>Man the Helm</h1>
+    <p class="lede">Ye can't write, ye can't type, and yer hands know only one thing: <b>the ship's wheel</b>. Steer the brass marker to yer answer to give the ship's surgeon what they need. Yarrr!</p>
+  </header>
+
+  <div class="app">
+    <section class="deck" aria-label="The helm">
+      <div class="legband">
+        <span id="legLabel">Leg 1 of 5</span>
+        <span class="pips" id="pips" aria-hidden="true"></span>
+      </div>
+
+      <div id="stage"><!-- question or summary rendered here --></div>
+    </section>
+
+    <aside class="log" aria-label="Ship's surgeon's log" aria-live="polite">
+      <h2>Ship's Surgeon's Log</h2>
+      <div class="stamp">What the care team actually reads — plain and clinical.</div>
+      <dl id="logBody"></dl>
+      <div class="flags" id="flags"></div>
+    </aside>
+  </div>
+
+  <footer>
+    A <a href="https://github.com/tavinathanson/patient-intake-party">Patient Intake Party</a> entry — team-20-pirates. All ailments fictional; no scallywags were harmed.
+  </footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- Data: pirate prompts mapped to a real front-desk intake form ----
+  const QUESTIONS = [
+    {
+      id: "reason",
+      type: "single",
+      prompt: "What brings ye to port?",
+      sub: "Steer the helm 'til yer chief trouble sits under the brass marker, then Set Course.",
+      field: "Chief complaint",
+      options: [
+        { label: "The Scurvy",     clinical: "scurvy (suspected vitamin C deficiency)" },
+        { label: "Peg-leg Trouble",clinical: "prosthetic (peg) leg pain / poor fit" },
+        { label: "Sea-Sickness",   clinical: "motion sickness with nausea" },
+        { label: "Cannon Wound",   clinical: "traumatic blast / shrapnel injury" },
+        { label: "Sunstroke",      clinical: "heat exhaustion / sunstroke" },
+        { label: "Rat Bite",       clinical: "animal (rat) bite" },
+      ],
+    },
+    {
+      id: "ailments",
+      type: "multi",
+      prompt: "What ails ye from voyages past?",
+      sub: "Steer to each old wound and Drop Anchor. Mark as many as ye carry, then Sail On.",
+      field: "Past conditions",
+      options: [
+        { label: "The Scurvy",        clinical: "chronic scurvy" },
+        { label: "Peg Leg",           clinical: "lower-limb amputation (prosthesis)" },
+        { label: "Hook Hand",         clinical: "upper-limb amputation (prosthesis)" },
+        { label: "Lost Eye",          clinical: "monocular vision / eye loss" },
+        { label: "The Gout",          clinical: "gout" },
+        { label: "Rotten Teeth",      clinical: "advanced dental decay" },
+        { label: "The Dreaded Lurgi", clinical: "unspecified chronic illness (patient-reported)" },
+        { label: "None, arr",         clinical: "no significant past conditions", exclusive: true },
+      ],
+    },
+    {
+      id: "grog",
+      type: "single",
+      prompt: "How much grog passes yer lips?",
+      sub: "Steer to yer measure and Set Course, bilge-rat.",
+      field: "Alcohol (grog)",
+      options: [
+        { label: "Dry Dock",          clinical: "none" },
+        { label: "A Tot Now & Again", clinical: "occasional" },
+        { label: "Grog Every Watch",  clinical: "daily / heavy use" },
+      ],
+    },
+    {
+      id: "barnacles",
+      type: "multi",
+      prompt: "What makes ye break out in barnacles?",
+      sub: "Yer allergies. Drop Anchor on each, then Sail On.",
+      field: "Allergies",
+      options: [
+        { label: "Shellfish",         clinical: "shellfish" },
+        { label: "Gunpowder",         clinical: "gunpowder / sulfur (environmental)" },
+        { label: "Ship's Cat",        clinical: "cats (dander)" },
+        { label: "Citrus",            clinical: "citrus fruit" },
+        { label: "Naught, iron gut",  clinical: "no known allergies", exclusive: true },
+      ],
+    },
+    {
+      id: "firstmate",
+      type: "single",
+      prompt: "Who's yer first mate, if the seas turn?",
+      sub: "Yer emergency contact. Steer and Set Course.",
+      field: "Emergency contact",
+      options: [
+        { label: "The Quartermaster", clinical: "quartermaster (crew)" },
+        { label: "Ship's Cook",       clinical: "ship's cook (crew)" },
+        { label: "Me Parrot",         clinical: "pet parrot — no valid human contact", flagNoContact: true },
+        { label: "The Cabin Boy",     clinical: "cabin boy (crew)" },
+        { label: "I Sail Alone",      clinical: "declines to name a contact", flagNoContact: true },
+      ],
+    },
+  ];
+  const N = QUESTIONS.length;
+  const RING = 46; // % radius of chip centers from helm center
+
+  // ---- State ----
+  const state = { current: 0, angle: 0, answers: {} };
+  QUESTIONS.forEach(q => { state.answers[q.id] = q.type === "multi" ? [] : null; });
+
+  // ---- Elements ----
+  const stage = document.getElementById("stage");
+  const legLabel = document.getElementById("legLabel");
+  const pips = document.getElementById("pips");
+  const logBody = document.getElementById("logBody");
+  const flagsEl = document.getElementById("flags");
+  const themeBtn = document.getElementById("themeBtn");
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) document.documentElement.setAttribute("data-reduce", "");
+
+  // ---- Angle helpers ----
+  const norm = a => ((a % 360) + 360) % 360;
+  function angDiff(a, b) { let d = (a - b) % 360; if (d > 180) d -= 360; if (d < -180) d += 360; return d; }
+  function stepFor(q) { return 360 / q.options.length; }
+  function selectedIndex(q) { return Math.round(norm(state.angle) / stepFor(q)) % q.options.length; }
+  function chipPos(i, n) {
+    const t = (i / n) * 2 * Math.PI;
+    return { x: 50 + RING * Math.sin(t), y: 50 - RING * Math.cos(t) };
+  }
+  function getOpt(qid, label) {
+    const q = QUESTIONS.find(x => x.id === qid);
+    return q && q.options.find(o => o.label === label);
+  }
+
+  // ---- Build the ship's wheel SVG (spokes generated so the geometry stays true) ----
+  function wheelSVG() {
+    const c = 100, spokes = 8, knobR = 46, tipR = 42;
+    let g = "";
+    for (let i = 0; i < spokes; i++) {
+      const a = (i / spokes) * 2 * Math.PI;
+      const kx = c + knobR * Math.sin(a), ky = c - knobR * Math.cos(a);
+      const tx = c + tipR * Math.sin(a), ty = c - tipR * Math.cos(a);
+      const isPointer = i === 0;
+      const col = isPointer ? "var(--brass)" : "var(--plank)";
+      const w = isPointer ? 5.5 : 4;
+      g += `<line x1="${c}" y1="${c}" x2="${tx.toFixed(2)}" y2="${ty.toFixed(2)}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+      if (isPointer) {
+        // brass arrowhead marking the heading
+        g += `<polygon points="${c},48 ${c-6},60 ${c+6},60" fill="var(--brass)" stroke="var(--brass-deep)" stroke-width="1"/>`;
+      } else {
+        g += `<circle cx="${kx.toFixed(2)}" cy="${ky.toFixed(2)}" r="5.5" fill="var(--plank)" stroke="var(--plank-dark)" stroke-width="1.5"/>`;
+      }
+    }
+    return `
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="rim-focus" cx="100" cy="100" r="56" fill="none" stroke="var(--brass)" stroke-width="2" opacity="0" />
+        <g id="wheelSpin">
+          <circle cx="100" cy="100" r="34" fill="none" stroke="var(--plank-dark)" stroke-width="9"/>
+          <circle cx="100" cy="100" r="34" fill="none" stroke="var(--plank)" stroke-width="5"/>
+          ${g}
+          <circle cx="100" cy="100" r="12" fill="var(--brass)" stroke="var(--brass-deep)" stroke-width="2"/>
+          <circle cx="100" cy="100" r="4.5" fill="var(--plank-dark)"/>
+        </g>
+      </svg>`;
+  }
+
+  let spinEl = null; // #wheelSpin, cached per render
+
+  function applyAngle(animate) {
+    if (!spinEl) return;
+    if (animate === false) helm.classList.add("dragging");
+    spinEl.style.transform = `rotate(${state.angle}deg)`;
+    if (animate === false) requestAnimationFrame(() => helm.classList.remove("dragging"));
+  }
+
+  // ---- Rendering ----
+  let helm = null;
+
+  function renderStage() {
+    // Progress band
+    legLabel.textContent = state.current >= N ? "Voyage complete" : `Leg ${state.current + 1} of ${N}`;
+    pips.innerHTML = QUESTIONS.map((_, i) => {
+      const cls = i < state.current ? "done" : (i === state.current ? "now" : "");
+      return `<span class="pip ${cls}"></span>`;
+    }).join("");
+
+    if (state.current >= N) return renderDone();
+
+    const q = QUESTIONS[state.current];
+    // Aim the marker at the current answer, or the first option.
+    let aimIdx = 0;
+    if (q.type === "single" && state.answers[q.id]) {
+      aimIdx = Math.max(0, q.options.findIndex(o => o.label === state.answers[q.id]));
+    }
+    state.angle = aimIdx * stepFor(q);
+
+    stage.innerHTML = `
+      <p class="prompt">${q.prompt}</p>
+      <p class="subprompt">${q.sub}</p>
+      <div class="helm" id="helm" role="slider" tabindex="0"
+           aria-label="${q.prompt} Use left and right arrows to steer."
+           aria-valuemin="0" aria-valuemax="${q.options.length - 1}" aria-valuenow="${aimIdx}">
+        ${wheelSVG()}
+      </div>
+      <div class="readout"><span>⚓ Heading: </span><span class="head" id="headLabel"></span></div>
+      <p class="anchored-list" id="anchored"></p>
+      <div class="controls" id="controls"></div>
+    `;
+
+    helm = document.getElementById("helm");
+    spinEl = document.getElementById("wheelSpin");
+    wireHelm(q);
+    renderControls(q);
+    applyAngle(true);
+    refreshSelectionUI(q);
+  }
+
+  function renderControls(q) {
+    const controls = document.getElementById("controls");
+    const back = state.current > 0
+      ? `<button class="act ghost" id="backBtn" type="button">◀ Come About</button>` : "";
+    const startOver = `<button class="act ghost" id="resetBtn" type="button">Scuttle & Restart</button>`;
+    if (q.type === "single") {
+      controls.innerHTML = `${back}<button class="act" id="commitBtn" type="button">⚓ Set Course</button>${startOver}`;
+      document.getElementById("commitBtn").onclick = () => setCourse(q);
+    } else {
+      controls.innerHTML = `${back}
+        <button class="act" id="anchorBtn" type="button">⚓ Drop Anchor</button>
+        <button class="act" id="sailBtn" type="button">Sail On →</button>${startOver}`;
+      document.getElementById("anchorBtn").onclick = () => dropAnchor(q);
+      document.getElementById("sailBtn").onclick = () => advance();
+    }
+    if (document.getElementById("backBtn")) document.getElementById("backBtn").onclick = () => { state.current--; renderAll(); };
+    document.getElementById("resetBtn").onclick = () => {
+      QUESTIONS.forEach(x => { state.answers[x.id] = x.type === "multi" ? [] : null; });
+      state.current = 0; renderAll();
+    };
+  }
+
+  function refreshSelectionUI(q) {
+    const sel = selectedIndex(q);
+    // (Re)build chips around the wheel
+    const existing = helm.querySelectorAll(".chip");
+    existing.forEach(e => e.remove());
+    q.options.forEach((o, i) => {
+      const p = chipPos(i, q.options.length);
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip" + (i === sel ? " aim" : "");
+      if (q.type === "multi" && state.answers[q.id].includes(o.label)) chip.className += " anchored";
+      chip.style.left = p.x + "%";
+      chip.style.top = p.y + "%";
+      chip.textContent = o.label;
+      chip.setAttribute("aria-label", o.label);
+      chip.onclick = (ev) => {
+        ev.stopPropagation();
+        state.angle = i * stepFor(q);
+        applyAngle(true);
+        refreshSelectionUI(q);
+      };
+      helm.appendChild(chip);
+    });
+    const head = document.getElementById("headLabel");
+    if (head) head.textContent = q.options[sel].label;
+    helm.setAttribute("aria-valuenow", sel);
+    helm.setAttribute("aria-valuetext", q.options[sel].label);
+    // anchored summary for multi
+    const anchored = document.getElementById("anchored");
+    if (anchored) {
+      if (q.type === "multi") {
+        const picks = state.answers[q.id];
+        anchored.textContent = picks.length ? "Anchored: " + picks.join(", ") : "Nothing anchored yet.";
+      } else {
+        anchored.textContent = "";
+      }
+    }
+  }
+
+  // ---- Interactions ----
+  function wireHelm(q) {
+    let dragging = false, last = 0;
+    const svg = helm.querySelector("svg");
+    const ptrAngle = (ev) => {
+      const r = helm.getBoundingClientRect();
+      const dx = ev.clientX - (r.left + r.width / 2);
+      const dy = ev.clientY - (r.top + r.height / 2);
+      return Math.atan2(dx, -dy) * 180 / Math.PI; // 0 at top, clockwise+
+    };
+    svg.addEventListener("pointerdown", (ev) => {
+      dragging = true; last = ptrAngle(ev);
+      helm.classList.add("dragging");
+      svg.setPointerCapture(ev.pointerId);
+    });
+    svg.addEventListener("pointermove", (ev) => {
+      if (!dragging) return;
+      const cur = ptrAngle(ev);
+      state.angle += angDiff(cur, last);
+      last = cur;
+      spinEl.style.transform = `rotate(${state.angle}deg)`;
+      refreshSelectionUI(q);
+    });
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      helm.classList.remove("dragging");
+      state.angle = selectedIndex(q) * stepFor(q); // snap
+      applyAngle(true);
+      refreshSelectionUI(q);
+    };
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+
+    helm.addEventListener("keydown", (ev) => {
+      const step = stepFor(q);
+      if (ev.key === "ArrowRight" || ev.key === "ArrowDown") { state.angle = (selectedIndex(q) + 1) * step; applyAngle(true); refreshSelectionUI(q); ev.preventDefault(); }
+      else if (ev.key === "ArrowLeft" || ev.key === "ArrowUp") { state.angle = (selectedIndex(q) - 1) * step; applyAngle(true); refreshSelectionUI(q); ev.preventDefault(); }
+      else if (ev.key === "Enter" || ev.key === " ") { q.type === "single" ? setCourse(q) : dropAnchor(q); ev.preventDefault(); }
+    });
+  }
+
+  function setCourse(q) {
+    state.answers[q.id] = q.options[selectedIndex(q)].label;
+    advance();
+  }
+
+  function dropAnchor(q) {
+    const opt = q.options[selectedIndex(q)];
+    const picks = state.answers[q.id];
+    if (opt.exclusive) {
+      // toggle the exclusive "none" and clear the rest
+      state.answers[q.id] = picks.includes(opt.label) ? [] : [opt.label];
+    } else {
+      const withoutExclusive = picks.filter(l => { const o = getOpt(q.id, l); return o && !o.exclusive; });
+      const idx = withoutExclusive.indexOf(opt.label);
+      if (idx >= 0) withoutExclusive.splice(idx, 1); else withoutExclusive.push(opt.label);
+      state.answers[q.id] = withoutExclusive;
+    }
+    refreshSelectionUI(q);
+    renderLog();
+  }
+
+  function advance() { state.current++; renderAll(); }
+
+  // ---- Surgeon's log ----
+  function clinicalFor(q) {
+    const a = state.answers[q.id];
+    if (q.type === "single") return a ? getOpt(q.id, a).clinical : null;
+    if (!a.length) return null;
+    return a.map(l => getOpt(q.id, l).clinical).join("; ");
+  }
+
+  function renderLog() {
+    logBody.innerHTML = QUESTIONS.map(q => {
+      const c = clinicalFor(q);
+      const dd = c
+        ? `<dd>${c}</dd>`
+        : `<dd class="pending">— awaiting soundings —</dd>`;
+      return `<dt>${q.field}</dt>${dd}`;
+    }).join("");
+    renderFlags();
+  }
+
+  function renderFlags() {
+    const flags = [];
+    const reason = state.answers.reason;
+    const past = state.answers.ailments || [];
+    const allergies = state.answers.barnacles || [];
+    const grog = state.answers.grog;
+    const mate = state.answers.firstmate;
+
+    const hasScurvy = reason === "The Scurvy" || past.includes("The Scurvy");
+    const citrusAllergy = allergies.includes("Citrus");
+    if (hasScurvy && citrusAllergy) {
+      flags.push(["warn", "⚠ Scurvy noted with a citrus allergy — the usual citrus fix is out. Reach for a non-citrus source of vitamin C."]);
+    }
+    if (grog === "Grog Every Watch") {
+      flags.push(["warn", "⚠ Heavy daily alcohol — screen for withdrawal and check for interactions before treatment."]);
+    }
+    const mateOpt = mate && getOpt("firstmate", mate);
+    if (mateOpt && mateOpt.flagNoContact) {
+      flags.push(["warn", "⚠ No valid emergency contact on file — flag for the front desk."]);
+    }
+    if (reason === "Cannon Wound") {
+      flags.push(["note", "☞ Blast injury as chief complaint — confirm tetanus status and screen for shrapnel."]);
+    }
+    flagsEl.innerHTML = flags.map(([k, t]) => `<div class="flag ${k}">${t}</div>`).join("");
+  }
+
+  // ---- Voyage end ----
+  function renderDone() {
+    stage.innerHTML = `
+      <div class="done-card">
+        <p class="big">⚓ Safe in Harbor</p>
+        <p>Yer log is filled and waitin' for the ship's surgeon on yer starboard side.</p>
+        <p>Hand it over, ye brave scallywag. Fair winds!</p>
+        <div class="controls">
+          <button class="act ghost" id="backBtn" type="button">◀ Come About</button>
+          <button class="act" id="resetBtn" type="button">New Voyage</button>
+        </div>
+      </div>`;
+    document.getElementById("backBtn").onclick = () => { state.current = N - 1; renderAll(); };
+    document.getElementById("resetBtn").onclick = () => {
+      QUESTIONS.forEach(x => { state.answers[x.id] = x.type === "multi" ? [] : null; });
+      state.current = 0; renderAll();
+    };
+    helm = null; spinEl = null;
+  }
+
+  function renderAll() { renderStage(); renderLog(); }
+
+  // ---- Theme toggle ----
+  themeBtn.onclick = () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = cur ? (cur === "dark" ? "light" : "dark") : (dark ? "light" : "dark");
+    document.documentElement.setAttribute("data-theme", next);
+  };
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
