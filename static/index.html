@@ -97,6 +97,51 @@
   }
   .caption .doom { font-style: italic; text-transform: none; letter-spacing: 0; color: #d8b98a; }
 
+  /* ---------------- live mic level ---------------- */
+  .mic {
+    max-width: 820px;
+    margin: .45rem auto 0;
+    display: flex; align-items: center; gap: .6rem;
+    font-size: .72rem; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--rope);
+  }
+  .mic-label { white-space: nowrap; }
+  .mic-bar {
+    position: relative;
+    flex: 1; height: 10px;
+    background: rgba(0,0,0,.5);
+    border: 1px solid rgba(185,151,96,.45);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .mic-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+    background: linear-gradient(90deg, #2f6d4a, #c8a33a 62%, #c8401f);
+    transition: width .05s linear;
+  }
+  .mic-peak {
+    position: absolute; top: 0; bottom: 0; width: 2px;
+    background: #fff; opacity: .75; left: 0;
+    transition: left .25s ease-out;
+  }
+  .mic-tick {
+    position: absolute; top: -3px; bottom: -3px; width: 2px;
+    background: var(--blood);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.35);
+    left: 0;
+  }
+  .mic-read { white-space: nowrap; min-width: 21ch; text-align: right; font-variant-numeric: tabular-nums; }
+  .mic[data-state="over"] .mic-read { color: #6fdc8c; font-weight: 700; }
+  .mic[data-state="under"] .mic-read { color: #e8b04b; }
+  .mic[data-state="idle"] { opacity: .5; }
+  .mic[data-state="calibrating"] .mic-read { color: #d8b98a; font-style: italic; }
+
+  @media (max-width: 620px) {
+    .mic { font-size: .64rem; gap: .4rem; }
+    .mic-read { min-width: 13ch; }
+    .mic-label { display: none; }
+  }
+
   /* ---------------- the card ---------------- */
   main { max-width: 620px; margin: 2rem auto 0; padding: 0 1rem; }
   .card {
@@ -234,6 +279,15 @@
   <div class="caption">
     <span id="progress-text">Step 0</span>
     <span class="doom" id="doom-text">still aboard</span>
+  </div>
+  <div class="mic" id="mic" data-state="idle">
+    <span class="mic-label">🎚 Mic</span>
+    <div class="mic-bar">
+      <span class="mic-fill" id="mic-fill"></span>
+      <span class="mic-peak" id="mic-peak"></span>
+      <i class="mic-tick" id="mic-tick" title="scream threshold"></i>
+    </div>
+    <span class="mic-read" id="mic-read">silent — nothin' open</span>
   </div>
 </div>
 
@@ -375,15 +429,65 @@ function paintPlank() {
 
 /* ---------------- scream detection ---------------- */
 const FLOOR = 0.045;         // quietest thing that counts as a holler
+const CEILING = 0.18;        // loudest threshold we'll ever demand (~−15 dBFS) — a
+                             // scream can always win; one transient in calibration
+                             // must never make the gate mathematically unreachable
 const SILENCE_MS = 500;      // this much quiet ends a scream
-const ADVANCE_MS = 250;      // this much noise counts as "let me through"
+const ADVANCE_MS = 250;      // this much accumulated noise counts as "let me through"
+const DIP_MS = 100;          // a dip shorter than this doesn't break a holler
 const WAIT_MS = 8000;        // give up waiting for a holler
 const MAX_SECONDS = 10;      // top of every scale
+const CALIBRATE_MS = 500;    // learn the room afore judgin' a holler
+const WARMUP_MS = 100;       // a fresh stream opens with digital silence — skip it
+const ROOM_MULTIPLE = 8;     // a scream must top the room's MEDIAN noise by this much
+const RETRY_MS = 500;        // breather between listen attempts, so nothin' spins hot
+
+/* ---------------- the level meter in the HUD ---------------- */
+const METER_TOP = 0.4;           // RMS that fills the bar
+const micBox = document.getElementById("mic");
+const micFill = document.getElementById("mic-fill");
+const micPeak = document.getElementById("mic-peak");
+const micTick = document.getElementById("mic-tick");
+const micRead = document.getElementById("mic-read");
+
+const asPercent = (rms) => `${Math.max(0, Math.min(100, (rms / METER_TOP) * 100))}%`;
+const asDb = (rms) => (rms > 0 ? `${(20 * Math.log10(rms)).toFixed(0)} dB` : "−∞ dB");
+
+function paintMeter({ level = 0, threshold = null, peak = null, state = "idle", label = null }) {
+  micBox.dataset.state = state;
+  micFill.style.width = asPercent(level);
+  if (peak !== null) micPeak.style.left = asPercent(peak);
+  if (threshold !== null) {
+    micTick.style.left = asPercent(threshold);
+    micTick.style.display = "block";
+  } else {
+    micTick.style.display = "none";
+  }
+  if (label !== null) { micRead.textContent = label; return; }
+  if (state === "idle") { micRead.textContent = "silent — nothin' open"; return; }
+  const over = threshold !== null && level >= threshold;
+  micRead.textContent = `${level.toFixed(3)} (${asDb(level)}) ${over ? "▲ loud enough" : "▽ too quiet"}`;
+}
+
+function resetMeter() {
+  paintMeter({ level: 0, threshold: null, peak: 0, state: "idle" });
+}
 
 class Screamer {
-  constructor() { this.token = 0; this.stream = null; this.context = null; }
+  constructor() { this.token = 0; this.stream = null; this.context = null; this.source = null; }
 
   get live() { return this.stream !== null; }
+
+  /* RMS of whatever the mic is hearing right now. */
+  reader(analyser) {
+    const buffer = new Float32Array(analyser.fftSize);
+    return () => {
+      analyser.getFloatTimeDomainData(buffer);
+      let sum = 0;
+      for (const sample of buffer) sum += sample * sample;
+      return Math.sqrt(sum / buffer.length);
+    };
+  }
 
   async open() {
     if (!this.context) this.context = new AudioContextAPI();
@@ -393,16 +497,22 @@ class Screamer {
     });
     const analyser = this.context.createAnalyser();
     analyser.fftSize = 1024;
-    this.context.createMediaStreamSource(this.stream).connect(analyser);
+    this.source = this.context.createMediaStreamSource(this.stream);
+    this.source.connect(analyser);
     return analyser;
   }
 
   stop() {
     this.token++;
+    if (this.source) {
+      this.source.disconnect?.();
+      this.source = null;
+    }
     if (this.stream) {
       for (const track of this.stream.getTracks()) track.stop();
       this.stream = null;
     }
+    resetMeter();
   }
 
   /* mode "advance": resolve as soon as a real holler is heard.
@@ -423,50 +533,66 @@ class Screamer {
     }
     if (!alive()) return null;
 
-    const buffer = new Float32Array(analyser.fftSize);
-    const level = () => {
-      analyser.getFloatTimeDomainData(buffer);
-      let sum = 0;
-      for (const sample of buffer) sum += sample * sample;
-      return Math.sqrt(sum / buffer.length);
-    };
+    const level = this.reader(analyser);
 
-    // learn the room, so a noisy waiting room isn't mistaken for a scream
-    const until = performance.now() + 450;
-    let room = 0;
-    while (performance.now() < until && alive()) {
-      room = Math.max(room, level());
+    // Learn the room, so a noisy waiting room isn't mistaken for a scream.
+    // Median, not max: one transient must not swing the threshold. The first
+    // WARMUP_MS of a fresh stream is digital silence, so it's discarded.
+    const calStart = performance.now();
+    const samples = [];
+    while (performance.now() - calStart < CALIBRATE_MS && alive()) {
+      const now = level();
+      if (performance.now() - calStart >= WARMUP_MS) samples.push(now);
+      paintMeter({ level: now, state: "calibrating", label: "learnin' the room…" });
       await new Promise(requestAnimationFrame);
     }
     if (!alive()) return null;
-    const threshold = Math.max(FLOOR, room * 4);
+    samples.sort((a, b) => a - b);
+    const room = samples.length ? samples[Math.floor(samples.length / 2)] : 0;
+    const threshold = Math.min(CEILING, Math.max(FLOOR, room * ROOM_MULTIPLE));
     onArmed();
 
     const armedAt = performance.now();
-    let start = null;
+    let prevTick = armedAt;
+    let loudMs = 0;                    // advance mode: loud time accumulated
+    let start = null;                  // measure mode: when the scream began
     let quietSince = null;
+    let peak = 0;
 
     while (alive()) {
       await new Promise(requestAnimationFrame);
       if (!alive()) return null;
       const now = performance.now();
+      const dt = now - prevTick;
+      prevTick = now;
       const loudness = level();
+      peak = Math.max(peak, loudness);
       const loud = loudness >= threshold;
+      paintMeter({ level: loudness, threshold, peak, state: loud ? "over" : "under" });
       if (onLevel) onLevel(loudness);
 
+      if (mode === "advance") {
+        // Real voices dip: accumulate loud time, and only a sustained quiet
+        // spell (DIP_MS) resets the count — so a cough still won't do it.
+        if (loud) { loudMs += dt; quietSince = null; }
+        else {
+          if (quietSince === null) quietSince = now;
+          if (now - quietSince >= DIP_MS) loudMs = 0;
+          if (loudMs === 0 && now - armedAt > WAIT_MS) {
+            onFail("Heard naught but wind. Holler again."); this.stop(); return null;
+          }
+        }
+        if (loudMs >= ADVANCE_MS) { this.stop(); return loudMs / 1000; }
+        continue;
+      }
+
+      // measure mode
       if (start === null) {
         if (loud) { start = now; quietSince = null; }
         else if (now - armedAt > WAIT_MS) { onFail("Heard naught but wind. Holler again."); this.stop(); return null; }
         continue;
       }
-
       const held = (now - start) / 1000;
-      if (mode === "advance") {
-        if (!loud) { start = null; continue; }        // a cough won't do it
-        if (held * 1000 >= ADVANCE_MS) { this.stop(); return held; }
-        continue;
-      }
-
       if (onHold) onHold(held);
       if (held >= MAX_SECONDS) { this.stop(); return MAX_SECONDS; }
       if (loud) quietSince = null;
@@ -492,8 +618,11 @@ class Dictation {
     try { recognition.stop(); } catch { /* already closed */ }
   }
 
-  /* Resolves with the final transcript, or null if nothing was heard. */
-  listen({ onInterim, onFail }) {
+  /* Resolves with the final transcript, or null if nothing was heard.
+   * onOpen fires when the mic is actually capturing (onaudiostart lands
+   * ~270ms after start()) — prompt the user then, not before, or their
+   * first word gets clipped. */
+  listen({ onInterim, onFail, onOpen }) {
     this.stop();
     return new Promise((resolve) => {
       const recognition = new SpeechRecognitionAPI();
@@ -503,6 +632,7 @@ class Dictation {
       this.recognition = recognition;
       let heard = null;
 
+      recognition.onaudiostart = () => { if (onOpen) onOpen(); };
       recognition.onresult = (event) => {
         let interim = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -566,20 +696,45 @@ function renderIntro() {
     </div>
     <ul class="rules">
       <li><b>There are no quills aboard.</b> Nothing on this form can be typed. Ye speak, we write.</li>
+      <li><b>There are no buttons either</b> — save the one below, which exists only because yer
+        browser demands a click afore it opens the microphone. It does nothin' else.</li>
       <li><b>One question at a time.</b> ${STEPS.length} paces down the plank, and no goin' back.</li>
-      <li><b>Ye pass by screamin'.</b> Say yer answer, then holler to move a pace along. That is the only door.</li>
+      <li><b>Ye pass by screamin'.</b> Each question listens for yer answer on its own; once
+        somethin's written down, SCREAM to move a pace along. That is the only door.</li>
       <li><b>No blanks.</b> The gate stays shut until ye've answered. Every question, all ${STEPS.length}.</li>
+      <li><b>Misspoke?</b> Say <i>"scratch that"</i> (or <i>"start over"</i>, <i>"clear that"</i>) and the line is wiped clean.</li>
       <li><b>For how bad it hurts, scream it out.</b> One second of holler for each point out of ten. Seven seconds is a seven.</li>
     </ul>
     ${canHear ? "" : `<p class="nosupport"><b>Yer browser has no ears.</b> This form takes no typing
        and no clickin' through — without speech recognition there is nothing ye can do here.
        Open it in Chrome or Safari.</p>`}
     <div class="acts">
-      <button class="holler" id="begin" ${canHear ? "" : "disabled"}>⚓ Step onto the plank</button>
+      <button class="holler" id="begin" ${canHear ? "" : "disabled"}>🎙 Wake the microphone — the only button aboard</button>
     </div>
     <p class="note" id="note"></p>`;
-  document.getElementById("begin").addEventListener("click", () => go(0));
+  document.getElementById("begin").addEventListener("click", beginByScream);
   paintPlank();
+}
+
+/* The one click in the whole app: it exists only because browsers demand a
+ * user gesture afore the microphone opens. It opens the mic (meter live in
+ * the HUD) — then a SCREAM, not the click, steps ye onto the plank. */
+async function beginByScream() {
+  const myGen = ++gen;
+  const begin = document.getElementById("begin");
+  begin.disabled = true;
+  begin.textContent = "🗣 The mic is open — now SCREAM to board";
+  note("Watch the gauge above — it shows what the ship hears. SCREAM past the red mark to step onto the plank.");
+  while (gen === myGen) {
+    const held = await screamer.listen({
+      mode: "advance",
+      onArmed: () => { if (gen === myGen) note("SCREAM to step onto the plank 🗣"); },
+      onFail: (message) => { if (gen === myGen) note(message); },
+    });
+    if (gen !== myGen) return;
+    if (held !== null) { go(0); return; }
+    await sleep(RETRY_MS);
+  }
 }
 
 function renderStep() {
@@ -600,15 +755,12 @@ function renderStep() {
     ` : `
       <div class="answer empty" id="answer"></div>
     `}
-    <div class="acts">
-      ${isScale ? "" : `<button class="speak" id="speak">🎙 Speak yer answer</button>`}
-      <button class="holler" id="holler">${isScale ? "🗣 Scream it" : "🗣 Scream to pass"}</button>
-    </div>
     <p class="note" id="note"></p>
     <p class="gate">${isScale
-      ? `<b>This one ye scream.</b> Hold it one second for every point out of ten — the holler
-         both answers the question and carries ye onward.`
-      : `<b>Speak yer answer first.</b> The gate opens once there's somethin' written down.`}</p>`;
+      ? `<b>This one ye scream.</b> No speakin' needed — hold yer holler one second for every
+         point out of ten. The scream both answers the question and carries ye onward.`
+      : `<b>Speak yer answer first.</b> The ship is already listenin'. Once somethin's written
+         down ye'll be told to SCREAM, and the scream takes the next pace.`}</p>`;
 
   if (isScale) {
     const pips = document.getElementById("pips");
@@ -625,14 +777,6 @@ function renderStep() {
   } else {
     paintAnswer();
   }
-
-  const speak = document.getElementById("speak");
-  if (speak) speak.addEventListener("click", startSpeaking);
-  document.getElementById("holler").addEventListener("click", () => {
-    if (STEPS[index].kind === "scale") measureScream();
-    else if (answered(STEPS[index])) armAdvance();
-    else note("Nothin' written down yet — speak yer answer, then holler.");
-  });
 
   paintGate();
   paintPlank();
@@ -651,21 +795,18 @@ function answered(step) {
   return !!(answers[step.key] || "").trim();
 }
 
-/* Lock or unlock the holler button for the question on screen. */
+/* Paint the gate line for the question on screen. There is no button to
+ * lock any more — the loop itself refuses to arm the scream on a blank. */
 function paintGate() {
   const step = STEPS[index];
-  const holler = document.getElementById("holler");
-  if (!holler || step.kind === "scale") return;
-  const open = answered(step);
-  holler.disabled = !open;
-  holler.title = open ? "" : "Speak yer answer first";
+  if (!step || step.kind === "scale") return;
   const gate = document.querySelector(".gate");
-  if (gate) {
-    gate.innerHTML = open
-      ? `<b>The gate is open.</b> Holler and ye take the next pace.`
-      : `<b>Speak yer answer first.</b> The gate opens once there's somethin' written down —
-         no soul passes this plank on a blank. Then scream to move onward.`;
-  }
+  if (!gate) return;
+  gate.innerHTML = answered(step)
+    ? `<b>The gate is open.</b> When the ship says SCREAM, holler and ye take the next pace.
+       Speakin' again adds to yer answer; <i>"scratch that"</i> wipes it clean.`
+    : `<b>Speak yer answer first.</b> The ship is listenin' — no soul passes this plank on a
+       blank. Once somethin's written down, the scream gate arms itself.`;
 }
 
 function paintAnswer(interim = "") {
@@ -701,38 +842,139 @@ function paintScale(value) {
   if (gauge) gauge.innerHTML = value > 0 ? `${value}<span class="of">/10</span>` : "—";
 }
 
-/* ---------------- speaking an answer ---------------- */
-async function startSpeaking() {
-  const step = STEPS[index];
-  screamer.stop();                       // one mic, one job
-  const speak = document.getElementById("speak");
-  const holler = document.getElementById("holler");
-  speak.dataset.live = "1";
-  speak.textContent = "🎙 Listening…";
-  holler.disabled = true;
-  note("Speak now.");
+/* ---------------- the voice loop: no buttons aboard ---------------- */
+/* Every step runs itself: dictation opens on its own, the scream gate arms
+ * itself once there's an answer, and a scream takes the pace. `gen` is the
+ * generation counter — go() bumps it, so any in-flight loop from an earlier
+ * step sees a stale token and dies without firing a stale advance. */
+let gen = 0;
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function isCorrection(heard) {
+  return /\b(scratch that|start over|clear that|belay that)\b/.test(normalize(heard));
+}
+
+function wipeAnswer(step) {
+  delete answers[step.key];
+  delete answers[`${step.key}__heard`];
+  delete chosen[step.key];
+  delete ratings[step.key];
+  if (step.kind === "choices") paintChoices();
+  else paintAnswer();
+}
+
+/* One round of dictation into the current question. */
+async function dictateOnce(myGen, step) {
+  screamer.stop();                       // one mic, one job — never both at once
+  if (gen !== myGen) return;
   const hot = document.getElementById("answer");
   if (hot) hot.classList.add("hot");
+  note("openin' the ship's ear…");
+  paintMeter({ level: 0, threshold: null, state: "calibrating", label: "🎙 openin' the ship's ear…" });
 
   const heard = await dictation.listen({
-    onInterim: (interim) => paintAnswer(interim),
-    onFail: (message) => note(message),
+    onOpen: () => {
+      if (gen !== myGen) return;
+      paintMeter({ level: 0, threshold: null, state: "calibrating", label: "🎙 the ship's ear is open" });
+      note(answered(step)
+        ? 'Speak to add to yer answer, say "scratch that" to wipe it — or hold yer tongue.'
+        : "Speak yer answer now.");
+    },
+    onInterim: (interim) => { if (gen === myGen) paintAnswer(interim); },
+    onFail: (message) => { if (gen === myGen) note(message); },
   });
 
-  delete speak.dataset.live;
-  speak.textContent = answered(step) ? "🎙 Speak again" : "🎙 Speak yer answer";
   if (hot) hot.classList.remove("hot");
-
-  if (!heard) { paintAnswer(); paintGate(); return; }
-  recordSpoken(step, heard);
+  resetMeter();
+  if (gen !== myGen) return;
+  if (heard) recordSpoken(step, heard);
+  else paintAnswer();
   paintGate();
+}
 
-  // Only once somethin' is written down does the gate open.
-  if (answered(step)) armAdvance();
-  else note("Nothin' written down yet — speak it again.");
+/* Hand the mic from dictation to the screamer and wait for a holler.
+ * No artificial delay needed — the mic hands over cleanly as long as the
+ * two never run at once. */
+async function screamToPass(myGen) {
+  dictation.stop();
+  if (gen !== myGen) return null;
+  return screamer.listen({
+    mode: "advance",
+    onArmed: () => { if (gen === myGen) note("SCREAM NOW to take the next pace 🗣"); },
+    onFail: (message) => { if (gen === myGen) note(message); },
+  });
+}
+
+/* A scale question: the scream is both the answer and the door. */
+async function screamScale(myGen, step) {
+  dictation.stop();
+  const vu = document.getElementById("vu");
+  const seconds = await screamer.listen({
+    mode: "measure",
+    onArmed: () => { if (gen === myGen) note("SCREAM NOW — one second for each point 🗣"); },
+    onLevel: (level) => { if (vu) vu.style.width = `${Math.min(100, (level / 0.3) * 100)}%`; },
+    onHold: (held) => {
+      if (gen !== myGen) return;
+      paintScale(Math.min(MAX_SECONDS, Math.max(1, Math.round(held))));
+      note(`${held.toFixed(1)}s…`);
+    },
+    onFail: (message) => { if (gen === myGen) note(message); },
+  });
+  if (vu) vu.style.width = "0";
+  if (gen !== myGen || seconds === null) return false;
+
+  const value = Math.min(MAX_SECONDS, Math.max(1, Math.round(seconds)));
+  ratings[step.key] = { value, method: "scream", seconds: Number(seconds.toFixed(1)) };
+  paintScale(value);
+  note(`Screamed ${seconds.toFixed(1)}s → ${value} out of 10. A pace onward.`);
+  await sleep(850);
+  if (gen !== myGen) return true;        // the ship moved on without us
+  go(index + 1);
+  return true;
+}
+
+/* The engine for one step: listen, gate, scream, advance — no clicks. */
+async function runStep() {
+  const myGen = ++gen;
+  const step = STEPS[index];
+
+  if (step.kind === "scale") {
+    while (gen === myGen) {
+      const done = await screamScale(myGen, step);
+      if (gen !== myGen || done) return;
+      await sleep(RETRY_MS);             // heard naught — arm it again
+    }
+    return;
+  }
+
+  while (gen === myGen) {
+    // No blanks: keep listenin' until somethin' is written down.
+    while (gen === myGen && !answered(step)) {
+      await dictateOnce(myGen, step);
+      if (gen !== myGen) return;
+      if (!answered(step)) await sleep(RETRY_MS);
+    }
+    if (gen !== myGen) return;
+
+    // Answered — arm the scream gate.
+    const held = await screamToPass(myGen);
+    if (gen !== myGen) return;
+    if (held !== null) { note("Heard ye. A pace onward."); go(index + 1); return; }
+
+    // No holler came. Back to dictation so they can amend, then re-arm.
+    // This alternates forever — no soul is ever stranded without a click.
+    await dictateOnce(myGen, step);
+    if (gen !== myGen) return;
+  }
 }
 
 function recordSpoken(step, heard) {
+  if (isCorrection(heard)) {
+    wipeAnswer(step);
+    paintGate();
+    note("Scratched clean. Say it anew.");
+    return;
+  }
   if (step.kind === "choices") {
     const hits = matchChoices(step, heard);
     if (!hits.length) { note(`Nothin' matched “${heard}”. Try again.`); return; }
@@ -759,74 +1001,16 @@ function recordSpoken(step, heard) {
   note("Written down.");
 }
 
-/* ---------------- screaming ---------------- */
-async function armAdvance() {
-  dictation.stop();
-  const holler = document.getElementById("holler");
-  const speak = document.getElementById("speak");
-  holler.dataset.live = "1";
-  holler.textContent = "🗣 Waitin' on yer holler…";
-  if (speak) speak.disabled = true;
-
-  const held = await screamer.listen({
-    mode: "advance",
-    onArmed: () => note("SCREAM NOW to take the next pace 🗣"),
-    onFail: (message) => {
-      note(message);
-      delete holler.dataset.live;
-      holler.textContent = "🗣 Scream to pass";
-      if (speak) speak.disabled = false;
-      paintGate();
-    },
-  });
-
-  if (held === null) return;           // failed or cancelled
-  note("Heard ye. A pace onward.");
-  go(index + 1);
-}
-
-async function measureScream() {
-  dictation.stop();
-  const step = STEPS[index];
-  const holler = document.getElementById("holler");
-  const vu = document.getElementById("vu");
-  holler.dataset.live = "1";
-  holler.textContent = "■ Hollerin'…";
-  note("Hold yer breath…");
-
-  const seconds = await screamer.listen({
-    mode: "measure",
-    onArmed: () => note("SCREAM NOW — one second for each point 🗣"),
-    onLevel: (level) => { if (vu) vu.style.width = `${Math.min(100, (level / 0.3) * 100)}%`; },
-    onHold: (held) => {
-      paintScale(Math.min(MAX_SECONDS, Math.max(1, Math.round(held))));
-      note(`${held.toFixed(1)}s…`);
-    },
-    onFail: (message) => {
-      note(message);
-      delete holler.dataset.live;
-      holler.textContent = "🗣 Scream it";
-    },
-  });
-
-  if (vu) vu.style.width = "0";
-  if (seconds === null) return;
-
-  const value = Math.min(MAX_SECONDS, Math.max(1, Math.round(seconds)));
-  ratings[step.key] = { value, method: "scream", seconds: Number(seconds.toFixed(1)) };
-  paintScale(value);
-  note(`Screamed ${seconds.toFixed(1)}s → ${value} out of 10. A pace onward.`);
-  setTimeout(() => go(index + 1), 850);
-}
-
 /* ---------------- walking the plank ---------------- */
 function go(next) {
+  gen++;                               // cancel any in-flight loop for the old step
   dictation.stop();
   screamer.stop();
   if (next >= STEPS.length) { walkOff(); return; }
   index = next;
   renderStep();
   window.scrollTo({ top: 0, behavior: "smooth" });
+  runStep();
 }
 
 function payload() {
@@ -879,6 +1063,7 @@ async function walkOff() {
     index = nameStep;
     renderStep();
     note("We'll not treat a soul with no name. Back ye go — speak it.");
+    runStep();
     return;
   }
 
@@ -898,16 +1083,10 @@ async function walkOff() {
         <p class="plain">Logged as soul #${result.id}. The surgeon will see ye below deck.</p>
       </div>
       ${screamedSummary()}
-      <div class="acts"><button class="speak" id="again">⚓ Another soul</button></div>`;
-    document.getElementById("again").addEventListener("click", () => {
-      for (const key of Object.keys(answers)) delete answers[key];
-      for (const key of Object.keys(chosen)) delete chosen[key];
-      for (const key of Object.keys(ratings)) delete ratings[key];
-      submitted = false;
-      walker.classList.remove("falling");
-      index = -1;
-      renderIntro();
-    });
+      <p class="gate"><b>No button here either.</b> The ship is still listenin' —
+        say <i>"another soul"</i> and the articles reset for the next patient.</p>
+      <p class="note" id="note"></p>`;
+    listenForAnotherSoul();
   } catch (error) {
     submitted = false;
     walker.classList.remove("falling");
@@ -917,8 +1096,49 @@ async function walkOff() {
         <h1 class="display">The sea took it</h1>
         <p class="plain">${error.message}</p>
       </div>
-      <div class="acts"><button class="holler" id="retry">⚓ Haul it up again</button></div>`;
-    document.getElementById("retry").addEventListener("click", () => { index = STEPS.length - 1; walkOff(); });
+      <p class="gate"><b>SCREAM to haul it up again.</b> No button for this either.</p>
+      <p class="note" id="note"></p>`;
+    retryByScream();
+  }
+}
+
+/* End card: no button — the mic stays open for "another soul". */
+async function listenForAnotherSoul() {
+  const myGen = ++gen;
+  screamer.stop();
+  while (gen === myGen) {
+    const heard = await dictation.listen({ onFail: () => {} });
+    if (gen !== myGen) return;
+    if (heard && /\b(another soul|another one|next soul|next patient|start again|restart)\b/.test(normalize(heard))) {
+      gen++;
+      dictation.stop();
+      for (const key of Object.keys(answers)) delete answers[key];
+      for (const key of Object.keys(chosen)) delete chosen[key];
+      for (const key of Object.keys(ratings)) delete ratings[key];
+      submitted = false;
+      walker.classList.remove("falling");
+      index = -1;
+      renderIntro();
+      return;
+    }
+    if (heard) note(`Heard “${heard}” — say "another soul" to ready the articles anew.`);
+    await sleep(RETRY_MS);
+  }
+}
+
+/* Submit failed: a scream sends it again. */
+async function retryByScream() {
+  const myGen = ++gen;
+  dictation.stop();
+  while (gen === myGen) {
+    const held = await screamer.listen({
+      mode: "advance",
+      onArmed: () => { if (gen === myGen) note("SCREAM to send yer articles again 🗣"); },
+      onFail: (message) => { if (gen === myGen) note(message); },
+    });
+    if (gen !== myGen) return;
+    if (held !== null) { index = STEPS.length - 1; walkOff(); return; }
+    await sleep(RETRY_MS);
   }
 }
 
