@@ -1,0 +1,242 @@
+{
+  "title": "The Itchy Dragon",
+  "author": "Team Dragon",
+  "startNode": "cover",
+  "dayLabel": "Page",
+  "letterBudget": 10,
+  "skipLabel": "🔥 Just roar (skip, costs no letters)",
+  "stats": {
+    "note": { "label": "Note for the Healer", "value": 0, "min": 0, "max": 100, "color": "#4f9d69" }
+  },
+  "report": {
+    "title": "The Princess's note for the care team",
+    "missingText": "Not answered. Ask in person.",
+    "topics": [
+      { "id": "where", "title": "Where and how it looks" },
+      { "id": "itch", "title": "Itch and sleep" },
+      { "id": "new", "title": "What changed recently" },
+      { "id": "cream", "title": "Creams" },
+      { "id": "feel", "title": "How the child feels" },
+      { "id": "wish", "title": "In the child's own letters" }
+    ],
+    "knownTitle": "What the clinic already knew",
+    "known": [
+      "Age 10. Eczema since a toddler, mild asthma, seasonal allergies.",
+      "Allergy: penicillin.",
+      "Cetirizine 10 mg daily. Hydrocortisone 1% from the drugstore.",
+      "Triamcinolone 0.1% cream prescribed 2025-03, never refilled.",
+      "Family texted 8/18 that the rash is back, and sent a photo 8/19. Nobody replied."
+    ],
+    "series": {
+      "label": "Itch log (0 to 10)",
+      "points": [
+        { "date": "8/15", "value": 4 }, { "date": "8/17", "value": 6 }, { "date": "8/19", "value": 7 },
+        { "date": "8/22", "value": 7 }, { "date": "8/25", "value": 5 }, { "date": "8/28", "value": 6 },
+        { "date": "8/31", "value": 8 }, { "date": "9/3", "value": 8 }, { "date": "9/5", "value": 9 }
+      ]
+    }
+  },
+  "nodes": {
+    "cover": {
+      "text": "You are a dragon. A big one. Last week you burnt a whole castle, and you were very proud. But today your scales are SO itchy you can't even nap.",
+      "image": "images/dragon.svg",
+      "choices": [{ "text": "Turn the page", "next": [{ "node": "princess" }] }]
+    },
+    "princess": {
+      "text": "Stomp, stomp. A princess marches up to your cave. She is wearing a paper bag. \"I was going to trick you,\" she says, \"but you look awful. Tell me what's wrong and I will run a note to the Royal Healer.\"",
+      "image": "images/princess.svg",
+      "choices": [{ "text": "ok", "next": [{ "node": "bag" }] }]
+    },
+    "bag": {
+      "text": "\"One problem,\" she says. \"Your fire burnt every letter in the kingdom. I saved 10 of each in my paper bag. Every word you say uses them up, so pick your words like a clever dragon.\"",
+      "image": "images/bag.svg",
+      "choices": [{ "text": ["got it", "ok", "mm"], "next": [{ "node": "q_where" }] }]
+    },
+
+    "q_where": {
+      "text": "\"Where are your scales itchy?\" (Your wing is your arm. Your wing fold is inside your elbow. Your snout is your face. Your claws are your hands.)",
+      "image": "images/dragon.svg",
+      "choices": [
+        { "text": ["in my wing folds", "wing folds"], "condition": { "not": ["s_elbow"] }, "set": { "spot": "inside elbows", "spotKid": "wing folds" }, "setFlags": ["s_elbow"], "addItems": ["wing folds"], "next": [{ "node": "q_look" }] },
+        { "text": ["in my knee folds", "knee folds"], "condition": { "not": ["s_knee"] }, "set": { "spot": "behind knees", "spotKid": "knee folds" }, "setFlags": ["s_knee"], "addItems": ["knee folds"], "next": [{ "node": "q_look" }] },
+        { "text": ["on my wing", "wing"], "condition": { "not": ["s_arm"] }, "set": { "spot": "arm", "spotKid": "wing" }, "setFlags": ["s_arm"], "addItems": ["wing"], "next": [{ "node": "q_look" }] },
+        { "text": ["on my leg", "leg"], "condition": { "not": ["s_leg"] }, "set": { "spot": "leg", "spotKid": "leg" }, "setFlags": ["s_leg"], "addItems": ["leg"], "next": [{ "node": "q_look" }] },
+        { "text": ["on my claws", "claws"], "condition": { "not": ["s_hand"] }, "set": { "spot": "hands", "spotKid": "claws" }, "setFlags": ["s_hand"], "addItems": ["claws"], "next": [{ "node": "q_look" }] },
+        { "text": ["on my snout", "snout"], "condition": { "not": ["s_face"] }, "set": { "spot": "face", "spotKid": "snout" }, "setFlags": ["s_face"], "addItems": ["snout"], "next": [{ "node": "q_look" }] },
+        { "text": ["on my neck", "neck"], "condition": { "not": ["s_neck"] }, "set": { "spot": "neck", "spotKid": "neck" }, "setFlags": ["s_neck"], "addItems": ["neck"], "next": [{ "node": "q_look" }] }
+      ],
+      "skip": { "next": [{ "node": "q_itch" }] }
+    },
+    "q_look": {
+      "text": "\"Hmm, your {spotKid}. What does it look like there?\"",
+      "image": "images/dragon.svg",
+      "choices": [
+        { "text": ["a bit red", "pink"], "effects": { "note": 6 }, "record": { "topic": "where", "label": "{spot}", "value": "a bit red" }, "next": [{ "node": "q_more" }] },
+        { "text": ["really red", "so red", "RED"], "effects": { "note": 6 }, "record": { "topic": "where", "label": "{spot}", "value": "very red" }, "next": [{ "node": "q_more" }] },
+        { "text": ["dry and bumpy", "bumpy", "dry"], "effects": { "note": 6 }, "record": { "topic": "where", "label": "{spot}", "value": "dry and bumpy" }, "next": [{ "node": "q_more" }] },
+        { "text": ["cracked", "split", "rips"], "effects": { "note": 6 }, "setFlags": ["broken"], "record": { "topic": "where", "label": "{spot}", "value": "cracked skin" }, "next": [{ "node": "q_more" }] },
+        { "text": ["bleeding", "blood"], "effects": { "note": 6 }, "setFlags": ["broken"], "record": { "topic": "where", "label": "{spot}", "value": "bleeding" }, "next": [{ "node": "q_more" }] }
+      ],
+      "skip": { "record": { "topic": "where", "label": "{spot}", "value": "itchy, look not described" }, "next": [{ "node": "q_more" }] }
+    },
+    "q_more": {
+      "text": "The princess writes it down with a burnt stick. \"Any other itchy spots?\"",
+      "image": "images/princess.svg",
+      "choices": [
+        { "text": ["yes", "yup", "uh huh"], "next": [{ "node": "q_where" }] },
+        { "text": ["no", "nah", "zip"], "endsDay": true, "next": [{ "if": { "flags": ["broken"] }, "node": "q_ooze" }, { "random": ["beat_sneeze", "beat_tail"], "pin": { "1": "beat_sneeze" } }] }
+      ]
+    },
+    "q_ooze": {
+      "text": "\"You said some skin is broken. Is any spot wet, yellow, or crusty?\"",
+      "image": "images/dragon.svg",
+      "choices": [
+        { "text": ["yes", "yup", "uh huh"], "effects": { "note": 8 }, "record": { "topic": "where", "label": "RED FLAG", "value": "broken skin that is wet, yellow, or crusty. Check for infection." }, "next": [{ "node": "beat_sneeze" }] },
+        { "text": ["no", "nah", "zip"], "effects": { "note": 8 }, "record": { "topic": "where", "label": "Broken skin", "value": "no oozing or crusting reported" }, "next": [{ "node": "beat_sneeze" }] }
+      ],
+      "skip": { "next": [{ "node": "beat_sneeze" }] }
+    },
+    "beat_sneeze": {
+      "text": "You sneeze. A tiny flame singes the corner of her paper bag. \"HEY. That is my only outfit.\" She pats it out and keeps writing.",
+      "image": "images/princess.svg",
+      "choices": [{ "text": ["sorry", "oops", "my bad"], "next": [{ "node": "q_itch" }] }]
+    },
+    "beat_tail": {
+      "text": "You try to scratch your back with your tail and fall over. The princess does not laugh. Much.",
+      "image": "images/dragon.svg",
+      "choices": [{ "text": ["ha", "oof"], "next": [{ "node": "q_itch" }] }]
+    },
+
+    "q_itch": {
+      "text": "\"How itchy is it? Show me with fire.\"",
+      "image": "images/dragon.svg",
+      "choices": [
+        { "text": ["a bit", "tiny"], "effects": { "note": 10 }, "endsDay": true, "record": { "topic": "itch", "label": "Itch", "value": "mild" }, "next": [{ "node": "q_new" }] },
+        { "text": ["a lot", "big"], "effects": { "note": 10 }, "record": { "topic": "itch", "label": "Itch", "value": "strong" }, "next": [{ "node": "q_when" }] },
+        { "text": ["so so much", "mega", "HUGE"], "effects": { "note": 10 }, "record": { "topic": "itch", "label": "Itch", "value": "severe, the worst option offered" }, "next": [{ "node": "q_when" }] }
+      ],
+      "skip": { "next": [{ "node": "q_new" }] }
+    },
+    "q_when": {
+      "text": "\"That sounds rotten. When is it the worst?\"",
+      "image": "images/night.svg",
+      "choices": [
+        { "text": ["at night", "night", "in bed"], "effects": { "note": 8 }, "record": { "topic": "itch", "label": "Worst", "value": "at night" }, "next": [{ "node": "q_sleep" }] },
+        { "text": ["in the day", "day"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "itch", "label": "Worst", "value": "daytime" }, "next": [{ "node": "q_new" }] },
+        { "text": ["all the time", "always"], "effects": { "note": 8 }, "record": { "topic": "itch", "label": "Worst", "value": "all the time" }, "next": [{ "node": "q_sleep" }] }
+      ],
+      "skip": { "next": [{ "node": "q_new" }] }
+    },
+    "q_sleep": {
+      "text": "\"Do you scratch in your sleep? Do you wake up?\"",
+      "image": "images/night.svg",
+      "choices": [
+        { "text": ["I wake up a lot", "wake up", "I wake"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "itch", "label": "Sleep", "value": "wakes up often from itching" }, "next": [{ "node": "q_new" }] },
+        { "text": ["I scratch asleep", "sleep scratch"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "itch", "label": "Sleep", "value": "scratches while asleep" }, "next": [{ "node": "q_new" }] },
+        { "text": ["I sleep fine", "fine", "ok"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "itch", "label": "Sleep", "value": "sleeps fine" }, "next": [{ "node": "q_new" }] }
+      ],
+      "skip": { "endsDay": true, "next": [{ "node": "q_new" }] }
+    },
+
+    "q_new": {
+      "text": "The princess peers into your cave. \"Anything new in here lately?\"",
+      "image": "images/princess.svg",
+      "choices": [
+        { "text": ["a pet", "pet"], "condition": { "not": ["n_pet"] }, "setFlags": ["n_pet"], "next": [{ "node": "q_pet" }] },
+        { "text": ["new soap", "soap", "suds"], "condition": { "not": ["n_soap"] }, "setFlags": ["n_soap"], "next": [{ "node": "q_soap" }] },
+        { "text": ["new school", "school", "class"], "condition": { "not": ["n_school"] }, "setFlags": ["n_school"], "next": [{ "node": "q_school" }] },
+        { "text": ["that is all", "done", "no"], "effects": { "note": 6 }, "endsDay": true, "record": { "topic": "new", "label": "Asked about changes", "value": "nothing more to add" }, "next": [{ "if": { "lettersLeft": { "below": 60 } }, "node": "end_empty" }, { "node": "q_cream" }] }
+      ],
+      "skip": { "endsDay": true, "next": [{ "node": "q_cream" }] }
+    },
+    "q_pet": {
+      "text": "\"A pet! What is its name?\" (Type it. Every letter comes out of the bag.)",
+      "image": "images/princess.svg",
+      "input": { "placeholder": "pet's name", "max": 16, "effects": { "note": 8 }, "addItems": ["pet"], "record": { "topic": "new", "label": "New pet", "value": "named {input}. Ask what kind and whether it sleeps in the bedroom." }, "next": [{ "node": "q_new" }] },
+      "skip": { "record": { "topic": "new", "label": "New pet", "value": "yes, no details" }, "next": [{ "node": "q_new" }] }
+    },
+    "q_soap": {
+      "text": "\"New soap! What kind?\"",
+      "image": "images/potion.svg",
+      "choices": [
+        { "text": ["dish soap", "dish"], "effects": { "note": 8 }, "record": { "topic": "new", "label": "New soap", "value": "dish soap" }, "next": [{ "node": "q_new" }] },
+        { "text": ["bath soap", "bath"], "effects": { "note": 8 }, "record": { "topic": "new", "label": "New soap", "value": "bath soap or body wash" }, "next": [{ "node": "q_new" }] },
+        { "text": ["for my clothes", "clothes", "wash"], "effects": { "note": 8 }, "record": { "topic": "new", "label": "New soap", "value": "laundry detergent" }, "next": [{ "node": "q_new" }] }
+      ],
+      "skip": { "record": { "topic": "new", "label": "New soap", "value": "yes, kind unknown" }, "next": [{ "node": "q_new" }] }
+    },
+    "q_school": {
+      "text": "\"Dragon school! How is it going?\"",
+      "image": "images/princess.svg",
+      "choices": [
+        { "text": ["fun", "good"], "effects": { "note": 8 }, "record": { "topic": "new", "label": "New school", "value": "likes it" }, "next": [{ "node": "q_new" }] },
+        { "text": ["so so", "meh"], "effects": { "note": 8 }, "record": { "topic": "new", "label": "New school", "value": "so-so" }, "next": [{ "node": "q_new" }] },
+        { "text": ["scary", "bad"], "effects": { "note": 8 }, "record": { "topic": "new", "label": "New school", "value": "finds it scary. Possible stress trigger." }, "next": [{ "node": "q_new" }] }
+      ],
+      "skip": { "record": { "topic": "new", "label": "New school", "value": "yes, no details" }, "next": [{ "node": "q_new" }] }
+    },
+
+    "q_cream": {
+      "text": "\"Do you have a potion for your scales? A cream?\"",
+      "image": "images/potion.svg",
+      "choices": [
+        { "text": ["the shop one", "shop"], "effects": { "note": 8 }, "record": { "topic": "cream", "label": "Using", "value": "drugstore cream (hydrocortisone 1%)" }, "next": [{ "node": "q_works" }] },
+        { "text": ["the healer's one", "healer's"], "effects": { "note": 8 }, "record": { "topic": "cream", "label": "Using", "value": "prescription cream" }, "next": [{ "node": "q_works" }] },
+        { "text": ["just lotion", "lotion"], "effects": { "note": 8 }, "record": { "topic": "cream", "label": "Using", "value": "moisturizer only" }, "next": [{ "node": "q_works" }] },
+        { "text": ["none", "no"], "effects": { "note": 8 }, "next": [{ "node": "q_whynot" }] }
+      ],
+      "skip": { "next": [{ "node": "q_feel" }] }
+    },
+    "q_works": {
+      "text": "\"Does the potion work?\"",
+      "image": "images/potion.svg",
+      "choices": [
+        { "text": ["yes", "yup"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "cream", "label": "Working?", "value": "yes" }, "next": [{ "node": "q_feel" }] },
+        { "text": ["a bit", "kinda"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "cream", "label": "Working?", "value": "a little" }, "next": [{ "node": "q_feel" }] },
+        { "text": ["no", "nah", "zip"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "cream", "label": "Working?", "value": "NO. Current cream is not helping." }, "next": [{ "node": "q_feel" }] }
+      ],
+      "skip": { "endsDay": true, "next": [{ "node": "q_feel" }] }
+    },
+    "q_whynot": {
+      "text": "\"No potion at all? How come?\"",
+      "image": "images/potion.svg",
+      "choices": [
+        { "text": ["ran out", "all gone"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "cream", "label": "No cream", "value": "ran out. Check refill and cost with parent." }, "next": [{ "node": "q_feel" }] },
+        { "text": ["it stings", "stings", "ouch"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "cream", "label": "No cream", "value": "stopped because it stings" }, "next": [{ "node": "q_feel" }] },
+        { "text": ["I forget", "forgot"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "cream", "label": "No cream", "value": "forgets to use it" }, "next": [{ "node": "q_feel" }] }
+      ],
+      "skip": { "endsDay": true, "record": { "topic": "cream", "label": "No cream", "value": "reason unknown" }, "next": [{ "node": "q_feel" }] }
+    },
+
+    "q_feel": {
+      "text": "The princess sits down next to you. \"How do your itchy scales make you feel?\"",
+      "image": "images/princess.svg",
+      "choices": [
+        { "text": ["fine", "ok"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "feel", "label": "Feels", "value": "fine" }, "next": [{ "node": "q_wish" }] },
+        { "text": ["sad", "blue"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "feel", "label": "Feels", "value": "sad about it" }, "next": [{ "node": "q_wish" }] },
+        { "text": ["mad", "grr"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "feel", "label": "Feels", "value": "angry or frustrated" }, "next": [{ "node": "q_wish" }] },
+        { "text": ["shy at school", "shy"], "effects": { "note": 8 }, "endsDay": true, "record": { "topic": "feel", "label": "Feels", "value": "self-conscious at school. Ask about teasing." }, "next": [{ "node": "q_wish" }] }
+      ],
+      "skip": { "endsDay": true, "next": [{ "node": "q_wish" }] }
+    },
+    "q_wish": {
+      "text": "\"Last thing. Tell the Healer anything you want, with whatever letters are left in the bag.\"",
+      "image": "images/bag.svg",
+      "input": { "placeholder": "your own words", "max": 40, "effects": { "note": 100 }, "record": { "topic": "wish", "label": "Child wrote", "value": "\"{input}\"" }, "next": [{ "node": "end_good" }] },
+      "skip": { "next": [{ "node": "end_good" }] }
+    },
+
+    "end_good": {
+      "text": "The princess rolls up the note and runs down the mountain to the Royal Healer. \"Hang on, dragon. No scratching till I'm back!\" Show this note to your grown-up and your doctor.",
+      "ending": true,
+      "endingType": "good",
+      "endingTitle": "The note is on its way!"
+    },
+    "end_empty": {
+      "text": "The paper bag is almost empty! The princess grabs the note and runs. \"The Healer can ask you the rest.\"",
+      "ending": true,
+      "endingType": "bad",
+      "endingTitle": "Out of letters!"
+    }
+  }
+}

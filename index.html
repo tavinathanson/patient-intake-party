@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Itchy Dragon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1 id="title"></h1>
+    <div id="clock"></div>
+    <div id="stats"></div>
+    <div id="items"></div>
+    <div id="letters" aria-label="Letters left in the paper bag"></div>
+  </header>
+  <main class="book">
+    <article class="page" id="page">
+      <img id="image" alt="">
+      <p id="text"></p>
+      <div id="choices"></div>
+    </article>
+  </main>
+  <div id="ending" hidden>
+    <section class="note">
+      <h2 id="endTitle"></h2>
+      <p id="endText"></p>
+      <div id="endStats"></div>
+      <div id="report"></div>
+      <button id="again">Play again</button>
+    </section>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
