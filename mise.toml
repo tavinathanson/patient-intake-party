@@ -1,0 +1,15 @@
+[tools]
+python = "3.12"
+uv = "latest"
+
+[tasks.dev]
+description = "Run Flask development server"
+run = "uv run python main.py"
+
+[tasks.start]
+description = "Run production gunicorn server"
+run = "uv run gunicorn main:app"
+
+[tasks.test]
+description = "Run test suite"
+run = "uv run python -c \"import main; print('App loaded successfully')\""

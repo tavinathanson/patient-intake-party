@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Persistent Pain Intake Form{% endblock %}
+
+{% block content %}
+<section class="form-wrapper">
+  <div class="form-header">
+    <hgroup>
+      <h1>New Patient Intake Form</h1>
+      <p>Persistent Pain Clinic baseline intake. Complete all sections below, or load sample patient data for testing.</p>
+    </hgroup>
+    {% if is_prefilled %}
+    <div class="banner-prefill">
+      <small>ℹ️ Prefilled with sample data for: <strong>{{ form_data.get('name', 'Fig Turnip') }}</strong> &bull; <a href="{{ url_for('index') }}">Reset to blank form</a></small>
+    </div>
+    {% endif %}
+  </div>
+
+  <form method="POST" action="{{ url_for('submit') }}" id="intake-form">
+    
+    <!-- Section 1: Demographics & Contact -->
+    <article class="form-card">
+      <header>
+        <h3>1. Patient &amp; Administrative Information</h3>
+      </header>
+
+      <div class="grid">
+        <label for="filled_out_by">
+          Filled out by (if not the patient)
+          <input type="text" id="filled_out_by" name="filled_out_by" 
+                 placeholder="e.g. Olive Turnip (wife)" 
+                 value="{{ form_data.get('filled_out_by', '') }}">
+        </label>
+        
+        <label for="date">
+          Date
+          <input type="date" id="date" name="date" 
+                 value="{{ form_data.get('date', '') }}">
+        </label>
+      </div>
+
+      <div class="grid">
+        <label for="name">
+          Patient Full Name <span class="required">*</span>
+          <input type="text" id="name" name="name" 
+                 placeholder="e.g. Fig Turnip" 
+                 value="{{ form_data.get('name', '') }}" required>
+        </label>
+
+        <label for="date_of_birth">
+          Date of Birth <span class="required">*</span>
+          <input type="date" id="date_of_birth" name="date_of_birth" 
+                 value="{{ form_data.get('date_of_birth', '') }}" required>
+        </label>
+      </div>
+
+      <div class="grid">
+        <label for="address">
+          Address
+          <input type="text" id="address" name="address" 
+                 placeholder="e.g. 12 Garden Row" 
+                 value="{{ form_data.get('address', '') }}">
+        </label>
+
+        <label for="phone">
+          Phone Number
+          <input type="tel" id="phone" name="phone" 
+                 placeholder="e.g. 555-0143" 
+                 value="{{ form_data.get('phone', '') }}">
+        </label>
+      </div>
+
+      <div class="grid">
+        <label for="insurance">
+          Insurance Carrier / Plan
+          <input type="text" id="insurance" name="insurance" 
+                 placeholder="e.g. BlueCross, through my work" 
+                 value="{{ form_data.get('insurance', '') }}">
+        </label>
+
+        <label for="member_id">
+          Member ID
+          <input type="text" id="member_id" name="member_id" 
+                 placeholder="e.g. ABC123456789" 
+                 value="{{ form_data.get('member_id', '') }}">
+        </label>
+      </div>
+
+      <label for="emergency_contact">
+        Emergency Contact <small class="text-muted">(Name, relationship, phone)</small>
+        <input type="text" id="emergency_contact" name="emergency_contact" 
+               placeholder="e.g. Olive Turnip, wife, 555-0143" 
+               value="{{ form_data.get('emergency_contact', '') }}">
+      </label>
+    </article>
+
+    <!-- Section 2: Clinical Details & Medications -->
+    <article class="form-card">
+      <header>
+        <h3>2. Visit Details &amp; Medications</h3>
+      </header>
+
+      <label for="reason_for_visit">
+        <strong>Reason for visit</strong> <span class="required">*</span>
+        <textarea id="reason_for_visit" name="reason_for_visit" rows="3" 
+                  placeholder="Describe main pain symptoms, duration, location, and goals for today's visit..." required>{{ form_data.get('reason_for_visit', '') }}</textarea>
+      </label>
+
+      <label for="current_medications">
+        <strong>Current medications</strong> <small class="text-muted">(Include over-the-counter, vitamins, eye drops, inhalers)</small>
+        <textarea id="current_medications" name="current_medications" rows="3" 
+                  placeholder="e.g. metformin, the nerve pill, meloxicam, tylenol">{{ form_data.get('current_medications', '') }}</textarea>
+      </label>
+
+      <fieldset>
+        <legend><strong>Allergies</strong></legend>
+        <div class="grid">
+          <div>
+            <label for="allergies_none">
+              <input type="checkbox" id="allergies_none" name="allergies_none" value="true"
+                     {% if form_data.get('allergies', '')|lower == 'none' %}checked{% endif %}>
+              No known allergies (None)
+            </label>
+          </div>
+          <div>
+            <input type="text" id="allergies" name="allergies" 
+                   placeholder="Or list allergies (e.g. codeine, penicillin)" 
+                   value="{% if form_data.get('allergies', '')|lower != 'none' %}{{ form_data.get('allergies', '') }}{% endif %}">
+          </div>
+        </div>
+      </fieldset>
+    </article>
+
+    <!-- Section 3: Past Medical Conditions -->
+    <article class="form-card">
+      <header>
+        <h3>3. Past Medical Conditions</h3>
+        <p><small>Check all conditions that apply to you or your medical history.</small></p>
+      </header>
+
+      {% set cur_conds = form_data.get('past_conditions', []) %}
+      {% set cur_conds_lower = [] %}
+      {% for c in cur_conds %}
+        {% set _ = cur_conds_lower.append(c|lower) %}
+      {% endfor %}
+
+      <div class="conditions-grid">
+        {% for cond in conditions %}
+        <label for="cond_{{ cond.id }}" class="checkbox-label">
+          <input type="checkbox" id="cond_{{ cond.id }}" name="past_conditions" value="{{ cond.id }}"
+                 {% if cond.id in cur_conds_lower or cond.label|lower in cur_conds_lower %}checked{% endif %}>
+          {{ cond.label }}
+        </label>
+        {% endfor %}
+      </div>
+
+      <div class="other-condition-row">
+        <label for="past_conditions_other">
+          Other past conditions:
+          {% set other_val = "" %}
+          {% for c in cur_conds %}
+            {% if c|lower not in [
+              'arthritis', 'asthma', 'cancer', 'copd', 'depression_anxiety', 'depression / anxiety', 
+              'diabetes', 'glaucoma', 'heart_disease', 'heart disease', 'high_blood_pressure', 
+              'high blood pressure', 'high_cholesterol', 'high cholesterol', 'kidney_disease', 
+              'kidney disease', 'seizures', 'stroke', 'thyroid_disease', 'thyroid disease'
+            ] %}
+              {% set other_val = c %}
+            {% endif %}
+          {% endfor %}
+          <input type="text" id="past_conditions_other" name="past_conditions_other" 
+                 placeholder="Please specify other condition(s)" 
+                 value="{{ other_val }}">
+        </label>
+      </div>
+    </article>
+
+    <!-- Section 4: Surgeries & Family History -->
+    <article class="form-card">
+      <header>
+        <h3>4. Surgeries &amp; Family Medical History</h3>
+      </header>
+
+      <label for="past_surgeries">
+        <strong>Past surgeries</strong> <small class="text-muted">(Procedure and year)</small>
+        <textarea id="past_surgeries" name="past_surgeries" rows="2" 
+                  placeholder="e.g. knee (2019)">{{ form_data.get('past_surgeries', '') }}</textarea>
+      </label>
+
+      <label for="family_history">
+        <strong>Family history</strong> <small class="text-muted">(Parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma)</small>
+        <textarea id="family_history" name="family_history" rows="2" 
+                  placeholder="e.g. father heart">{{ form_data.get('family_history', '') }}</textarea>
+      </label>
+    </article>
+
+    <!-- Section 5: Lifestyle & Substances -->
+    <article class="form-card">
+      <header>
+        <h3>5. Social &amp; Lifestyle History</h3>
+      </header>
+
+      <div class="lifestyle-section">
+        <label for="tobacco">
+          <strong>Tobacco Use</strong> <small class="text-muted">(Never, Former, Current, or details)</small>
+          <input type="text" id="tobacco" name="tobacco" 
+                 placeholder="e.g. quit, never, current" 
+                 value="{{ form_data.get('tobacco', '') }}">
+        </label>
+
+        <label for="alcohol">
+          <strong>Alcohol Use</strong> <small class="text-muted">(None, Occasional, Daily, or details)</small>
+          <input type="text" id="alcohol" name="alcohol" 
+                 placeholder="e.g. some, none, daily" 
+                 value="{{ form_data.get('alcohol', '') }}">
+        </label>
+
+        <label for="drugs">
+          <strong>Recreational Drugs</strong> <small class="text-muted">(No, Yes, or details)</small>
+          <input type="text" id="drugs" name="drugs" 
+                 placeholder="e.g. no, yes" 
+                 value="{{ form_data.get('drugs', '') }}">
+        </label>
+      </div>
+    </article>
+
+    <!-- Section 6: Signature -->
+    <article class="form-card">
+      <header>
+        <h3>6. Signature &amp; Confirmation</h3>
+      </header>
+
+      <div class="grid">
+        <label for="signature">
+          Signature <span class="required">*</span>
+          <input type="text" id="signature" name="signature" 
+                 placeholder="e.g. O. Turnip (wife)" 
+                 value="{{ form_data.get('signature', '') }}" required>
+        </label>
+      </div>
+
+      <small class="text-muted">By submitting this form, you confirm that the information provided is true and accurate to the best of your knowledge.</small>
+    </article>
+
+    <!-- Action Buttons -->
+    <div class="form-actions grid">
+      <button type="submit" class="primary btn-large">Submit Intake Form</button>
+      <a href="{{ url_for('index', prefill='fig') }}" role="button" class="secondary outline">Prefill Fig Turnip (Sample Data)</a>
+    </div>
+
+  </form>
+</section>
+{% endblock %}

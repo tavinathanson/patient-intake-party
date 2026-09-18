@@ -1,0 +1,17 @@
+[project]
+name = "patient-intake-party"
+version = "0.1.0"
+description = "Persistent Pain Patient Intake Web Application"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "flask>=3.0.0",
+    "gunicorn>=21.0.0",
+]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
