@@ -382,6 +382,22 @@ const REAL = QUESTIONS.filter(q => !q.practice && !q.dance);
 const PARAMS = new URLSearchParams(location.search);
 const CV_OFF = PARAMS.has('nocv');
 
+// The real record, if somebody dropped one next to index.html. It is gitignored
+// and never deploys, so anywhere but this laptop falls back to the synth.
+const SONG_URL = 'macarena.mp3';
+const SONG_START = Number(PARAMS.get('t')) || 0;    // ?t=22 to start on the chorus
+const SONG_BPM = Number(PARAMS.get('bpm')) || BPM;  // ?bpm=105 to nudge the sync
+
+let songEl = null;
+fetch(SONG_URL, { method: 'HEAD' })
+  .then(r => {
+    if (!r.ok) return;
+    songEl = new Audio(SONG_URL);
+    songEl.preload = 'auto';        // have metadata ready so currentTime is seekable
+    songEl.load();
+  })
+  .catch(() => { /* no track, synth it is */ });
+
 // Some rooms are not dance-break rooms.
 if (PARAMS.has('nodance')) {
   const i = QUESTIONS.findIndex(q => q.dance);
@@ -790,7 +806,7 @@ function plainText(flags, clashes, seconds) {
 let brk = null, danceSeen = false;
 
 function startBreak() {
-  const beat = 60 / BPM;
+  const beat = 60 / SONG_BPM;
   const totalBeats = COUNT_IN + MOVES.length * ROUNDS;
   const dance = $('dance'), big = $('dancebig'), sub = $('dancesub'), dots = $('dancecount');
 
@@ -800,17 +816,28 @@ function startBreak() {
   dots.innerHTML = '';
   for (let i = 0; i < 8; i++) dots.append(el('i'));
 
-  let ctx = null, master = null;
-  try {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    ctx.resume();
-  } catch (e) { ctx = null; }               // silent dance break is still a dance break
+  let ctx = null, master = null, song = null, elapsed = null;
 
-  const t0 = ctx ? ctx.currentTime + 0.25 : 0;
-  const started = performance.now();
-  const elapsed = ctx ? () => ctx.currentTime - t0 : () => (performance.now() - started) / 1000;
+  if (songEl && songEl.readyState >= 1) {
+    // Drive the coaching off the record's own clock, so the counts cannot drift
+    // away from the music no matter how the browser schedules us.
+    song = songEl;
+    const from = Math.max(0, SONG_START - COUNT_IN * beat);
+    try { song.currentTime = from; } catch (e) { /* not seekable yet */ }
+    song.volume = 0.85;
+    song.play().catch(() => { /* autoplay refused: the break runs silent */ });
+    elapsed = () => song.currentTime - from;
+  } else {
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume();
+    } catch (e) { ctx = null; }             // silent dance break is still a dance break
 
-  if (ctx) master = playLoop(ctx, t0, beat, totalBeats);
+    const t0 = ctx ? ctx.currentTime + 0.25 : 0;
+    const started = performance.now();
+    elapsed = ctx ? () => ctx.currentTime - t0 : () => (performance.now() - started) / 1000;
+    if (ctx) master = playLoop(ctx, t0, beat, totalBeats);
+  }
 
   let shown = -1;
   const tick = setInterval(() => {
@@ -833,7 +860,7 @@ function startBreak() {
     big.classList.remove('beatpulse'); void big.offsetWidth; big.classList.add('beatpulse');
   }, 40);
 
-  brk = { ctx, master, tick, end: 0, done: false };
+  brk = { ctx, master, song, tick, end: 0, done: false };
 }
 
 function finishBreak() {
@@ -849,8 +876,19 @@ function stopBreak() {
   if (!brk) return;
   clearInterval(brk.tick);
   clearTimeout(brk.end);
-  const { ctx, master } = brk;
+  const { ctx, master, song } = brk;
   brk = null;
+
+  if (song) {
+    const from = song.volume;
+    let step = 0;
+    const fade = setInterval(() => {
+      step++;
+      song.volume = Math.max(0, from * (1 - step / 8));
+      if (step >= 8) { clearInterval(fade); song.pause(); song.volume = from; }
+    }, 25);
+  }
+
   if (ctx) {
     // Ramp before closing, or you get a click on the way out.
     try {
