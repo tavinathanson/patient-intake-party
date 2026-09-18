@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Intake Form Reader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#E7ECEA; --paper:#FFFFFF; --ink:#18272B; --muted:#5B6B6E; --rule:#C9D3D1;
+  --accent:#0E6A73; --accent-ink:#FFFFFF; --mark:#FFF1A8; --mark-ink:#18272B;
+  --low:#B4540A; --low-bg:#FDEBD9; --med:#7A6A00; --high:#1F7A44; --high-bg:#DFF2E6;
+  --field:#F6F8F7; --shadow:0 1px 2px rgba(20,40,45,.08),0 8px 24px rgba(20,40,45,.08);
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0F1719; --paper:#172225; --ink:#E4ECEA; --muted:#93A3A5; --rule:#2C3B3E;
+  --accent:#4FB3BC; --accent-ink:#0B1416; --mark:#4A4418; --mark-ink:#F4EFC8;
+  --low:#F2A35E; --low-bg:#3A2616; --med:#D8C75A; --high:#6FD199; --high-bg:#16321F;
+  --field:#1D2A2D; --shadow:0 1px 2px rgba(0,0,0,.4);
+}}
+:root[data-theme="dark"]{
+  --ground:#0F1719; --paper:#172225; --ink:#E4ECEA; --muted:#93A3A5; --rule:#2C3B3E;
+  --accent:#4FB3BC; --accent-ink:#0B1416; --mark:#4A4418; --mark-ink:#F4EFC8;
+  --low:#F2A35E; --low-bg:#3A2616; --med:#D8C75A; --high:#6FD199; --high-bg:#16321F;
+  --field:#1D2A2D; --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.45}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:24px 48px}
+header.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px;margin-bottom:20px}
+header.top h1{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:0;text-wrap:balance}
+header.top p{margin:0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+
+/* source panel */
+.panel{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:flex;flex-direction:column;gap:14px}
+@media (max-width:860px){.panel{position:static}}
+.drop{border:1.5px dashed var(--rule);border-radius:10px;background:var(--paper);padding:20px 16px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.drop strong{display:block;font-size:15px}
+.drop span{color:var(--muted);font-size:13px}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.thumbs:empty{display:none}
+.thumb{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;background:var(--field);border:1px solid var(--rule);max-width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:1;cursor:pointer}
+.btn{font:600 14px/1 var(--sans);border-radius:8px;padding:12px 16px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row .btn{flex:1}
+.seg{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-width:0}
+.seg legend{padding:0;margin-bottom:6px;font:500 11px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.seg .opts{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--paper)}
+.seg label{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;font-weight:600;font-size:14px;cursor:pointer}
+.seg label + label{border-left:1px solid var(--rule)}
+.seg input{width:16px;height:16px;accent-color:var(--accent);margin:0}
+.seg label:has(input:checked){background:var(--accent);color:var(--accent-ink)}
+.seg label:has(input:checked) input{accent-color:var(--accent-ink)}
+.seg label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:-3px}
+.status{font-size:13px;color:var(--muted);min-height:1.2em}
+.status.err{color:var(--low)}
+.legend{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--rule);padding-top:12px}
+.legend i{display:inline-block;width:28px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+.notes{background:var(--paper);border-radius:8px;padding:12px 14px;font-size:13px;border:1px solid var(--rule)}
+.notes h3{margin:0 0 6px;font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+
+/* the form sheet */
+.sheet{background:var(--paper);box-shadow:var(--shadow);border-radius:4px;padding:28px 28px 32px}
+@media (max-width:520px){.sheet{padding:20px 16px}}
+.sheet-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:8px;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:18px}
+.sheet-head h2{margin:0;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.sheet-head .tag{font:500 11px/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.example{font:500 11px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;background:var(--mark);color:var(--mark-ink);padding:5px 8px;border-radius:3px}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 20px}
+@media (max-width:620px){.fields{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f.wide{grid-column:1/-1}
+.lab{display:flex;align-items:center;gap:8px;font:500 11px/1.2 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.chip{font:600 10px/1 var(--mono);letter-spacing:.05em;padding:3px 5px;border-radius:3px;text-transform:uppercase}
+.chip.high{background:var(--high-bg);color:var(--high)}
+.chip.medium{background:var(--mark);color:var(--mark-ink)}
+.chip.low{background:var(--low-bg);color:var(--low)}
+input[type=text],textarea{font:400 15px/1.4 var(--sans);color:var(--ink);background:transparent;border:0;border-bottom:1px solid var(--rule);padding:6px 2px;width:100%;border-radius:0}
+textarea{resize:vertical;min-height:64px;border:1px solid var(--rule);border-radius:4px;padding:8px 10px;background:var(--field)}
+input[type=text]:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 1px 0 var(--accent)}
+.ai{background:linear-gradient(transparent 12%,var(--mark) 12%,var(--mark) 92%,transparent 92%)}
+textarea.ai{background:var(--mark);color:var(--mark-ink)}
+.ai-low{box-shadow:inset 0 -2px 0 var(--low)}
+textarea.ai-low{border-color:var(--low)}
+.sec{grid-column:1/-1;margin-top:10px;padding-top:12px;border-top:1px solid var(--rule);font:600 13px/1.2 var(--sans);letter-spacing:.02em}
+.checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 16px}
+@media (max-width:620px){.checks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+label.ck{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;padding:2px 4px;border-radius:3px}
+label.ck input{width:17px;height:17px;accent-color:var(--accent);flex:none}
+label.ck.ai{background:var(--mark);color:var(--mark-ink)}
+.inline{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px}
+.inline .rl{min-width:9.5em;font-weight:600;font-size:14px}
+.inline input[type=text]{width:7em}
+.sig{display:flex;flex-wrap:wrap;gap:14px 20px;align-items:flex-end}
+.sig .f{flex:1 1 220px}
+.sigline{font-family:"Segoe Script","Bradley Hand","Snell Roundhand",cursive;font-size:20px}
+.foot{margin-top:18px;font-size:12px;color:var(--muted)}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-1px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Intake Form Reader</h1>
+    <p>Drop in photos of a patient's paperwork — a filled-out intake sheet, ID, insurance card, pill bottles. Claude reads them and fills the New Patient Intake Form. Highlighted fields came from the photos; review before saving.</p>
+  </header>
+
+  <div class="grid">
+    <aside class="panel" aria-label="Source photos">
+      <label class="drop" id="drop" for="file">
+        <input type="file" id="file" accept="image/*,.heic,.heif" multiple>
+        <strong>Add photos</strong>
+        <span>Drop, paste, or tap to pick · JPG, PNG, HEIC</span>
+      </label>
+      <div class="thumbs" id="thumbs"></div>
+      <fieldset class="seg">
+        <legend>Patient sex</legend>
+        <div class="opts">
+          <label><input type="radio" name="sex" id="sexF" value="F" checked> Female</label>
+          <label><input type="radio" name="sex" id="sexM" value="M"> Male</label>
+        </div>
+      </fieldset>
+      <div class="row">
+        <button class="btn primary" id="read" disabled>Read &amp; fill form</button>
+        <button class="btn" id="stop" hidden>Stop</button>
+      </div>
+      <div class="status" id="status" role="status"></div>
+      <div class="notes" id="notesBox" hidden>
+        <h3>Reader notes</h3>
+        <ul id="notes"></ul>
+      </div>
+      <div class="row">
+        <button class="btn" id="clear">Clear form</button>
+        <button class="btn" id="save" hidden>Save JSON</button>
+      </div>
+      <div class="legend">
+        <div><i style="background:var(--mark)"></i>Filled from the photos</div>
+        <div><i style="background:var(--low-bg);box-shadow:inset 0 -2px 0 var(--low)"></i>Low confidence — check against the photo</div>
+        <div>Anything not visible stays blank. Claude does not guess medical history from someone's appearance.</div>
+      </div>
+    </aside>
+
+    <main class="sheet" aria-label="New Patient Intake Form">
+      <div class="sheet-head">
+        <div>
+          <div class="tag">Front desk · Form NP-1</div>
+          <h2>New Patient Intake Form</h2>
+        </div>
+        <span class="example" id="exampleTag">Example data</span>
+      </div>
+
+      <form class="fields" id="form" autocomplete="off" onsubmit="return false">
+        <div class="f"><div class="lab">Filled out by (if not the patient)</div><input type="text" id="filledBy"></div>
+        <div class="f"><div class="lab">Date</div><input type="text" id="date"></div>
+        <div class="f"><div class="lab">Name</div><input type="text" id="name"></div>
+        <div class="f"><div class="lab">Date of birth</div><input type="text" id="dob"></div>
+        <div class="f wide"><div class="lab">Address</div><input type="text" id="address"></div>
+        <div class="f"><div class="lab">Phone</div><input type="text" id="phone"></div>
+        <div class="f"><div class="lab">Insurance</div><input type="text" id="insurance"></div>
+        <div class="f"><div class="lab">Member ID</div><input type="text" id="memberId"></div>
+        <div class="f"><div class="lab">Emergency contact (name, relationship, phone)</div><input type="text" id="emergencyContact"></div>
+        <div class="f wide"><div class="lab">Reason for visit</div><textarea id="reasonForVisit" rows="3"></textarea></div>
+        <div class="f wide"><div class="lab">Current medications (incl. OTC, vitamins, eye drops, inhalers)</div><textarea id="medications" rows="4"></textarea></div>
+        <div class="f wide"><div class="lab">Allergies</div>
+          <div class="inline"><label class="ck" id="lab-allergiesNone"><input type="checkbox" id="allergiesNone"> None</label></div>
+          <textarea id="allergies" rows="2"></textarea>
+        </div>
+
+        <div class="sec">Past conditions <span style="font-weight:400;color:var(--muted)">(check all that apply)</span></div>
+        <div class="f wide"><div class="checks" id="conds"></div>
+          <div class="inline" style="margin-top:6px"><span class="lab">Other</span><input type="text" id="conditionOther" style="flex:1;min-width:10em"></div>
+        </div>
+
+        <div class="f wide"><div class="lab">Past surgeries (procedure and year)</div><textarea id="surgeries" rows="2"></textarea></div>
+        <div class="f wide"><div class="lab">Family history (parents, siblings, children)</div><textarea id="familyHistory" rows="2"></textarea></div>
+
+        <div class="sec">Social history</div>
+        <div class="f wide" style="gap:10px">
+          <div class="inline"><span class="rl">Tobacco</span>
+            <label class="ck" id="lab-tobacco-never"><input type="radio" name="tobacco" value="never"> Never</label>
+            <label class="ck" id="lab-tobacco-former"><input type="radio" name="tobacco" value="former"> Former</label>
+            <span class="lab">quit</span><input type="text" id="tobaccoQuit" aria-label="Year quit">
+            <label class="ck" id="lab-tobacco-current"><input type="radio" name="tobacco" value="current"> Current</label>
+          </div>
+          <div class="inline"><span class="rl">Alcohol</span>
+            <label class="ck" id="lab-alcohol-none"><input type="radio" name="alcohol" value="none"> None</label>
+            <label class="ck" id="lab-alcohol-occasional"><input type="radio" name="alcohol" value="occasional"> Occasional</label>
+            <label class="ck" id="lab-alcohol-daily"><input type="radio" name="alcohol" value="daily"> Daily</label>
+          </div>
+          <div class="inline"><span class="rl">Recreational drugs</span>
+            <label class="ck" id="lab-drugs-no"><input type="radio" name="drugs" value="no"> No</label>
+            <label class="ck" id="lab-drugs-yes"><input type="radio" name="drugs" value="yes"> Yes</label>
+          </div>
+        </div>
+
+        <div class="sec">Signature</div>
+        <div class="f wide"><div class="sig">
+          <div class="f"><div class="lab">Signed by</div><input type="text" id="signature" class="sigline"></div>
+          <div class="f" style="flex:0 1 220px"><div class="lab">Relationship (if not the patient)</div><input type="text" id="signerRelationship"></div>
+        </div></div>
+      </form>
+      <p class="foot">Illustrative clinic form, not medical advice. AI-read values can be wrong — confirm with the patient.</p>
+    </main>
+  </div>
+</div>
+
+<script>
+const CONDITIONS = [
+  ["arthritis","Arthritis"],["diabetes","Diabetes"],["kidney_disease","Kidney disease"],
+  ["asthma","Asthma"],["glaucoma","Glaucoma"],["seizures","Seizures"],
+  ["cancer","Cancer"],["heart_disease","Heart disease"],["stroke","Stroke"],
+  ["copd","COPD / emphysema"],["high_blood_pressure","High blood pressure"],["thyroid_disease","Thyroid disease"],
+  ["depression_anxiety","Depression / anxiety"],["high_cholesterol","High cholesterol"]
+];
+const TEXT = ["filledBy","date","name","dob","address","phone","insurance","memberId","emergencyContact",
+  "reasonForVisit","medications","allergies","conditionOther","surgeries","familyHistory","tobaccoQuit","signature","signerRelationship"];
+const RADIOS = {tobacco:["never","former","current"],alcohol:["none","occasional","daily"],drugs:["no","yes"]};
+const $ = id => document.getElementById(id);
+
+const condBox = $("conds");
+for (const [k,l] of CONDITIONS){
+  const lab = document.createElement("label"); lab.className="ck"; lab.id="lab-c-"+k;
+  lab.innerHTML = `<input type="checkbox" id="c-${k}" value="${k}"> ${l}`;
+  condBox.append(lab);
+}
+
+const EXAMPLE = {
+  filledBy:"", date:"09/18/2026", name:"Plum Okafor (example)", dob:"03/14/1958",
+  address:"41 Orchard Lane, Springfield, IL 62704", phone:"(217) 555-0142",
+  insurance:"Medicare + AARP Supplement", memberId:"1EG4-TE5-MK72",
+  emergencyContact:"Fig Okafor, daughter, (217) 555-0199",
+  reasonForVisit:"Blurry vision in left eye, worse at night; annual eye exam.",
+  medications:"Lisinopril 10 mg daily\nAtorvastatin 20 mg nightly\nLatanoprost eye drops, 1 drop each eye at bedtime\nVitamin D 1000 IU",
+  allergiesNone:false, allergies:"Penicillin (hives)",
+  conditions:["high_blood_pressure","high_cholesterol","glaucoma"], conditionOther:"",
+  surgeries:"Cataract surgery, right eye — 2021", familyHistory:"Mother: glaucoma. Father: heart disease, stroke.",
+  tobacco:"former", tobaccoQuit:"1994", alcohol:"occasional", drugs:"no",
+  signature:"Plum Okafor", signerRelationship:"",
+  confidence:{}
+};
+
+function clearMarks(){
+  document.querySelectorAll(".ai,.ai-low").forEach(e=>e.classList.remove("ai","ai-low"));
+  document.querySelectorAll(".chip").forEach(e=>e.remove());
+}
+function mark(el, conf){
+  if (!el) return;
+  el.classList.add("ai");
+  if (conf==="low") el.classList.add("ai-low");
+}
+function chip(fieldEl, conf){
+  if (!conf || !fieldEl) return;
+  const lab = fieldEl.closest(".f")?.querySelector(".lab");
+  if (!lab || lab.querySelector(".chip")) return;
+  const c = document.createElement("span"); c.className="chip "+conf; c.textContent=conf;
+  lab.append(c);
+}
+
+function fill(d, fromAI){
+  clearMarks();
+  const conf = d.confidence || {};
+  for (const k of TEXT){
+    const el=$(k), v = d[k]==null ? "" : String(d[k]);
+    el.value = v;
+    if (fromAI && v){ mark(el, conf[k]); chip(el, conf[k]); }
+  }
+  $("allergiesNone").checked = !!d.allergiesNone;
+  if (fromAI && d.allergiesNone) mark($("lab-allergiesNone"), conf.allergies);
+  const conds = new Set(Array.isArray(d.conditions)?d.conditions:[]);
+  for (const [k] of CONDITIONS){
+    $("c-"+k).checked = conds.has(k);
+    if (fromAI && conds.has(k)) mark($("lab-c-"+k), conf.conditions);
+  }
+  for (const [name,vals] of Object.entries(RADIOS)){
+    for (const v of vals){
+      const r = document.querySelector(`input[name=${name}][value=${v}]`);
+      r.checked = d[name]===v;
+      if (fromAI && d[name]===v) mark($(`lab-${name}-${v}`), conf[name]);
+    }
+  }
+  $("exampleTag").hidden = !!fromAI || d!==EXAMPLE;
+}
+
+function collect(){
+  const o = {};
+  for (const k of TEXT) o[k] = $(k).value.trim();
+  o.allergiesNone = $("allergiesNone").checked;
+  o.conditions = CONDITIONS.map(([k])=>k).filter(k=>$("c-"+k).checked);
+  for (const name of Object.keys(RADIOS)){
+    o[name] = document.querySelector(`input[name=${name}]:checked`)?.value || "";
+  }
+  return o;
+}
+
+fill({confidence:{}},false);
+$("form").addEventListener("input", e => {
+  $("exampleTag").hidden = true;
+  const t = e.target; t.classList.remove("ai-low");
+});
+
+/* ---------- photos ---------- */
+let files = [];
+let maxCount = 5;
+function renderThumbs(){
+  const box=$("thumbs"); box.innerHTML="";
+  files.forEach((f,i)=>{
+    const d=document.createElement("div"); d.className="thumb";
+    const img=document.createElement("img"); img.alt=f.name||"photo "+(i+1);
+    img.src=URL.createObjectURL(f); img.onload=()=>URL.revokeObjectURL(img.src);
+    const x=document.createElement("button"); x.type="button"; x.textContent="×"; x.setAttribute("aria-label","Remove photo");
+    x.onclick=()=>{files.splice(i,1); renderThumbs();};
+    d.append(img,x); box.append(d);
+  });
+  $("read").disabled = !files.length;
+}
+// Re-encode every photo as a JPEG (handles iPhone HEIC where the browser can decode it, and huge files)
+async function toJpeg(f){
+  let src;
+  try { src = await createImageBitmap(f); }
+  catch {
+    src = await new Promise((res,rej)=>{ const im=new Image(); const u=URL.createObjectURL(f);
+      im.onload=()=>{URL.revokeObjectURL(u);res(im);}; im.onerror=()=>{URL.revokeObjectURL(u);rej();}; im.src=u; });
+  }
+  const w=src.width||src.naturalWidth, h=src.height||src.naturalHeight;
+  const k=Math.min(1, 2400/Math.max(w,h));
+  const c=document.createElement("canvas"); c.width=Math.round(w*k); c.height=Math.round(h*k);
+  c.getContext("2d").drawImage(src,0,0,c.width,c.height);
+  const b = await new Promise(r=>c.toBlob(r,"image/jpeg",0.9));
+  if (!b) throw new Error("encode");
+  return new File([b], (f.name||"photo").replace(/\.[^.]+$/,"")+".jpg", {type:"image/jpeg"});
+}
+async function addFiles(list){
+  list=[...list]; if(!list.length) return;
+  setStatus('<span class="spin"></span>Preparing photo…');
+  const ok=[], bad=[];
+  for (const f of list){
+    try { ok.push(await toJpeg(f)); } catch { bad.push(f.name||"file"); }
+  }
+  files = files.concat(ok).slice(0,maxCount);
+  renderThumbs();
+  if (bad.length) setStatus(`Couldn't open ${bad.join(", ")}. This browser can't open that format (often iPhone HEIC) — try Safari, or save the photo as JPG or take a screenshot of it.`, true);
+  else if (files.length) setStatus(sample ? `${files.length} photo${files.length>1?"s":""} ready — click Read & fill form.` : unavailableMsg, !sample);
+}
+$("file").addEventListener("change", e=>{ addFiles(e.target.files); e.target.value=""; });
+const drop=$("drop");
+["dragenter","dragover"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop",e=>addFiles(e.dataTransfer.files));
+window.addEventListener("paste",e=>{ const f=[...(e.clipboardData?.files||[])]; if(f.length) addFiles(f); });
+
+function setStatus(msg, err){ const s=$("status"); s.classList.toggle("err",!!err); s.innerHTML=msg; }
+
+/* ---------- Claude ---------- */
+let sample=null, downloads=null, ctl=null;
+let unavailableMsg="Still connecting to Claude — try again in a few seconds.";
+
+const PROMPT = `You are reading photos for a clinic's front desk to fill out a New Patient Intake Form.
+The photos may show: a hand- or type-filled intake form, a driver's license/ID, an insurance card, medication bottles or boxes, a referral letter, or the patient themselves.
+
+Rules:
+- Only fill a field from information actually visible/legible in the photos. Transcribe; do not invent.
+- NEVER infer medical conditions, medications, allergies, substance use, or family history from a person's appearance. If a photo only shows a person, those fields stay empty.
+- Read checkboxes on a paper form as checked only if clearly marked.
+- Medication labels: list each as "Name strength, directions" on its own line.
+- Dates as MM/DD/YYYY when the full date is known; keep what's written otherwise.
+- Leave a field as "" (or false / [] / "") when not shown.
+- For every field you DID fill, give a confidence: "high" (clearly legible), "medium" (partly legible or reasonable reading), "low" (hard to read / a guess between options).
+- "notes": short strings for the front desk — illegible spots, conflicts between photos (e.g. name on ID differs from form), what each photo was.
+
+Reply with ONLY one JSON object of this exact shape:
+{
+ "filledBy": "", "date": "", "name": "", "dob": "", "address": "", "phone": "",
+ "insurance": "", "memberId": "", "emergencyContact": "", "reasonForVisit": "",
+ "medications": "", "allergiesNone": false, "allergies": "",
+ "conditions": [],  // any of: ${CONDITIONS.map(c=>c[0]).join(", ")}
+ "conditionOther": "", "surgeries": "", "familyHistory": "",
+ "tobacco": "",      // "never" | "former" | "current" | ""
+ "tobaccoQuit": "",  // year quit if former
+ "alcohol": "",      // "none" | "occasional" | "daily" | ""
+ "drugs": "",        // "no" | "yes" | ""
+ "signature": "",    // signer's name if a signature is present and legible, else "signed (illegible)" or ""
+ "signerRelationship": "",
+ "confidence": { "<fieldName>": "high|medium|low" },
+ "notes": []
+}`;
+
+// DEMO MODE: no API, no LLM. Each read returns one of these four made-up patients at random.
+const TODAY = new Date().toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"});
+const DEMO_PATIENTS = [
+  { // woman, 68, eye care
+    filledBy:"", date:TODAY, name:"Plum Okafor", dob:"03/14/1958",
+    address:"41 Orchard Lane, Springfield, IL 62704", phone:"(217) 555-0142",
+    insurance:"Medicare + AARP Supplement Plan G", memberId:"1EG4-TE5-MK72",
+    emergencyContact:"Fig Okafor, daughter, (217) 555-0199",
+    reasonForVisit:"Blurry vision in left eye, worse at night. Annual eye exam.",
+    medications:"Lisinopril 10 mg, 1 tablet daily\nAtorvastatin 20 mg, 1 tablet at bedtime\nLatanoprost 0.005% eye drops, 1 drop each eye at bedtime\nVitamin D3 1000 IU daily",
+    allergiesNone:false, allergies:"Penicillin (hives)",
+    conditions:["high_blood_pressure","high_cholesterol","glaucoma"], conditionOther:"",
+    surgeries:"Cataract surgery, right eye — 2021", familyHistory:"Mother: glaucoma. Father: heart disease, stroke.",
+    tobacco:"former", tobaccoQuit:"1994", alcohol:"occasional", drugs:"no",
+    signature:"Plum Okafor", signerRelationship:"",
+    confidence:{ name:"high", dob:"high", address:"high", phone:"medium", insurance:"high", memberId:"low",
+      emergencyContact:"medium", reasonForVisit:"high", medications:"medium", allergies:"high", conditions:"high",
+      surgeries:"medium", familyHistory:"medium", tobacco:"high", tobaccoQuit:"low", alcohol:"high", drugs:"high", signature:"medium", date:"high" },
+    notes:["Member ID: the 4th character could be a 4 or an A — confirm against the insurance card.",
+      "Year quit smoking is partly smudged; read as 1994.",
+      "Atorvastatin dose taken from the pill bottle label; the form left strength blank."]
+  },
+  { // man, 54, back pain / PT
+    filledBy:"", date:TODAY, name:"Marcus Delgado", dob:"11/02/1971",
+    address:"2280 Riverside Dr, Apt 4B, Austin, TX 78741", phone:"(512) 555-0187",
+    insurance:"Blue Cross Blue Shield of Texas PPO", memberId:"XJD884215903",
+    emergencyContact:"Elena Delgado, wife, (512) 555-0163",
+    reasonForVisit:"Lower back pain radiating down right leg for 3 weeks after lifting boxes. Referred by Dr. Patel for physical therapy.",
+    medications:"Metformin 500 mg, twice daily with meals\nIbuprofen 400 mg as needed for pain\nCyclobenzaprine 5 mg at bedtime as needed",
+    allergiesNone:true, allergies:"",
+    conditions:["diabetes","arthritis"], conditionOther:"",
+    surgeries:"Appendectomy — 1998\nLeft knee arthroscopy — 2015", familyHistory:"Father: diabetes, heart disease. Brother: diabetes.",
+    tobacco:"never", tobaccoQuit:"", alcohol:"occasional", drugs:"no",
+    signature:"Marcus Delgado", signerRelationship:"",
+    confidence:{ name:"high", dob:"high", address:"high", phone:"high", insurance:"high", memberId:"medium",
+      emergencyContact:"high", reasonForVisit:"high", medications:"high", allergies:"high", conditions:"high",
+      surgeries:"medium", familyHistory:"medium", tobacco:"high", alcohol:"medium", drugs:"high", signature:"high", date:"high" },
+    notes:["Referral letter from Dr. Patel attached; diagnosis listed as lumbar radiculopathy.",
+      "Knee surgery year written over; read as 2015.",
+      "Alcohol box ticked between Occasional and Daily; recorded as Occasional."]
+  },
+  { // woman, 29, asthma / anxiety, form filled by mother
+    filledBy:"Rosa Nguyen (mother)", date:TODAY, name:"Lily Nguyen", dob:"07/23/1997",
+    address:"915 Maple Ave, Portland, OR 97205", phone:"(503) 555-0128",
+    insurance:"Kaiser Permanente Gold 80 HMO", memberId:"KP-000-47-3319",
+    emergencyContact:"Rosa Nguyen, mother, (503) 555-0174",
+    reasonForVisit:"Frequent headaches and shortness of breath with exercise. New patient establishing care.",
+    medications:"Albuterol HFA inhaler, 2 puffs every 4–6 hours as needed\nSertraline 50 mg daily\nOral contraceptive (Sprintec), 1 tablet daily",
+    allergiesNone:false, allergies:"Sulfa drugs (rash)\nPeanuts (throat swelling — carries EpiPen)",
+    conditions:["asthma","depression_anxiety"], conditionOther:"Migraines",
+    surgeries:"Wisdom teeth removal — 2016", familyHistory:"Mother: thyroid disease. Maternal grandmother: breast cancer.",
+    tobacco:"never", tobaccoQuit:"", alcohol:"occasional", drugs:"no",
+    signature:"Rosa Nguyen", signerRelationship:"Mother",
+    confidence:{ filledBy:"high", name:"high", dob:"medium", address:"high", phone:"high", insurance:"high", memberId:"low",
+      emergencyContact:"high", reasonForVisit:"medium", medications:"high", allergies:"high", conditions:"high", conditionOther:"medium",
+      surgeries:"high", familyHistory:"medium", tobacco:"high", alcohol:"high", drugs:"high", signature:"medium", signerRelationship:"high", date:"high" },
+    notes:["Form completed and signed by the patient's mother; patient is an adult — confirm consent to share.",
+      "Member ID has a glare spot over the middle digits.",
+      "Peanut allergy noted as severe — flag in chart."]
+  },
+  { // man, 76, cardiac / COPD, form filled by son
+    filledBy:"David Brennan (son)", date:TODAY, name:"Walter Brennan", dob:"01/09/1950",
+    address:"63 Harbor View Rd, Portsmouth, NH 03801", phone:"(603) 555-0115",
+    insurance:"Humana Gold Plus (Medicare Advantage HMO)", memberId:"H5619-0417-88210",
+    emergencyContact:"David Brennan, son, (603) 555-0152",
+    reasonForVisit:"Follow-up after hospital stay for chest pain. Increased shortness of breath and ankle swelling.",
+    medications:"Metoprolol succinate 50 mg daily\nApixaban (Eliquis) 5 mg twice daily\nFurosemide 20 mg every morning\nTiotropium (Spiriva) inhaler, 1 inhalation daily\nLevothyroxine 75 mcg daily\nAspirin 81 mg daily",
+    allergiesNone:false, allergies:"Codeine (nausea, confusion)\nShellfish",
+    conditions:["heart_disease","copd","high_blood_pressure","thyroid_disease","kidney_disease"], conditionOther:"Atrial fibrillation",
+    surgeries:"Coronary bypass (CABG ×3) — 2012\nRight hip replacement — 2019", familyHistory:"Father: heart attack at 61. Sister: stroke.",
+    tobacco:"former", tobaccoQuit:"2008", alcohol:"none", drugs:"no",
+    signature:"David Brennan", signerRelationship:"Son (healthcare proxy)",
+    confidence:{ filledBy:"high", name:"high", dob:"high", address:"medium", phone:"high", insurance:"high", memberId:"medium",
+      emergencyContact:"high", reasonForVisit:"medium", medications:"medium", allergies:"high", conditions:"medium", conditionOther:"high",
+      surgeries:"high", familyHistory:"medium", tobacco:"high", tobaccoQuit:"medium", alcohol:"high", drugs:"high", signature:"medium", signerRelationship:"high", date:"high" },
+    notes:["Six medications listed; Apixaban and Aspirin together — clinician may want to review.",
+      "Kidney disease box is lightly marked; confirm with patient.",
+      "Signed by son as healthcare proxy — request a copy of the proxy document."]
+  }
+];
+const DEMO_SEX = ["F","M","F","M"];   // matches DEMO_PATIENTS order
+const lastPick = {};
+function pickPatient(){
+  const sex = document.querySelector('input[name=sex]:checked')?.value || "F";
+  const pool = DEMO_PATIENTS.map((p,i)=>i).filter(i=>DEMO_SEX[i]===sex);
+  let i; do { i = pool[Math.floor(Math.random()*pool.length)]; } while (i===lastPick[sex] && pool.length>1);
+  lastPick[sex] = i;
+  return JSON.parse(JSON.stringify(DEMO_PATIENTS[i]));
+}
+function demoSample(){
+  const wait = (ms, signal) => new Promise((res, rej) => {
+    const t = setTimeout(res, ms);
+    signal?.addEventListener("abort", () => { clearTimeout(t); rej({ code:"cancelled" }); }, { once:true });
+  });
+  const fn = {};
+  fn.limits = async () => ({ maxPromptBytes:65536, images:{ maxCount:5, maxInputBytes:20e6, mediaTypes:["image/jpeg"] } });
+  fn.json = async (input, opts={}) => {
+    await wait(1800, opts.signal);
+    opts.onText?.({ text:"{", delta:"{" });
+    await wait(1400, opts.signal);
+    return pickPatient();
+  };
+  return fn;
+}
+
+(async ()=>{
+  sample = demoSample();
+  renderThumbs();
+  setStatus("Add photos, then Read & fill.");
+  try { downloads = await window.claude?.use("downloads"); } catch { downloads=null; }
+  $("save").hidden=false;   // claude.ai viewer save, or a plain browser download elsewhere
+})();
+
+const COPY = {
+  not_granted:"Claude access wasn't allowed for this page. Reload to be asked again.",
+  rate_limited:"Too many requests right now — wait a minute and try again.",
+  session_expired:"Your Claude session expired — sign in again.",
+  image_rejected:"One of the photos couldn't be used. Try a different file.",
+  images_unavailable:"This Claude view can't send photos. Try a desktop browser at claude.ai.",
+  sampling_disabled:"Claude isn't enabled for this account or organization.",
+  refused:"Claude declined to read these photos. Try different images.",
+  invalid_json:"Claude's answer couldn't be parsed. Try again.",
+  empty_completion:"No answer came back. Try again with fewer photos.",
+};
+
+$("read").onclick = async ()=>{
+  if (!files.length) return;
+  if (!sample){ setStatus(unavailableMsg, true); return; }
+  ctl = new AbortController();
+  $("read").disabled=true; $("stop").hidden=false;
+  setStatus('<span class="spin"></span>Reading photos…');
+  try{
+    const input = PROMPT + `\n\nThere are ${files.length} photo(s). Today's date is ${new Date().toLocaleDateString("en-US")}.`;
+    const opts = { images: files, signal: ctl.signal, modelTier:"default",
+      onText: ()=>setStatus('<span class="spin"></span>Writing the form…') };
+    let d;
+    if (typeof sample.json === "function") d = await sample.json(input, opts);
+    else { const {text}=await sample(input, opts); const m=text.match(/\{[\s\S]*\}/); if(!m) throw {code:"invalid_json"}; d=JSON.parse(m[0]); }
+    if (!d || typeof d!=="object") throw {code:"invalid_json"};
+    fill(d,true);
+    const notes = Array.isArray(d.notes)?d.notes.filter(Boolean):[];
+    $("notes").innerHTML=""; notes.forEach(n=>{const li=document.createElement("li"); li.textContent=String(n); $("notes").append(li);});
+    $("notesBox").hidden = !notes.length;
+    const filled = TEXT.filter(k=>$(k).value).length + (d.conditions?.length?1:0);
+    const lows = Object.values(d.confidence||{}).filter(c=>c==="low").length;
+    setStatus(`Filled ${filled} field${filled===1?"":"s"}${lows?` · ${lows} low-confidence — check those`:""}.`);
+  }catch(e){
+    if (e?.code==="cancelled") setStatus("Stopped.");
+    else if (["not_granted","sampling_disabled","capability_disabled","not_declared","images_unavailable"].includes(e?.code)){ setStatus(COPY[e.code]||"Photo reading isn't available here.", true); if(e.code!=="not_granted") sample=null; }
+    else setStatus((COPY[e?.code] || "Something went wrong reaching Claude. Try again.") + (e?.code ? ` <span style="font-family:var(--mono);opacity:.7">[${e.code}${e.message?": "+String(e.message).slice(0,140).replace(/</g,"&lt;"):""}]</span>` : ""), true);
+    console.error("sample failed", e);
+  }finally{
+    $("stop").hidden=true; renderThumbs();
+  }
+};
+$("stop").onclick=()=>ctl?.abort();
+
+$("clear").onclick=()=>{
+  fill({confidence:{}},false); $("exampleTag").hidden=true;
+  $("notesBox").hidden=true; setStatus(files.length?"Form cleared.":"Form cleared. Add photos to start.");
+};
+$("save").onclick=async()=>{
+  const d=collect();
+  const fn=((d.name||"intake-form").replace(/[^a-z0-9]+/gi,"-").replace(/^-|-$/g,"").toLowerCase()||"intake-form")+".json";
+  const json = JSON.stringify(d,null,2);
+  if (!downloads){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([json],{type:"application/json"})); a.download=fn; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); setStatus("Saved "+fn); return; }
+  try{ await downloads.save({filename:fn, data:json}); setStatus("Saved "+fn); }
+  catch(e){ if(e?.code!=="cancelled") setStatus("Save didn't go through.", true); }
+};
+</script>
+
+</body>
+</html>
