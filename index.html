@@ -1,0 +1,1119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Patient Intake Party 🎨</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Gochi+Hand&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 24px 16px 72px;
+    color: #2a2233;
+    font-family: "Fredoka", "Comic Sans MS", "Comic Neue", "Chalkboard SE", "Marker Felt", "Segoe Print", cursive, system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 8% 12%, #ffd6e7 0 11%, transparent 12%),
+      radial-gradient(circle at 92% 18%, #fff1a8 0 9%, transparent 10%),
+      radial-gradient(circle at 84% 88%, #c9f2ff 0 13%, transparent 14%),
+      radial-gradient(circle at 12% 82%, #d7ffd1 0 10%, transparent 11%),
+      #fffaf0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .party { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 20px; }
+  h1 { font-size: clamp(1.8rem, 6vw, 2.8rem); margin: 0 0 4px; letter-spacing: .5px; }
+  h1 span { display: inline-block; animation: bob 1.6s ease-in-out infinite; }
+  .sub { margin: 0; color: #6b5f7a; font-size: 1.05rem; }
+
+  @keyframes bob { 0%,100% { transform: rotate(-8deg) } 50% { transform: rotate(10deg) translateY(-3px) } }
+
+  /* ---------- Finger paint input component ---------- */
+  .fp-card {
+    background: #fff;
+    border: 4px solid #2a2233;
+    border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* wobbly hand-drawn edge */
+    padding: 22px 18px 20px;
+    box-shadow: 8px 8px 0 #2a2233;
+    position: relative;
+  }
+  .fp-card.is-shaking { animation: shake .45s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0) }
+    20% { transform: translateX(-10px) rotate(-1deg) }
+    40% { transform: translateX(10px) rotate(1deg) }
+    60% { transform: translateX(-8px) }
+    80% { transform: translateX(8px) }
+  }
+
+  .fp-question { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .fp-question h2 { margin: 0; font-size: clamp(1.5rem, 5.5vw, 2.3rem); line-height: 1.1; }
+  .fp-hint { margin: 2px 0 0; color: #6b5f7a; font-size: .95rem; }
+  .fp-speak {
+    flex: 0 0 auto;
+    width: 64px; height: 64px;
+    font-size: 30px; line-height: 1;
+    border: 4px solid #2a2233; border-radius: 50%;
+    background: #ffe23a; cursor: pointer;
+    box-shadow: 4px 4px 0 #2a2233;
+    transition: transform .08s;
+  }
+  .fp-speak:active { transform: translate(3px,3px); box-shadow: 1px 1px 0 #2a2233; }
+  .fp-card.is-talking .fp-speak { animation: talk .28s ease-in-out infinite; }
+  .fp-card.is-talking .fp-question h2 { animation: wiggle .32s ease-in-out infinite; }
+  @keyframes talk { 0%,100% { transform: scale(1) rotate(-6deg) } 50% { transform: scale(1.12) rotate(6deg) } }
+  @keyframes wiggle { 0%,100% { transform: rotate(-1.5deg) } 50% { transform: rotate(1.5deg) } }
+
+  .fp-pots {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center;
+    margin: 10px 0 12px;
+    padding: 10px;
+    background: #f3ecdc;
+    border-radius: 18px;
+    border: 3px dashed #c9b8a0;
+  }
+  .fp-pot {
+    width: 46px; height: 46px; padding: 0;
+    border: 3px solid #2a2233;
+    border-radius: 48% 52% 55% 45% / 55% 48% 52% 45%; /* blobby pot */
+    background: var(--c);
+    cursor: pointer; position: relative;
+    box-shadow: inset -6px -6px 0 rgba(0,0,0,.18), 3px 3px 0 #2a2233;
+    transition: transform .12s;
+  }
+  .fp-pot:hover { transform: scale(1.08) rotate(-4deg); }
+  .fp-pot.is-on { transform: scale(1.22) rotate(6deg); }
+  .fp-pot.is-on::after {
+    content: "👆"; position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -45%); font-size: 24px;
+    filter: drop-shadow(0 1px 0 #fff);
+  }
+
+  .fp-canvas-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    max-width: 100%;
+    background:
+      repeating-radial-gradient(circle at 30% 40%, rgba(0,0,0,.015) 0 2px, transparent 2px 6px),
+      #fffdf7;
+    border: 5px solid #2a2233;
+    border-radius: 14px;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .fp-canvas-wrap canvas {
+    display: block; width: 100%; height: 100%;
+    cursor: none;
+    transition: opacity .4s;
+  }
+  .fp-canvas-wrap.is-washing canvas { opacity: 0; }
+  .fp-finger {
+    position: absolute; left: 0; top: 0;
+    font-size: 42px; line-height: 1;
+    pointer-events: none;
+    transform: translate(-50%, -6%) rotate(0deg);
+    opacity: 0; transition: opacity .15s, transform .06s;
+    filter: drop-shadow(2px 3px 0 rgba(0,0,0,.25));
+  }
+  .fp-finger.is-visible { opacity: 1; }
+  .fp-finger.is-down { transform: translate(-50%, -2%) rotate(-14deg) scale(1.06); }
+  .fp-finger::after {
+    content: ""; position: absolute; left: 50%; top: -2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--paint, #ff4b4b);
+    transform: translateX(-50%);
+    opacity: 0; transition: opacity .1s;
+  }
+  .fp-finger.is-down::after { opacity: .95; }
+
+  .fp-suds {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font-size: clamp(40px, 12vw, 90px);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .fp-canvas-wrap.is-washing .fp-suds { opacity: 1; animation: scrub .5s ease-in-out infinite; }
+  @keyframes scrub { 0%,100% { transform: translateX(-12%) rotate(-8deg) } 50% { transform: translateX(12%) rotate(8deg) } }
+
+  .fp-meter { display: flex; align-items: center; gap: 10px; margin: 12px 2px 6px; font-size: .95rem; }
+  .fp-meter-bar { flex: 1; height: 16px; border: 3px solid #2a2233; border-radius: 10px; background: #fff; overflow: hidden; }
+  .fp-meter-bar i {
+    display: block; height: 100%; width: 0%;
+    background: repeating-linear-gradient(135deg, #ff4b4b 0 10px, #ffe23a 10px 20px, #4fd35a 20px 30px, #33a6ff 30px 40px, #a95cff 40px 50px);
+    transition: width .2s;
+  }
+  .fp-meter-label { white-space: nowrap; }
+
+  .fp-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 12px; }
+  .fp-btn {
+    font: inherit; font-size: 1.15rem; font-weight: bold;
+    padding: 12px 22px;
+    border: 4px solid #2a2233; border-radius: 40px 14px 36px 12px / 12px 36px 14px 40px;
+    background: #fff; color: #2a2233; cursor: pointer;
+    box-shadow: 5px 5px 0 #2a2233;
+    transition: transform .08s, box-shadow .08s;
+  }
+  .fp-btn:active { transform: translate(4px,4px); box-shadow: 1px 1px 0 #2a2233; }
+  .fp-btn.fp-done { background: #4fd35a; }
+  .fp-btn.fp-clear { background: #c9f2ff; }
+  .fp-btn.fp-again { background: #ffd6e7; }
+
+  .fp-fallback { margin-top: 14px; text-align: center; font-size: .9rem; color: #6b5f7a; }
+  .fp-fallback summary { cursor: pointer; }
+  .fp-fallback input {
+    font: inherit; font-size: 1.1rem; margin-top: 8px; padding: 8px 12px;
+    border: 3px solid #2a2233; border-radius: 12px; width: min(100%, 320px);
+  }
+
+  .fp-toast {
+    position: absolute; left: 50%; top: -18px;
+    transform: translate(-50%, -100%);
+    background: #2a2233; color: #fff; padding: 10px 16px;
+    border-radius: 14px; font-size: 1rem; white-space: nowrap; max-width: 92vw;
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  .fp-toast.is-on { opacity: 1; transform: translate(-50%, -110%); }
+
+  /* result: a "HELLO my name is" sticker */
+  .fp-result { display: grid; place-items: center; gap: 16px; padding: 10px 0; }
+  .nametag {
+    width: min(100%, 460px);
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 6px 8px 0 rgba(42,34,51,.85);
+    transform: rotate(-2deg);
+    border: 3px solid #2a2233;
+  }
+  .nametag-top {
+    background: #e63946; color: #fff; text-align: center;
+    font-weight: 900; font-size: 2.2rem; letter-spacing: 2px; padding: 10px 12px 6px;
+  }
+  .nametag-top span { display: block; font-size: 1rem; font-weight: normal; letter-spacing: 0; }
+  .nametag-body { padding: 10px; min-height: 120px; display: grid; place-items: center; }
+  .nametag-body img { width: 100%; height: auto; display: block; border-radius: 8px; }
+  .nametag-body .typed {
+    font-family: "Gochi Hand", "Comic Sans MS", cursive;
+    font-size: 2.8rem; text-align: center; padding: 20px 8px;
+  }
+  .fp-verdict { margin: 0; font-size: 1.15rem; text-align: center; max-width: 520px; }
+  .fp-caption { margin: 0; font-size: .95rem; color: #6b5f7a; text-align: center; }
+
+  /* ---------- Hold-up-your-fingers picker (age) ---------- */
+  #intake > section + section { margin-top: 32px; }
+
+  .fc-hands {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .fc-hand {
+    --tilt: 0deg;
+    position: relative;
+    display: grid; place-items: center;
+    padding: 14px 10px 10px;
+    background: #fff;
+    border: 4px solid #2a2233;
+    border-radius: 28px 14px 30px 12px / 12px 30px 14px 28px;
+    box-shadow: 5px 5px 0 #2a2233;
+    cursor: pointer;
+    transform: rotate(var(--tilt));
+    transition: transform .12s, background .12s, box-shadow .12s;
+  }
+  .fc-hand:nth-child(1) { --tilt: -2deg; }
+  .fc-hand:nth-child(2) { --tilt: 1.5deg; }
+  .fc-hand:nth-child(3) { --tilt: 1deg; }
+  .fc-hand:nth-child(4) { --tilt: -1.5deg; }
+  .fc-hand:hover { transform: rotate(var(--tilt)) translateY(-4px) scale(1.03); }
+  .fc-hand:focus-within { outline: 4px solid #33a6ff; outline-offset: 4px; }
+  .fc-hand.is-picked {
+    background: #fff1a8;
+    transform: rotate(calc(var(--tilt) * -1)) scale(1.05);
+    box-shadow: 2px 2px 0 #2a2233;
+  }
+  .fc-hand.is-picked::after {
+    content: "⭐"; position: absolute; top: -16px; right: -12px;
+    font-size: 34px; line-height: 1;
+    animation: bob 1.2s ease-in-out infinite;
+    filter: drop-shadow(1px 2px 0 rgba(0,0,0,.25));
+  }
+  .fc-hand input {
+    position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none;
+  }
+  .fc-hand svg { display: block; width: 100%; max-width: 150px; height: auto; }
+  .fc-verdict { margin: 16px auto 0; }
+
+  /* ---------- Tap-the-doll body map (where does it hurt) ---------- */
+  .bm-doll-wrap { display: grid; place-items: center; margin-top: 8px; }
+  .bm-doll {
+    display: block;
+    width: min(100%, 280px);
+    height: auto;
+    overflow: visible;
+    touch-action: manipulation;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .bm-doll .ink  { fill: none; stroke: #2a2233; stroke-linecap: round; stroke-linejoin: round; }
+  .bm-doll .limb { fill: none; stroke: var(--c); stroke-linecap: round; }
+  .bm-doll .body { fill: var(--c); stroke: #2a2233; stroke-width: 4; }
+  .bm-part {
+    cursor: pointer; outline: none;
+    transform-box: fill-box; transform-origin: center;
+    transition: filter .12s;
+  }
+  .bm-part:hover { filter: brightness(1.07); }
+  .bm-part:focus-visible .ink,
+  .bm-part:focus-visible .body { stroke: #33a6ff; }
+  .bm-part.is-hurt { --c: #ff4b4b; animation: throb .9s ease-in-out infinite; }
+  @keyframes throb { 0%,100% { transform: scale(1) } 50% { transform: scale(1.06) } }
+  .bm-ouch { font-size: 24px; opacity: 0; transition: opacity .15s; pointer-events: none; }
+  .bm-part.is-hurt .bm-ouch { opacity: 1; }
+  .bm-face-ouch { display: none; }
+  .bm-doll.is-ouch .bm-face-smile { display: none; }
+  .bm-doll.is-ouch .bm-face-ouch { display: block; }
+  .bm-verdict { margin: 16px auto 0; }
+  .fp-btn.bm-fine { background: #fff1a8; }
+
+  /* splash: needed so Chrome lets us talk (speech needs a user gesture) */
+  #splash {
+    position: fixed; inset: 0; z-index: 10;
+    display: grid; place-items: center; text-align: center;
+    background: rgba(255, 250, 240, .96);
+    cursor: pointer; padding: 24px;
+  }
+  #splash .big { font-size: clamp(2rem, 8vw, 3.4rem); margin: 0 0 8px; }
+  #splash .hand { font-size: clamp(64px, 20vw, 120px); display: inline-block; animation: wave 1s ease-in-out infinite; transform-origin: 70% 90%; }
+  @keyframes wave { 0%,100% { transform: rotate(-12deg) } 50% { transform: rotate(16deg) } }
+  #splash small { display: block; color: #6b5f7a; margin-top: 6px; }
+  #splash[hidden] { display: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<main class="party">
+  <header>
+    <h1><span>🎨</span> Patient Intake Party</h1>
+    <p class="sub">Finger-paint your answers. Yes, really. Wash your hands after.</p>
+  </header>
+
+  <form id="intake" autocomplete="off">
+    <section id="q-name"></section>
+    <section id="q-age"></section>
+    <section id="q-hurt"></section>
+  </form>
+</main>
+
+<div id="splash" role="button" tabindex="0" aria-label="Tap to start">
+  <div>
+    <div class="hand">🖐️</div>
+    <p class="big">Tap anywhere to start!</p>
+    <small>(the computer needs your permission before it's allowed to talk)</small>
+    <small id="no-voice" hidden>Your browser can't talk out loud. Chrome can. It's fine, keep painting.</small>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Paint pots ----------
+  const POTS = [
+    { name: 'Ketchup red',          color: '#ff4b4b' },
+    { name: 'Traffic cone orange',  color: '#ff9a1f' },
+    { name: 'Banana yellow',        color: '#ffe23a' },
+    { name: 'Booger green',         color: '#4fd35a' },
+    { name: 'Swimming pool blue',   color: '#33a6ff' },
+    { name: 'Grape purple',         color: '#a95cff' },
+    { name: 'Bubblegum pink',       color: '#ff6fc0' },
+    { name: 'Mud brown',            color: '#8b5a2b' },
+    { name: 'RAINBOW (every color at once)', color: 'rainbow' },
+  ];
+  const RAINBOW_CSS = 'conic-gradient(red, orange, yellow, green, blue, violet, red)';
+
+  const COMPLIMENTS = [
+    "Beautiful! I have absolutely no idea what that says, but it's going straight on the fridge.",
+    "Gorgeous. Is that a J? A dinosaur? Both? I love it.",
+    "A masterpiece. The doctor is going to frame this.",
+    "Stunning work. Your name is now officially... that.",
+    "Ooh, very artistic. We'll just call you the artist formerly known as this painting.",
+    "Wow. Picasso could never. Mostly because he's not here.",
+  ];
+  const EMPTY_MSGS = [
+    "You didn't paint anything! Is your name invisible? Try again.",
+    "That's a blank page. Unless your name is Blank Page, give it another go.",
+    "Hmm, I see nothing. Did you paint with the invisible paint? Try a real color.",
+  ];
+  const MESS_LABELS = [
+    [0,   'Mess-o-meter: suspiciously clean'],
+    [25,  'Mess-o-meter: a respectable mess'],
+    [55,  'Mess-o-meter: your grown-up will notice'],
+    [85,  'Mess-o-meter: bath time is coming'],
+    [100, 'Mess-o-meter: MAXIMUM MESS. Wash your hands. Seriously.'],
+  ];
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+  // ---------- Text to speech (Chrome's speechSynthesis) ----------
+  const Voice = (() => {
+    const synth = window.speechSynthesis;
+    let voices = [];
+    const load = () => { if (synth) voices = synth.getVoices() || []; };
+    load();
+    if (synth) synth.addEventListener('voiceschanged', load);
+
+    function pickVoice() {
+      const prefs = ['Google US English', 'Samantha', 'Karen', 'Moira', 'Daniel', 'Google UK English Female'];
+      for (const p of prefs) {
+        const v = voices.find(v => v.name && v.name.includes(p));
+        if (v) return v;
+      }
+      return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en')) || voices[0] || null;
+    }
+
+    let current = Promise.resolve(); // resolves when whatever is being said right now finishes
+
+    function say(text, opts = {}) {
+      if (!synth) return (current = Promise.resolve());
+      synth.cancel();
+      current = new Promise(resolve => {
+        const u = new SpeechSynthesisUtterance(text);
+        const v = pickVoice();
+        if (v) u.voice = v;
+        u.pitch = opts.pitch ?? 1.35;   // slightly squeaky = funnier
+        u.rate  = opts.rate  ?? 1.0;
+        u.onstart = () => opts.onstart && opts.onstart();
+        const done = () => { opts.onend && opts.onend(); resolve(); };
+        u.onend = done;
+        u.onerror = done;
+        // Chrome sometimes drops an utterance queued in the same tick as cancel()
+        setTimeout(() => synth.speak(u), 60);
+      });
+      return current;
+    }
+
+    return { say, whenDone: () => current, supported: !!synth };
+  })();
+
+  // ---------- The finger-painting input ----------
+  class FingerPaintInput {
+    constructor(root, { question, hint = '', name = 'answer' }) {
+      this.root = root;
+      this.question = question;
+      this.hint = hint;
+      this.name = name;
+      this.baseR = 14;      // finger width in CSS px
+      this.r = this.baseR;
+      this.hue = 0;
+      this.dabs = 0;
+      this.drawing = false;
+      this.pot = POTS[0];
+
+      this.render();
+      this.bind();
+      this.resize();
+    }
+
+    render() {
+      this.root.className = 'fp';
+      this.root.innerHTML = `
+        <div class="fp-card">
+          <div class="fp-toast" role="status" aria-live="polite"></div>
+          <div class="fp-question">
+            <button type="button" class="fp-speak" aria-label="Hear the question again" title="Say it again, robot">🔊</button>
+            <div>
+              <h2>${this.question}</h2>
+              ${this.hint ? `<p class="fp-hint">${this.hint}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="fp-pots" role="group" aria-label="Paint colors">
+            ${POTS.map((p, i) => `
+              <button type="button" class="fp-pot${i === 0 ? ' is-on' : ''}" data-i="${i}"
+                aria-pressed="${i === 0}" aria-label="${p.name}" title="${p.name}"
+                style="--c:${p.color === 'rainbow' ? RAINBOW_CSS : p.color}"></button>`).join('')}
+          </div>
+
+          <div class="fp-canvas-wrap">
+            <canvas aria-label="Finger painting canvas. Paint your answer here."></canvas>
+            <div class="fp-finger" aria-hidden="true">👆</div>
+            <div class="fp-suds" aria-hidden="true">🫧🧼🫧</div>
+          </div>
+
+          <div class="fp-meter">
+            <span class="fp-meter-label">Mess-o-meter: suspiciously clean</span>
+            <div class="fp-meter-bar" aria-hidden="true"><i></i></div>
+          </div>
+
+          <div class="fp-actions">
+            <button type="button" class="fp-btn fp-clear">🧼 Wash it off</button>
+            <button type="button" class="fp-btn fp-done">✅ Done!</button>
+          </div>
+
+          <details class="fp-fallback">
+            <summary>Fingers not cooperating? Type it instead (boring, but allowed)</summary>
+            <input type="text" class="fp-typed" placeholder="Your name" maxlength="80" autocomplete="off">
+          </details>
+
+          <input type="hidden" name="${this.name}" class="fp-value">
+        </div>
+
+        <div class="fp-result" hidden>
+          <div class="nametag">
+            <div class="nametag-top">HELLO<span>my name is</span></div>
+            <div class="nametag-body"></div>
+          </div>
+          <p class="fp-verdict"></p>
+          <p class="fp-caption"></p>
+          <div class="fp-actions">
+            <button type="button" class="fp-btn fp-again">🎨 Paint it again</button>
+          </div>
+        </div>`;
+
+      const $ = s => this.root.querySelector(s);
+      this.card    = $('.fp-card');
+      this.result  = $('.fp-result');
+      this.wrap    = $('.fp-canvas-wrap');
+      this.canvas  = $('canvas');
+      this.ctx     = this.canvas.getContext('2d');
+      this.finger  = $('.fp-finger');
+      this.meterBar   = $('.fp-meter-bar i');
+      this.meterLabel = $('.fp-meter-label');
+      this.toastEl = $('.fp-toast');
+      this.typed   = $('.fp-typed');
+      this.hidden  = $('.fp-value');
+      this.finger.style.setProperty('--paint', this.pot.color);
+    }
+
+    bind() {
+      const c = this.canvas;
+      c.addEventListener('pointerdown',   e => this.onDown(e));
+      c.addEventListener('pointermove',   e => this.onMove(e));
+      c.addEventListener('pointerup',     e => this.onUp(e));
+      c.addEventListener('pointercancel', e => this.onUp(e));
+      c.addEventListener('pointerleave',  () => this.finger.classList.remove('is-visible'));
+      c.addEventListener('contextmenu',   e => e.preventDefault());
+
+      this.root.querySelectorAll('.fp-pot').forEach(btn => {
+        btn.addEventListener('click', () => this.choosePot(+btn.dataset.i));
+      });
+      this.root.querySelector('.fp-speak').addEventListener('click', () => this.speakQuestion());
+      this.root.querySelector('.fp-clear').addEventListener('click', () => this.clear(true));
+      this.root.querySelector('.fp-done').addEventListener('click', () => this.done());
+      this.root.querySelector('.fp-again').addEventListener('click', () => this.paintAgain());
+
+      if ('ResizeObserver' in window) {
+        new ResizeObserver(() => this.resize()).observe(this.wrap);
+      } else {
+        window.addEventListener('resize', () => this.resize());
+      }
+    }
+
+    // Keep the drawing when the canvas changes size (rotation, window resize).
+    resize() {
+      const rect = this.wrap.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const snap = document.createElement('canvas');
+      snap.width = this.canvas.width; snap.height = this.canvas.height;
+      if (snap.width && snap.height) snap.getContext('2d').drawImage(this.canvas, 0, 0);
+
+      this.canvas.width  = Math.round(rect.width * dpr);
+      this.canvas.height = Math.round(rect.height * dpr);
+      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (snap.width && snap.height) this.ctx.drawImage(snap, 0, 0, rect.width, rect.height);
+    }
+
+    // ----- colors -----
+    choosePot(i) {
+      this.pot = POTS[i];
+      this.root.querySelectorAll('.fp-pot').forEach((b, j) => {
+        b.classList.toggle('is-on', i === j);
+        b.setAttribute('aria-pressed', String(i === j));
+      });
+      this.finger.style.setProperty('--paint', this.pot.color === 'rainbow' ? RAINBOW_CSS : this.pot.color);
+    }
+    currentColor() {
+      if (this.pot.color === 'rainbow') {
+        this.hue = (this.hue + 2.5) % 360;
+        return `hsl(${this.hue} 95% 55%)`;
+      }
+      return this.pot.color;
+    }
+
+    // ----- pointer handling -----
+    pos(e) {
+      const r = this.canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+    moveFinger(e, p) {
+      // On touch the real finger is already there; only show the cartoon one for mouse/pen.
+      if (e.pointerType === 'touch') { this.finger.classList.remove('is-visible'); return; }
+      this.finger.style.left = p.x + 'px';
+      this.finger.style.top  = p.y + 'px';
+      this.finger.classList.add('is-visible');
+    }
+    onDown(e) {
+      e.preventDefault();
+      this.canvas.setPointerCapture(e.pointerId);
+      const p = this.pos(e);
+      this.drawing = true;
+      this.moved = 0;
+      this.r = this.baseR;
+      this.last = { ...p, t: performance.now() };
+      this.moveFinger(e, p);
+      this.finger.classList.add('is-down');
+      this.dab(p.x, p.y, this.r * 1.15);
+    }
+    onMove(e) {
+      const p = this.pos(e);
+      this.moveFinger(e, p);
+      if (!this.drawing) return;
+
+      const now = performance.now();
+      const dx = p.x - this.last.x, dy = p.y - this.last.y;
+      const d = Math.hypot(dx, dy);
+      const dt = Math.max(1, now - this.last.t);
+      const v = d / dt; // px per ms
+
+      // Slow, deliberate smearing = fat blobby line. Fast flicks = thin + splatter.
+      let target = this.baseR * (1.35 - Math.min(v, 1.5) * 0.45);
+      if (e.pointerType === 'pen' && e.pressure > 0) target *= 0.5 + e.pressure;
+      target = Math.max(this.baseR * 0.45, Math.min(this.baseR * 1.5, target));
+      this.r += (target - this.r) * 0.3;
+
+      const step = Math.max(2, this.r * 0.3);
+      const n = Math.max(1, Math.ceil(d / step));
+      for (let i = 1; i <= n; i++) {
+        const t = i / n;
+        this.dab(this.last.x + dx * t, this.last.y + dy * t, this.r);
+      }
+      if (v > 0.8 && Math.random() < 0.6) this.splatter(p.x, p.y, v);
+
+      this.moved += d;
+      this.last = { ...p, t: now };
+    }
+    onUp(e) {
+      if (!this.drawing) return;
+      this.drawing = false;
+      this.finger.classList.remove('is-down');
+      try { this.canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+      if (this.moved < 3 && this.last) this.fingerprint(this.last.x, this.last.y);
+      this.updateMeter();
+    }
+
+    // ----- paint marks -----
+    dab(x, y, r) {
+      const ctx = this.ctx;
+      const jx = (Math.random() - 0.5) * r * 0.35;
+      const jy = (Math.random() - 0.5) * r * 0.35;
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = this.currentColor();
+      ctx.beginPath();
+      ctx.ellipse(x + jx, y + jy, r * (0.85 + Math.random() * 0.3), r * (0.85 + Math.random() * 0.3), Math.random() * Math.PI, 0, Math.PI * 2);
+      ctx.fill();
+      // occasional glossy highlight so it looks wet
+      if (Math.random() < 0.12) {
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#fff';
+        ctx.beginPath();
+        ctx.ellipse(x - r * 0.3, y - r * 0.3, r * 0.35, r * 0.22, -0.7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      this.dabs++;
+      if (this.dabs % 25 === 0) this.updateMeter();
+    }
+    splatter(x, y, v) {
+      const n = 1 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const dist = 12 + Math.random() * 40 * Math.min(v, 2);
+        this.dab(x + Math.cos(a) * dist, y + Math.sin(a) * dist, 1.5 + Math.random() * 3);
+      }
+    }
+    fingerprint(x, y) {
+      const ctx = this.ctx;
+      const r = this.baseR * 1.35;
+      this.dab(x, y, r);
+      ctx.save();
+      ctx.strokeStyle = 'rgba(0,0,0,.22)';
+      ctx.lineWidth = 1.4;
+      for (let k = 1; k <= 3; k++) {
+        const start = Math.random() * Math.PI * 2;
+        ctx.beginPath();
+        ctx.ellipse(x, y, r * k / 4.2, r * k / 3.6, 0.4, start, start + Math.PI * (1 + Math.random() * 0.8));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    updateMeter() {
+      const pct = Math.min(100, Math.round(this.dabs / 14));
+      this.meterBar.style.width = pct + '%';
+      let label = MESS_LABELS[0][1];
+      for (const [min, text] of MESS_LABELS) if (pct >= min) label = text;
+      this.meterLabel.textContent = label;
+    }
+
+    // ----- speech -----
+    speakQuestion() {
+      return Voice.say(this.question, {
+        onstart: () => this.card.classList.add('is-talking'),
+        onend:   () => this.card.classList.remove('is-talking'),
+      });
+    }
+
+    // ----- value / actions -----
+    isEmpty() { return this.dabs === 0; }
+    toDataURL() { return this.canvas.toDataURL('image/png'); }
+
+    toast(msg) {
+      this.toastEl.textContent = msg;
+      this.toastEl.classList.add('is-on');
+      clearTimeout(this._toastT);
+      this._toastT = setTimeout(() => this.toastEl.classList.remove('is-on'), 2800);
+    }
+
+    clear(withSuds) {
+      const wipe = () => {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.restore();
+        this.dabs = 0;
+        this.updateMeter();
+      };
+      if (!withSuds) { wipe(); return; }
+      this.wrap.classList.add('is-washing');
+      Voice.say(pick(['Squeaky clean!', 'Scrub scrub scrub!', 'All gone. Like it never happened.']), { rate: 1.1 });
+      setTimeout(wipe, 420);
+      setTimeout(() => this.wrap.classList.remove('is-washing'), 900);
+    }
+
+    done() {
+      const typed = this.typed.value.trim();
+      if (this.isEmpty() && !typed) {
+        this.card.classList.remove('is-shaking');
+        void this.card.offsetWidth; // restart animation
+        this.card.classList.add('is-shaking');
+        const msg = pick(EMPTY_MSGS);
+        this.toast(msg);
+        Voice.say(msg);
+        return;
+      }
+
+      const body = this.result.querySelector('.nametag-body');
+      body.innerHTML = '';
+      let value;
+      if (!this.isEmpty()) {
+        value = this.toDataURL();
+        const img = document.createElement('img');
+        img.src = value;
+        img.alt = typed ? `Finger painting of the name ${typed}` : 'Your finger-painted name';
+        body.appendChild(img);
+      } else {
+        value = typed;
+        const div = document.createElement('div');
+        div.className = 'typed';
+        div.textContent = typed;
+        body.appendChild(div);
+      }
+      this.hidden.value = value;
+
+      const verdict = this.isEmpty()
+        ? "You typed it. Efficient. A little boring. But efficient."
+        : pick(COMPLIMENTS);
+      this.result.querySelector('.fp-verdict').textContent = verdict;
+      this.result.querySelector('.fp-caption').textContent =
+        (!this.isEmpty() && typed) ? `Translation provided by the patient: "${typed}"` : '';
+
+      this.card.hidden = true;
+      this.result.hidden = false;
+      Voice.say(verdict);
+      if (!this.isEmpty()) this.celebrate();
+
+      this.root.dispatchEvent(new CustomEvent('fp:answer', {
+        bubbles: true,
+        detail: { name: this.name, painting: this.isEmpty() ? null : value, typed: typed || null },
+      }));
+    }
+
+    // Paint-splat confetti in the colors of the pots (canvas-confetti, loaded from jsDelivr).
+    celebrate() {
+      if (typeof window.confetti !== 'function') return;
+      const colors = POTS.filter(p => p.color !== 'rainbow').map(p => p.color);
+      const base = { colors, shapes: ['circle'], scalar: 1.6, gravity: 0.9, ticks: 220, disableForReducedMotion: true };
+      window.confetti({ ...base, particleCount: 90, spread: 80, origin: { x: 0.2, y: 0.7 }, angle: 60 });
+      window.confetti({ ...base, particleCount: 90, spread: 80, origin: { x: 0.8, y: 0.7 }, angle: 120 });
+      setTimeout(() => window.confetti({ ...base, particleCount: 60, spread: 120, startVelocity: 25, origin: { x: 0.5, y: 0.4 } }), 250);
+    }
+
+    paintAgain() {
+      this.result.hidden = true;
+      this.card.hidden = false;
+      this.clear(false);
+      this.typed.value = '';
+      this.hidden.value = '';
+      this.resize();
+      this.speakQuestion();
+    }
+  }
+
+  window.FingerPaintInput = FingerPaintInput;
+
+  // ---------- The hold-up-your-fingers input ----------
+  const SKINS   = ['#f8d3b0', '#d9a066', '#a3683a', '#6b3e1e'];
+  const SLEEVES = ['#ff4b4b', '#33a6ff', '#4fd35a', '#a95cff'];
+  const AGE_VERDICTS = {
+    1: "One! A whole year old. Congratulations on the walking.",
+    2: "Two! Terrific two. Or terrible two. The doctor will decide.",
+    3: "Three! Practically a grown-up. Do you have a job yet?",
+    4: "Four! That's ALL the fingers. Welcome to the big leagues.",
+  };
+
+  // A cartoon hand (back of the hand, thumb tucked at the side) holding up `count` fingers.
+  function handSVG(count, skin, sleeve) {
+    const X  = [42, 58.5, 75, 91.5];  // index, middle, ring, pinky (left edge of each finger)
+    const UP = [24, 16, 22, 34];      // fingertip y when raised; middle is tallest
+    const W = 13, R = W / 2, BASE = 88, FOLDED = 64;
+    const fingers = X.map((x, i) => {
+      const top = i < count ? UP[i] : FOLDED;
+      // Open path (no Z) so the finger's bottom edge doesn't draw a line across the palm.
+      return `<path d="M${x} ${BASE} V${top + R} A${R} ${R} 0 0 1 ${x + W} ${top + R} V${BASE}"/>`;
+    }).join('');
+    return `
+      <svg viewBox="0 0 120 140" aria-hidden="true" focusable="false">
+        <g fill="${skin}" stroke="#2a2233" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+          <ellipse cx="33" cy="98" rx="11" ry="18" transform="rotate(-18 33 98)"/>
+          <rect x="40" y="78" width="66" height="50" rx="18"/>
+          ${fingers}
+        </g>
+        <rect x="46" y="122" width="54" height="16" rx="7" fill="${sleeve}" stroke="#2a2233" stroke-width="4"/>
+      </svg>`;
+  }
+
+  class FingerCountInput {
+    constructor(root, { question, hint = '', name = 'answer', max = 4 }) {
+      this.root = root;
+      this.question = question;
+      this.hint = hint;
+      this.name = name;
+      this.max = max;
+      this.value = null;
+
+      this.render();
+      this.bind();
+    }
+
+    render() {
+      this.root.className = 'fc';
+      const hands = [];
+      for (let n = 1; n <= this.max; n++) {
+        const s = n === 1 ? '' : 's';
+        hands.push(`
+          <label class="fc-hand" data-n="${n}">
+            <input type="radio" name="${this.name}" value="${n}"
+              aria-label="${n} year${s} old, a hand holding up ${n} finger${s}">
+            ${handSVG(n, SKINS[(n - 1) % SKINS.length], SLEEVES[(n - 1) % SLEEVES.length])}
+          </label>`);
+      }
+      this.root.innerHTML = `
+        <div class="fp-card">
+          <div class="fp-question">
+            <button type="button" class="fp-speak" aria-label="Hear the question again" title="Say it again, robot">🔊</button>
+            <div>
+              <h2>${this.question}</h2>
+              ${this.hint ? `<p class="fp-hint">${this.hint}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="fc-hands" role="radiogroup" aria-label="${this.question}">
+            ${hands.join('')}
+          </div>
+
+          <p class="fp-verdict fc-verdict" hidden></p>
+        </div>`;
+
+      this.card      = this.root.querySelector('.fp-card');
+      this.verdictEl = this.root.querySelector('.fc-verdict');
+    }
+
+    bind() {
+      this.root.querySelector('.fp-speak').addEventListener('click', () => this.speakQuestion());
+      this.root.querySelectorAll('.fc-hand input').forEach(input => {
+        input.addEventListener('change', () => { if (input.checked) this.pick(+input.value); });
+      });
+    }
+
+    speakQuestion() {
+      return Voice.say(this.question, {
+        onstart: () => this.card.classList.add('is-talking'),
+        onend:   () => this.card.classList.remove('is-talking'),
+      });
+    }
+
+    pick(n) {
+      this.value = n;
+      this.root.querySelectorAll('.fc-hand').forEach(l => l.classList.toggle('is-picked', +l.dataset.n === n));
+
+      const verdict = AGE_VERDICTS[n] || `${n}! Great number. One of my favorites.`;
+      this.verdictEl.textContent = verdict;
+      this.verdictEl.hidden = false;
+      Voice.say(verdict);
+
+      this.root.dispatchEvent(new CustomEvent('fp:answer', {
+        bubbles: true,
+        detail: { name: this.name, value: n },
+      }));
+    }
+  }
+
+  window.FingerCountInput = FingerCountInput;
+
+  // ---------- The tap-the-doll body map input ----------
+  // The doll faces you, so its right arm is on YOUR left. Kids won't mind. Doctors will.
+  const PARTS = [
+    { id: 'head',      label: 'Head' },
+    { id: 'tummy',     label: 'Tummy' },
+    { id: 'right_arm', label: 'Right arm' },
+    { id: 'left_arm',  label: 'Left arm' },
+    { id: 'right_leg', label: 'Right leg' },
+    { id: 'left_leg',  label: 'Left leg' },
+  ];
+  const HURT_VERDICTS = {
+    head:      "Your head! Ouch. Have you tried thinking softer thoughts?",
+    tummy:     "Tummy trouble. Was it the broccoli? It's always the broccoli.",
+    right_arm: "Your right arm! Good thing you brought a spare.",
+    left_arm:  "Your left arm! Good thing you brought a spare.",
+    right_leg: "Your right leg! We'll have you hopping again in no time.",
+    left_leg:  "Your left leg! We'll have you hopping again in no time.",
+  };
+  const HURT_EVERYWHERE = "Ouch, ouch, AND ouch? You're falling apart, kiddo. Don't worry, the doctor has glue.";
+  const BETTER_MSGS = [
+    "Feeling better already? Amazing. Medicine works fast around here.",
+    "All better! That was quick.",
+    "Boo-boo gone. Poof.",
+  ];
+  const NOTHING_HURTS = "Nothing hurts? Look at you. Healthy as a horse. A very small horse.";
+
+  // A rag doll built from tappable parts. Each part is a focusable checkbox with a bandage
+  // that appears when it's picked. The face switches from smile to "ouch" if anything hurts.
+  function dollSVG() {
+    const skin = '#f8d3b0', shirt = '#33a6ff', shoe = '#a95cff';
+    const label = id => PARTS.find(p => p.id === id).label;
+    const limb = (d, w) =>
+      `<path class="ink" d="${d}" stroke-width="${w + 8}"/><path class="limb" d="${d}" stroke-width="${w}"/>`;
+    const part = (id, c, inner, ox, oy) => `
+      <g class="bm-part" data-part="${id}" role="checkbox" tabindex="0" aria-checked="false"
+         aria-label="${label(id)}" style="--c:${c}">
+        ${inner}
+        <text class="bm-ouch" x="${ox}" y="${oy}" text-anchor="middle" dominant-baseline="central">🩹</text>
+      </g>`;
+    // yarn hair: loops along the top of the head
+    const hair = [-150, -120, -90, -60, -30].map(deg => {
+      const a = deg * Math.PI / 180;
+      const cx = (100 + 33 * Math.cos(a)).toFixed(1), cy = (50 + 33 * Math.sin(a)).toFixed(1);
+      return `<circle cx="${cx}" cy="${cy}" r="10" fill="#ff9a1f" stroke="#2a2233" stroke-width="4"/>`;
+    }).join('');
+
+    return `
+      <svg class="bm-doll" viewBox="0 0 200 245" role="group" aria-label="A rag doll. Tap a body part to say it hurts.">
+        <rect x="88" y="74" width="24" height="24" rx="6" fill="${skin}" stroke="#2a2233" stroke-width="4"/>
+        ${part('right_arm', skin, limb('M74 100 Q44 110 40 148', 18) + `<circle class="body" cx="40" cy="156" r="12"/>`, 50, 124)}
+        ${part('left_arm',  skin, limb('M126 100 Q156 110 160 148', 18) + `<circle class="body" cx="160" cy="156" r="12"/>`, 150, 124)}
+        ${part('right_leg', skin, limb('M86 160 L82 218', 20) + `<ellipse class="shoe" cx="79" cy="228" rx="16" ry="9" fill="${shoe}" stroke="#2a2233" stroke-width="4"/>`, 82, 190)}
+        ${part('left_leg',  skin, limb('M114 160 L118 218', 20) + `<ellipse class="shoe" cx="121" cy="228" rx="16" ry="9" fill="${shoe}" stroke="#2a2233" stroke-width="4"/>`, 118, 190)}
+        ${part('tummy', shirt, `
+          <rect class="body" x="66" y="90" width="68" height="76" rx="22"/>
+          <circle cx="100" cy="108" r="3.5" fill="#2a2233"/>
+          <circle cx="100" cy="150" r="3.5" fill="#2a2233"/>`, 100, 129)}
+        ${part('head', skin, `
+          ${hair}
+          <circle class="body" cx="100" cy="50" r="34"/>
+          <circle cx="88" cy="46" r="3.5" fill="#2a2233"/>
+          <circle cx="112" cy="46" r="3.5" fill="#2a2233"/>
+          <circle cx="80" cy="58" r="5" fill="#ff9fbf" opacity=".8"/>
+          <circle cx="120" cy="58" r="5" fill="#ff9fbf" opacity=".8"/>
+          <path class="bm-face-smile" d="M88 62 Q100 73 112 62" fill="none" stroke="#2a2233" stroke-width="3" stroke-linecap="round"/>
+          <g class="bm-face-ouch">
+            <path d="M81 36 l11 4 M119 36 l-11 4" fill="none" stroke="#2a2233" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="100" cy="67" rx="7" ry="5.5" fill="#2a2233"/>
+            <ellipse cx="85" cy="56" rx="2.5" ry="4.5" fill="#33a6ff"/>
+            <ellipse cx="115" cy="56" rx="2.5" ry="4.5" fill="#33a6ff"/>
+          </g>`, 100, 34)}
+      </svg>`;
+  }
+
+  class BodyMapInput {
+    constructor(root, { question, hint = '', name = 'answer' }) {
+      this.root = root;
+      this.question = question;
+      this.hint = hint;
+      this.name = name;
+      this.hurt = new Set();
+      this.touched = false;   // has the kid tapped anything yet (including "nothing hurts")
+
+      this.render();
+      this.bind();
+    }
+
+    render() {
+      this.root.className = 'bm';
+      this.root.innerHTML = `
+        <div class="fp-card">
+          <div class="fp-question">
+            <button type="button" class="fp-speak" aria-label="Hear the question again" title="Say it again, robot">🔊</button>
+            <div>
+              <h2>${this.question}</h2>
+              ${this.hint ? `<p class="fp-hint">${this.hint}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="bm-doll-wrap">${dollSVG()}</div>
+
+          <div class="fp-actions">
+            <button type="button" class="fp-btn bm-fine">😄 Nothing hurts!</button>
+          </div>
+
+          <div hidden>
+            ${PARTS.map(p => `<input type="checkbox" name="${this.name}" value="${p.id}" tabindex="-1">`).join('')}
+          </div>
+
+          <p class="fp-verdict bm-verdict" hidden></p>
+        </div>`;
+
+      this.card      = this.root.querySelector('.fp-card');
+      this.doll      = this.root.querySelector('.bm-doll');
+      this.verdictEl = this.root.querySelector('.bm-verdict');
+      this.boxes = {};
+      this.root.querySelectorAll('input[type="checkbox"]').forEach(b => { this.boxes[b.value] = b; });
+    }
+
+    bind() {
+      this.root.querySelector('.fp-speak').addEventListener('click', () => this.speakQuestion());
+      this.root.querySelector('.bm-fine').addEventListener('click', () => this.nothingHurts());
+      this.root.querySelectorAll('.bm-part').forEach(g => {
+        g.addEventListener('click', () => this.toggle(g.dataset.part));
+        g.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.toggle(g.dataset.part); }
+        });
+      });
+    }
+
+    speakQuestion() {
+      return Voice.say(this.question, {
+        onstart: () => this.card.classList.add('is-talking'),
+        onend:   () => this.card.classList.remove('is-talking'),
+      });
+    }
+
+    get value() { return [...this.hurt]; }
+
+    toggle(id) {
+      const on = !this.hurt.has(id);
+      if (on) this.hurt.add(id); else this.hurt.delete(id);
+      this.sync();
+
+      const verdict = !on ? pick(BETTER_MSGS)
+        : this.hurt.size >= 3 ? HURT_EVERYWHERE
+        : HURT_VERDICTS[id];
+      this.answer(verdict);
+    }
+
+    nothingHurts() {
+      this.hurt.clear();
+      this.sync();
+      this.answer(NOTHING_HURTS);
+    }
+
+    // Push the Set into the doll (classes, aria) and the hidden checkboxes (form value).
+    sync() {
+      this.root.querySelectorAll('.bm-part').forEach(g => {
+        const on = this.hurt.has(g.dataset.part);
+        g.classList.toggle('is-hurt', on);
+        g.setAttribute('aria-checked', String(on));
+      });
+      for (const [id, box] of Object.entries(this.boxes)) box.checked = this.hurt.has(id);
+      this.doll.classList.toggle('is-ouch', this.hurt.size > 0);
+    }
+
+    answer(verdict) {
+      this.touched = true;
+      this.verdictEl.textContent = verdict;
+      this.verdictEl.hidden = false;
+      Voice.say(verdict);
+
+      this.root.dispatchEvent(new CustomEvent('fp:answer', {
+        bubbles: true,
+        detail: { name: this.name, value: this.value },
+      }));
+    }
+  }
+
+  window.BodyMapInput = BodyMapInput;
+
+  // ---------- Wire up the page ----------
+  const nameQ = new FingerPaintInput(document.getElementById('q-name'), {
+    question: "What's your name?",
+    hint: 'Paint it with your finger. Spelling optional. Elbows allowed.',
+    name: 'patient_name',
+  });
+
+  const ageQ = new FingerCountInput(document.getElementById('q-age'), {
+    question: 'How old are you?',
+    hint: "Tap the hand that's holding up your age. Older than four? Pick four and hold up the rest yourself.",
+    name: 'patient_age',
+  });
+
+  const hurtQ = new BodyMapInput(document.getElementById('q-hurt'), {
+    question: 'Where does it hurt?',
+    hint: "Tap the doll where it hurts on YOU. Tap again if it stops. Tap lots of spots if you're having a day.",
+    name: 'hurt_spots',
+  });
+
+  document.getElementById('intake').addEventListener('submit', e => e.preventDefault());
+  document.getElementById('intake').addEventListener('fp:answer', e => {
+    console.log('Intake answer:', e.detail);
+    // Move the party along to the next question once this one is answered.
+    const next = e.detail.name === 'patient_name' && ageQ.value === null ? ageQ
+               : e.detail.name === 'patient_age'  && !hurtQ.touched     ? hurtQ
+               : null;
+    if (next) {
+      Voice.whenDone().then(() => {
+        next.root.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        next.speakQuestion();
+      });
+    }
+  });
+
+  const splash = document.getElementById('splash');
+  if (!Voice.supported) document.getElementById('no-voice').hidden = false;
+  const start = () => {
+    splash.hidden = true;
+    // This click is the "user activation" Chrome requires before speechSynthesis will play.
+    setTimeout(() => nameQ.speakQuestion(), 150);
+  };
+  splash.addEventListener('click', start, { once: true });
+  splash.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } }, { once: true });
+})();
+</script>
+</body>
+</html>
