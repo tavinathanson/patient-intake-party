@@ -34,14 +34,14 @@ const FIELDS = [
 
   { key: 'reason_for_visit',    section: 1, label: 'Reason for visit',    type: 'textarea', required: true,  width: 420 },
   { key: 'current_medications', section: 1, label: 'Current medications', type: 'textarea', required: true,  width: 440, hint: 'include OTC, vitamins, eye drops, inhalers. "none" is fine' },
-  { key: 'allergies',           section: 1, label: 'Allergies',           type: 'allergies', required: true, width: 340 },
+  { key: 'allergies',           section: 1, label: 'Allergies',           type: 'allergies', required: true, width: 340, stack: true },
   { key: 'past_conditions',     section: 1, label: 'Past conditions',     type: 'checks',   required: false, width: 660, hint: 'check all that apply', options: CONDITIONS },
-  { key: 'past_surgeries',      section: 1, label: 'Past surgeries',      type: 'text',     required: false, width: 360, hint: 'procedure and year' },
+  { key: 'past_surgeries',      section: 1, label: 'Past surgeries',      type: 'text',     required: false, width: 360, hint: 'procedure and year', stack: true },
   { key: 'family_history',      section: 1, label: 'Family history',      type: 'textarea', required: false, width: 420, hint: 'parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma' },
 
   { key: 'tobacco',   section: 2, label: 'Tobacco',            type: 'radio', required: true, width: 440, options: ['Never', 'Former', 'Current'], extra: { key: 'tobacco_quit', placeholder: 'quit year (if former)' } },
-  { key: 'alcohol',   section: 2, label: 'Alcohol',            type: 'radio', required: true, width: 400, options: ['None', 'Occasional', 'Daily'] },
-  { key: 'drugs',     section: 2, label: 'Recreational drugs', type: 'radio', required: true, width: 320, options: ['No', 'Yes'] },
+  { key: 'alcohol',   section: 2, label: 'Alcohol',            type: 'radio', required: true, width: 400, options: ['None', 'Occasional', 'Daily'], stack: true },
+  { key: 'drugs',     section: 2, label: 'Recreational drugs', type: 'radio', required: true, width: 320, options: ['No', 'Yes'], stack: true },
   { key: 'signature', section: 2, label: 'Signature',          type: 'text',  required: true, width: 380, hint: 'type your full name to sign', placeholder: 'Your name' },
 ];
 
@@ -50,6 +50,8 @@ const RUN_MUL = 3;
 const BLOCK_SPEEDUP = 0.035; // each completed block adds 3.5% to the scroll speed (linear, up to about +60% at the end)
 const TOTAL_TICKS = 400;
 const DANGER_PX = 200;
+const STACK_GAP = 28;   // vertical space between stacked blocks
+const BASE_LIFT = 48;   // bottom block sits this far above the ground
 
 // ---------------------------------------------------------------------------
 // DOM handles
@@ -137,6 +139,7 @@ const audio = (() => {
           { vol: 0.16 });
     },
     run()   { seq([[N.C5, 40]], { vol: 0.05 }); },
+    jump()  { seq([[330, 180]], { vol: 0.08, glide: 500 }); },
   };
 })();
 
@@ -191,6 +194,7 @@ const G = {
   lastFrame: 0,
   anim: 0,
   fieldPoints: 0,
+  lastHurry: 0,
 };
 const PLAYER_X = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--player-x')) || 120;
 
@@ -274,8 +278,10 @@ function layout() {
   let section = -1;
   G.sectionStarts = [];
 
+  let col = null; // the column being built: { x, w, bottom, h, tier }
   for (const c of G.cards) {
-    if (c.def.section !== section) {
+    const stacking = c.def.stack && col;
+    if (!stacking && c.def.section !== section) {
       section = c.def.section;
       const s = SECTIONS[section];
       if (section === 0) {
@@ -289,9 +295,19 @@ function layout() {
         x += 300;
       }
     }
-    c.x = x;
-    c.el.style.left = x + 'px';
-    x += c.w + SECTIONS[section].gap;
+    if (stacking) {
+      c.x = col.x;
+      c.tier = col.tier + 1;
+      c.bottom = col.bottom + col.h + STACK_GAP;
+      col.w = Math.max(col.w, c.w); col.bottom = c.bottom; col.h = c.el.offsetHeight; col.tier = c.tier;
+    } else {
+      c.x = x; c.tier = 0; c.bottom = BASE_LIFT;
+      col = { x, w: c.w, bottom: BASE_LIFT, h: c.el.offsetHeight, tier: 0 };
+    }
+    c.el.style.left = c.x + 'px';
+    c.el.style.bottom = `calc(var(--ground-h) + ${c.bottom}px)`;
+    c.el.classList.toggle('stacked', c.tier > 0);
+    x = col.x + col.w + SECTIONS[section].gap; // where the next column starts
   }
 
   x += 260;
@@ -377,11 +393,20 @@ function award(c) {
   G.fieldPoints += pts;
   G.coins += 1;
   audio.coin();
+  spinJump();
   popup(`+${pts}`, c.el.getBoundingClientRect());
   if (G.coins % 10 === 0) {
     G.lives += 1;
     setTimeout(() => { audio.oneUp(); popup('1-UP', player.getBoundingClientRect(), true); }, 350);
   }
+}
+
+function spinJump() {
+  if (G.state !== 'playing') return;
+  player.classList.remove('spin');
+  void player.offsetWidth; // restart the animation if it is already running
+  player.classList.add('spin');
+  audio.jump();
 }
 
 function renderHUD() {
@@ -468,7 +493,7 @@ function frame(now) {
     c.el.classList.toggle('danger', inDanger);
     if (inDanger) {
       dangerLevel = Math.max(dangerLevel, 1 - (right - px) / DANGER_PX);
-      if (!c.warned) { c.warned = true; audio.hurry(); }
+      if (!c.warned) { c.warned = true; if (now - G.lastHurry > 600) { G.lastHurry = now; audio.hurry(); } }
     }
   }
   danger.style.setProperty('--danger', dangerLevel.toFixed(2));
@@ -680,6 +705,7 @@ stage.addEventListener('mousedown', (e) => {
   if (!e.target.closest('.card') && document.activeElement && document.activeElement.blur) document.activeElement.blur();
 });
 
+player.addEventListener('animationend', (e) => { if (e.animationName === 'spin') player.classList.remove('spin'); });
 $('btn-start').addEventListener('click', start);
 $('btn-retry').addEventListener('click', start);
 $('btn-again').addEventListener('click', () => { G.state = 'title'; show('title'); player.className = 'player'; });

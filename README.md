@@ -15,6 +15,7 @@ A side-scrolling patient intake form. The screen scrolls right at a constant spe
 * Every 10 blocks earns a 1-UP.
 * TIME counts down from 400 across the level. Hold `Shift` or `→` (when not typing) to run, and every tick left at the flag is worth 50 points.
 * Three worlds (1-1 Who are you, 1-2 Medical stuff, 1-3 The hard questions). Each one scrolls faster. Every block you complete also nudges the speed up about 3.5%, so by the last block the screen moves about 1.6× as fast as it did at the start.
+* World 1-2 stacks some blocks two high and world 1-3 stacks three, so you have to juggle several at once as they scroll by together.
 * Reach the flag and you get a "Course Clear" screen with the care team summary and a Copy JSON button. Nothing leaves the browser.
 
 **Controls:** `Tab` next block, `Enter` commit and jump to the next block, `Esc` let go of a block, click the sky to let go too. Pick EASY / NORMAL / HARD on the title screen.
