@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gone Fishin' Intake</title>
+<style>
+  :root {
+    --bg: #e8f4f8;
+    --ink: #1d2b36;
+    --muted: #5b6b78;
+    --card: #ffffff;
+    --accent: #e8743b;
+    --accent-ink: #ffffff;
+    --water-top: #5fb3d9;
+    --water-bottom: #1f5f8b;
+    --green: #3fb96b;
+    --red: #e04848;
+    --decoy: #b05cc9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Trebuchet MS", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  main { max-width: 960px; margin: 0 auto; padding: 16px; }
+  h1 { margin: 8px 0 4px; font-size: 2rem; }
+  .sub { color: var(--muted); margin: 0 0 16px; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .panel {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 16px;
+  }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  input[type=text] {
+    flex: 1 1 240px;
+    font-size: 1rem;
+    padding: 10px 12px;
+    border: 2px solid #c8d8e0;
+    border-radius: 8px;
+  }
+  button {
+    font: inherit;
+    font-weight: bold;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: #dfe8ee; color: var(--ink); }
+  button.bait.selected { outline: 3px solid var(--ink); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; min-height: 36px; }
+  .chip {
+    background: #dff0f7;
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.95rem;
+  }
+  .chip button { padding: 0 0 0 6px; background: none; color: var(--muted); }
+  .hint { color: var(--muted); font-size: 0.9rem; margin-top: 8px; }
+  .banner {
+    font-size: 1.3rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .status { min-height: 1.5em; color: var(--muted); margin: 8px 0; }
+  .pond-wrap { position: relative; }
+  canvas {
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    touch-action: none;
+    cursor: crosshair;
+  }
+  .meter-wrap { margin-top: 12px; visibility: hidden; }
+  .meter-wrap.show { visibility: visible; }
+  .meter {
+    position: relative;
+    height: 28px;
+    border-radius: 14px;
+    background: linear-gradient(90deg,
+      var(--red) 0 8%, #f3d36b 8% 35%, var(--green) 35% 65%, #f3d36b 65% 92%, var(--red) 92% 100%);
+  }
+  .marker {
+    position: absolute;
+    top: -4px;
+    width: 8px;
+    height: 36px;
+    margin-left: -4px;
+    background: var(--ink);
+    border-radius: 4px;
+  }
+  .progress { height: 8px; background: #dfe8ee; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .progress div { height: 100%; width: 0; background: var(--green); }
+  .card-overlay {
+    position: absolute; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(10, 30, 50, 0.45);
+    border-radius: 12px;
+  }
+  .card-overlay.show { display: flex; }
+  .catch-card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 360px;
+    text-align: center;
+  }
+  .catch-card .fishname { font-size: 1.4rem; font-weight: bold; margin: 8px 0; }
+  .log-item { border-bottom: 1px solid #e3ecf1; padding: 10px 0; }
+  .log-item:last-child { border-bottom: none; }
+  .log-q { font-weight: bold; }
+  .log-meta { color: var(--muted); font-size: 0.9rem; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; font-weight: bold; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎣 Gone Fishin' Intake</h1>
+  <p class="sub">The patient intake form that makes you work for it.</p>
+
+  <!-- Phase 1: answer dump -->
+  <section id="screen-dump" class="screen active">
+    <div class="panel">
+      <p><strong>Enter your answers.</strong> You'll find out the questions later.</p>
+      <div class="row">
+        <input id="answer-input" type="text" placeholder="e.g. Tuesday, left knee, penicillin…" autocomplete="off">
+        <button id="add-btn">Add answer</button>
+      </div>
+      <div id="chips" class="chips"></div>
+      <p id="count-hint" class="hint">0 / 6 answers. Doctors often ask about… things.</p>
+    </div>
+    <button id="release-btn" disabled>🌊 Release into pond</button>
+  </section>
+
+  <!-- Phase 2: fishing -->
+  <section id="screen-pond" class="screen">
+    <div class="panel">
+      <div id="question" class="banner"></div>
+      <div class="row">
+        <span style="align-self:center">Bait:</span>
+        <button class="bait secondary" data-bait="worm">🪱 Worm</button>
+        <button class="bait secondary" data-bait="shrimp">🦐 Shrimp</button>
+        <button class="bait secondary" data-bait="lure">✨ Fancy Lure</button>
+      </div>
+      <div id="status" class="status">Pick a bait, then click the pond to cast.</div>
+      <div class="pond-wrap">
+        <canvas id="pond" width="900" height="480"></canvas>
+        <div id="card-overlay" class="card-overlay">
+          <div class="catch-card">
+            <div>You caught:</div>
+            <div id="catch-name" class="fishname"></div>
+            <div id="catch-meta" class="hint"></div>
+            <div class="row" style="justify-content:center;margin-top:12px">
+              <button id="use-btn">Use this answer</button>
+              <button id="release-fish-btn" class="secondary">Release</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="meter-wrap" class="meter-wrap">
+        <div class="hint" style="margin:0 0 6px">Hold the mouse or spacebar to reel. Stay in the green!</div>
+        <div class="meter"><div id="marker" class="marker"></div></div>
+        <div class="progress"><div id="progress-fill"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Phase 3: catch log -->
+  <section id="screen-log" class="screen">
+    <div class="panel">
+      <h2>📋 Catch Log for the Care Team</h2>
+      <div id="log"></div>
+      <details>
+        <summary>What the patient actually typed</summary>
+        <ul id="raw-answers"></ul>
+      </details>
+    </div>
+    <button id="restart-btn">🎣 Fish again</button>
+  </section>
+</main>
+
+<script>
+// ---------- Data ----------
+const CATEGORIES = {
+  name:      { q: "What is your name?",                     fallback: ["Greg Fishman", "Anonymous Tuna"] },
+  dob:       { q: "What is your date of birth?",            fallback: ["03/14/1987", "The Before Times"] },
+  insurance: { q: "Who is your insurance provider?",        fallback: ["Blue Cross Blue Fish", "Aetna Maybe"] },
+  meds:      { q: "What medications are you taking?",       fallback: ["Ibuprofen", "Fish oil"] },
+  allergies: { q: "Do you have any allergies?",             fallback: ["Shellfish (ironic)", "Pollen"] },
+  symptoms:  { q: "What brings you in today?",              fallback: ["Back pain", "General unease"] },
+};
+const QUESTION_ORDER = ["name", "dob", "insurance", "meds", "allergies", "symptoms"];
+const DECOYS = ["Mild dragon", "Allergic to Tuesdays", "Insurance: vibes", "I am a fish",
+                "Probably fine", "My cousin's rash", "42", "Soup"];
+const BAITS = {
+  worm:   ["name", "dob"],
+  shrimp: ["meds", "allergies"],
+  lure:   ["insurance", "symptoms"],
+};
+const MIN_ANSWERS = 6;
+
+function categorize(text) {
+  const t = text.trim();
+  const lower = t.toLowerCase();
+  if (/blue|aetna|cigna|united|kaiser|medicare|medicaid|insurance|humana|ppo|hmo/.test(lower)) return "insurance";
+  if (/allerg|penicillin|peanut|shellfish|latex|pollen|sulfa|bee/.test(lower)) return "allergies";
+  if (/\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\b(19|20)\d{2}\b|\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b/.test(lower)) return "dob";
+  if (/ibuprofen|tylenol|advil|aspirin|metformin|ozempic|insulin|oxycodone|lipitor|zoloft|prozac|xanax/.test(lower)
+      || /(in|ol|ide|pril|ine|one|pam)$/.test(lower)) return "meds";
+  if (/^[A-Z][a-z'-]+(\s+[A-Z][a-z'-]+)+$/.test(t)) return "name";
+  return "symptoms";
+}
+
+// ---------- Phase 1 ----------
+const answers = [];
+const $ = (id) => document.getElementById(id);
+
+function renderChips() {
+  const chips = $("chips");
+  chips.innerHTML = "";
+  answers.forEach((a, i) => {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = a;
+    const x = document.createElement("button");
+    x.textContent = "✕";
+    x.onclick = () => { answers.splice(i, 1); renderChips(); };
+    chip.appendChild(x);
+    chips.appendChild(chip);
+  });
+  const n = answers.length;
+  $("count-hint").textContent = n >= MIN_ANSWERS
+    ? `${n} answers. That's probably enough. Probably.`
+    : `${n} / ${MIN_ANSWERS} answers. Doctors often ask about… things.`;
+  $("release-btn").disabled = n < MIN_ANSWERS;
+}
+
+function addAnswer() {
+  const v = $("answer-input").value.trim();
+  if (!v) return;
+  answers.push(v);
+  $("answer-input").value = "";
+  $("answer-input").focus();
+  renderChips();
+}
+$("add-btn").onclick = addAnswer;
+$("answer-input").addEventListener("keydown", (e) => { if (e.key === "Enter") addAnswer(); });
+$("release-btn").onclick = startPond;
+
+// ---------- Pond ----------
+const canvas = $("pond");
+const ctx = canvas.getContext("2d");
+const W = canvas.width, H = canvas.height;
+const SURFACE = 40;
+const ROD = { x: W / 2, y: 0 };
+
+let fish = [];
+let qIndex = 0;
+let bait = null;
+let state = "idle"; // idle | sinking | waiting | reeling | landed | done
+let hook = null;    // { x, y, targetY }
+let hooked = null;
+let holding = false;
+let reel = null;    // { marker, progress, drift, driftTimer }
+let stats = null;
+let catchLog = [];
+
+function makeFish(text, cat, decoy) {
+  const big = text.length > 12;
+  ctx.font = `bold ${big ? 14 : 12}px Trebuchet MS, sans-serif`;
+  const tw = ctx.measureText(text).width;
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  const speed = big ? 0.5 + Math.random() * 0.4 : 1.6 + Math.random() * 0.8;
+  return {
+    text, cat, decoy, big,
+    w: Math.max(big ? 90 : 60, tw + 30),
+    h: big ? 40 : 26,
+    x: 80 + Math.random() * (W - 160),
+    y: SURFACE + 40 + Math.random() * (H - SURFACE - 80),
+    vx: dir * speed,
+    speed,
+    phase: Math.random() * Math.PI * 2,
+  };
+}
+
+function startPond() {
+  fish = [];
+  const byCat = {};
+  answers.forEach((a) => {
+    const cat = categorize(a);
+    byCat[cat] = (byCat[cat] || 0) + 1;
+    fish.push(makeFish(a, cat, false));
+  });
+  // Fallback fish for empty categories, so every question is answerable
+  for (const cat of QUESTION_ORDER) {
+    if (!byCat[cat]) CATEGORIES[cat].fallback.forEach((t) => fish.push(makeFish(t, cat, false)));
+  }
+  // Decoys
+  const shuffled = [...DECOYS].sort(() => Math.random() - 0.5);
+  const nDecoys = 4 + Math.floor(Math.random() * 3);
+  shuffled.slice(0, nDecoys).forEach((t) => fish.push(makeFish(t, null, true)));
+
+  qIndex = 0;
+  catchLog = [];
+  showScreen("screen-pond");
+  startQuestion();
+}
+
+function startQuestion() {
+  stats = { casts: 0, snaps: 0, releases: 0 };
+  const cat = QUESTION_ORDER[qIndex];
+  $("question").textContent = `Q${qIndex + 1} of ${QUESTION_ORDER.length}: ${CATEGORIES[cat].q}`;
+  setBait(null);
+  resetHook();
+  setStatus("Pick a bait, then click the pond to cast.");
+}
+
+function setBait(b) {
+  bait = b;
+  document.querySelectorAll(".bait").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.bait === b);
+  });
+}
+document.querySelectorAll(".bait").forEach((btn) => {
+  btn.onclick = () => {
+    if (state === "reeling" || state === "landed") return;
+    setBait(btn.dataset.bait);
+    setStatus("Now click the pond to cast.");
+  };
+});
+
+function setStatus(s) { $("status").textContent = s; }
+
+function resetHook() {
+  state = "idle";
+  hook = null;
+  hooked = null;
+  reel = null;
+  holding = false;
+  $("meter-wrap").classList.remove("show");
+}
+
+function canvasPoint(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+}
+
+canvas.addEventListener("pointerdown", (e) => {
+  if (state === "reeling") { holding = true; return; }
+  if (state === "landed" || state === "done") return;
+  if (!bait) { setStatus("🪱 Pick a bait first. The fish have standards."); return; }
+  const p = canvasPoint(e);
+  hook = { x: p.x, y: SURFACE, targetY: Math.max(SURFACE + 20, Math.min(H - 20, p.y)) };
+  state = "sinking";
+  stats.casts++;
+  setStatus("Splash! Waiting for a bite…");
+});
+window.addEventListener("pointerup", () => { holding = false; });
+window.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && state === "reeling") { holding = true; e.preventDefault(); }
+});
+window.addEventListener("keyup", (e) => { if (e.code === "Space") holding = false; });
+
+function attracted(f) {
+  return bait && (f.decoy || BAITS[bait].includes(f.cat));
+}
+
+function update() {
+  for (const f of fish) {
+    if (f === hooked) continue;
+    f.phase += 0.05;
+    if (state === "waiting" && attracted(f)) {
+      // Drift toward the hook
+      const dx = hook.x - f.x, dy = hook.y - f.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const s = f.speed * 0.6;
+      f.vx = (dx / d) * s || f.vx;
+      f.x += f.vx;
+      f.y += (dy / d) * s;
+    } else {
+      if (Math.abs(f.vx) < f.speed * 0.9) f.vx = Math.sign(f.vx || 1) * f.speed;
+      f.x += f.vx;
+      f.y += Math.sin(f.phase) * 0.4;
+      if (f.x < f.w / 2 || f.x > W - f.w / 2) f.vx *= -1;
+    }
+    f.x = Math.max(f.w / 2, Math.min(W - f.w / 2, f.x));
+    f.y = Math.max(SURFACE + f.h / 2 + 4, Math.min(H - f.h / 2 - 4, f.y));
+  }
+
+  if (state === "sinking") {
+    hook.y += 6;
+    if (hook.y >= hook.targetY) { hook.y = hook.targetY; state = "waiting"; }
+  }
+
+  if (state === "waiting") {
+    const biter = fish.find((f) => Math.abs(f.x - hook.x) < f.w / 2 && Math.abs(f.y - hook.y) < f.h / 2);
+    if (biter) startReel(biter);
+  }
+
+  if (state === "reeling") updateReel();
+}
+
+function startReel(f) {
+  hooked = f;
+  state = "reeling";
+  reel = { marker: 0.5, progress: 0, drift: 0, driftTimer: 0, startY: hook.y };
+  $("meter-wrap").classList.add("show");
+  setStatus(`🐟 Something bit! Reel it in!`);
+}
+
+function updateReel() {
+  const pull = hooked.big ? 0.012 : 0.008;
+  if (--reel.driftTimer <= 0) {
+    reel.drift = (Math.random() < 0.5 ? -1 : 1) * pull * (0.5 + Math.random());
+    reel.driftTimer = 30 + Math.random() * 40;
+  }
+  reel.marker += holding ? 0.012 : -0.010;
+  reel.marker += reel.drift + (Math.random() - 0.5) * pull;
+
+  if (reel.marker > 0.35 && reel.marker < 0.65) reel.progress += 1 / 120; // 2s at 60fps
+
+  // Hook rises as progress grows; the hooked fish thrashes along with it
+  hook.y = reel.startY - (reel.startY - SURFACE - 10) * reel.progress;
+  hooked.phase += 0.4;
+  hooked.x = hook.x + Math.sin(hooked.phase) * 8;
+  hooked.y = hook.y + hooked.h / 2;
+
+  $("marker").style.left = `${reel.marker * 100}%`;
+  $("progress-fill").style.width = `${Math.min(1, reel.progress) * 100}%`;
+
+  if (reel.marker <= 0.08 || reel.marker >= 0.92) {
+    stats.snaps++;
+    const escaped = hooked;
+    escaped.vx = (Math.random() < 0.5 ? -1 : 1) * escaped.speed;
+    resetHook();
+    setStatus(`💥 SNAP! "${escaped.text}" has escaped. It lives freely now. Cast again.`);
+  } else if (reel.progress >= 1) {
+    land();
+  }
+}
+
+function land() {
+  state = "landed";
+  $("meter-wrap").classList.remove("show");
+  $("catch-name").textContent = `"${hooked.text}"`;
+  $("catch-meta").textContent = `${hooked.big ? "Big & slow" : "Small & fast"}${hooked.decoy ? " · suspiciously shiny" : ""}`;
+  $("card-overlay").classList.add("show");
+  setStatus("A fine catch. Probably.");
+}
+
+$("release-fish-btn").onclick = () => {
+  stats.releases++;
+  const f = hooked;
+  f.x = 80 + Math.random() * (W - 160);
+  f.y = SURFACE + 40 + Math.random() * (H - SURFACE - 80);
+  $("card-overlay").classList.remove("show");
+  resetHook();
+  setStatus(`🌊 "${f.text}" swims away, unbothered. Cast again.`);
+};
+
+$("use-btn").onclick = () => {
+  const cat = QUESTION_ORDER[qIndex];
+  const f = hooked;
+  catchLog.push({ q: CATEGORIES[cat].q, fish: f, stats: { ...stats }, correct: f.cat === cat });
+  fish = fish.filter((x) => x !== f);
+  $("card-overlay").classList.remove("show");
+  resetHook();
+  qIndex++;
+  if (qIndex >= QUESTION_ORDER.length) return showLog();
+  startQuestion();
+  setStatus(f.cat === cat ? "✅ Answer locked in. Next question!" : "🤔 The doctor will surely understand. Next question!");
+};
+
+// ---------- Drawing ----------
+function drawFish(f) {
+  const dir = f.vx >= 0 ? 1 : -1;
+  const color = f.decoy ? "#b05cc9" : f.big ? "#2a9d8f" : "#f4a261";
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  // Tail
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  const tx = -dir * f.w / 2;
+  ctx.moveTo(tx + dir * 4, 0);
+  ctx.lineTo(tx - dir * 16, -f.h / 2);
+  ctx.lineTo(tx - dir * 16, f.h / 2);
+  ctx.closePath();
+  ctx.fill();
+  // Body
+  ctx.beginPath();
+  ctx.ellipse(0, 0, f.w / 2, f.h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Eye
+  ctx.fillStyle = "#fff";
+  ctx.beginPath();
+  ctx.arc(dir * (f.w / 2 - 10), -f.h / 6, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#1d2b36";
+  ctx.beginPath();
+  ctx.arc(dir * (f.w / 2 - 9), -f.h / 6, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // Label
+  ctx.fillStyle = "#fff";
+  ctx.font = `bold ${f.big ? 14 : 12}px Trebuchet MS, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(f.text, -dir * 4, 1);
+  ctx.restore();
+}
+
+function draw() {
+  // Sky strip + water
+  ctx.fillStyle = "#cfeaf5";
+  ctx.fillRect(0, 0, W, SURFACE);
+  const g = ctx.createLinearGradient(0, SURFACE, 0, H);
+  g.addColorStop(0, "#5fb3d9");
+  g.addColorStop(1, "#1f5f8b");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, SURFACE, W, H - SURFACE);
+  // Seaweed
+  ctx.strokeStyle = "rgba(40,120,70,0.6)";
+  ctx.lineWidth = 6;
+  for (let i = 0; i < 8; i++) {
+    const x = 60 + i * 115;
+    ctx.beginPath();
+    ctx.moveTo(x, H);
+    ctx.quadraticCurveTo(x + Math.sin(Date.now() / 700 + i) * 15, H - 40, x, H - 70 - (i % 3) * 20);
+    ctx.stroke();
+  }
+
+  fish.forEach(drawFish);
+
+  // Rod tip + line + hook
+  ctx.fillStyle = "#7a4e2d";
+  ctx.fillRect(ROD.x - 5, 0, 10, 14);
+  if (hook) {
+    ctx.strokeStyle = "#1d2b36";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(ROD.x, 12);
+    ctx.lineTo(hook.x, hook.y);
+    ctx.stroke();
+    ctx.strokeStyle = "#999";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(hook.x, hook.y + 6, 6, Math.PI, Math.PI * 2.4, true);
+    ctx.stroke();
+    if (bait && state !== "reeling") {
+      ctx.font = "18px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText({ worm: "🪱", shrimp: "🦐", lure: "✨" }[bait], hook.x, hook.y + 14);
+    }
+  }
+}
+
+function loop() {
+  if (document.getElementById("screen-pond").classList.contains("active")) {
+    update();
+    draw();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ---------- Phase 3 ----------
+function showLog() {
+  state = "done";
+  const log = $("log");
+  log.innerHTML = "";
+  catchLog.forEach((entry) => {
+    const f = entry.fish;
+    const div = document.createElement("div");
+    div.className = "log-item";
+    const q = document.createElement("div");
+    q.className = "log-q";
+    q.textContent = `Q: ${entry.q}`;
+    const a = document.createElement("div");
+    a.textContent = `🎣 Caught: "${f.text}"${entry.correct ? "" : "  ⚠️"}`;
+    const meta = document.createElement("div");
+    meta.className = "log-meta";
+    const kind = f.decoy ? "decoy" : entry.correct ? "on-topic" : "off-topic";
+    meta.textContent = `(${kind} · ${f.big ? "big & slow" : "small & fast"} · ${entry.stats.casts} casts · `
+      + `${entry.stats.snaps} snapped lines · ${entry.stats.releases} releases)`;
+    div.append(q, a, meta);
+    log.appendChild(div);
+  });
+  const raw = $("raw-answers");
+  raw.innerHTML = "";
+  answers.forEach((a) => {
+    const li = document.createElement("li");
+    li.textContent = a;
+    raw.appendChild(li);
+  });
+  showScreen("screen-log");
+}
+
+$("restart-btn").onclick = () => {
+  answers.length = 0;
+  renderChips();
+  showScreen("screen-dump");
+};
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id));
+}
+</script>
+</body>
+</html>
