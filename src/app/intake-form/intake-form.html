@@ -1,0 +1,64 @@
+<form class="sheet" (submit)="$event.preventDefault()">
+  <h2 class="sheet-title">New Patient Intake Form</h2>
+
+  @for (row of rows(); track row.def.key; let i = $index) {
+    <section class="row" [class.hidden]="i >= revealed()" [class.edited]="row.edited">
+      <div class="label">
+        <label [attr.for]="'f-' + row.def.key">{{ row.def.label }}</label>
+        @if (row.def.hint) {
+          <span class="hint">({{ row.def.hint }})</span>
+        }
+      </div>
+
+      <div class="value">
+        @switch (row.def.kind) {
+          @case ('block') {
+            <textarea
+              [id]="'f-' + row.def.key"
+              rows="2"
+              [value]="row.value"
+              (input)="onInput(row.def.key, $event)"
+            ></textarea>
+          }
+          @case ('conditions') {
+            <div class="grid" [id]="'f-' + row.def.key">
+              @for (condition of allConditions; track condition) {
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    [checked]="row.conditions.includes(condition)"
+                    (change)="toggleCondition.emit({ key: row.def.key, condition })"
+                  />
+                  <span>{{ condition }}</span>
+                </label>
+              }
+            </div>
+            @for (writeIn of writeIns(row); track writeIn) {
+              <p class="write-in">☑ {{ writeIn }}</p>
+            }
+          }
+          @default {
+            <input
+              type="text"
+              [id]="'f-' + row.def.key"
+              [value]="row.value"
+              (input)="onInput(row.def.key, $event)"
+            />
+          }
+        }
+
+        <p class="meta">
+          @if (row.edited) {
+            <span class="badge human">corrected by a human</span>
+          } @else {
+            <span class="badge">{{ row.guess.confidence.toFixed(1) }}% confident</span>
+          }
+          <span class="why">{{ row.guess.why }}</span>
+          <button type="button" class="reroll" (click)="reroll.emit(row.def.key)" title="Guess again, differently">
+            🎲
+          </button>
+        </p>
+      </div>
+    </section>
+  }
+</form>

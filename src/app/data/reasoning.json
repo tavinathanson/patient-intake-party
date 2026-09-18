@@ -1,0 +1,16 @@
+{
+  "generic": [
+    "Dominant hue {hex}. Consistent with the above.",
+    "{orientation} photograph, {w}×{h}. Narrows it considerably.",
+    "Mean brightness {brightness}%. That settles it.",
+    "Aspect ratio {ratio}. Textbook.",
+    "Contrast {contrast}%. We have seen this before.",
+    "File is {kb} kB. Which is telling.",
+    "No contradicting evidence in the photograph.",
+    "Cross-referenced against the photograph. Twice.",
+    "Corner pixels agree.",
+    "The {hueName} channel is doing most of the work here.",
+    "Held to the light. Unchanged. Confirmed.",
+    "This follows directly from the previous field."
+  ]
+}

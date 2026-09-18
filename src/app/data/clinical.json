@@ -1,0 +1,106 @@
+{
+  "reason_for_visit": {
+    "mild": [
+      "Patient points at the photograph and says nothing further.",
+      "Follow-up. Unclear on what."
+    ],
+    "spicy": [
+      "Something has been going on. Duration: a while. Location: broadly.",
+      "Patient was told to come in by someone whose name he did not catch.",
+      "It flared up, then settled, then did it again, and here we are."
+    ],
+    "unhinged": [
+      "The photograph was taken as evidence. The patient rests his case.",
+      "Patient does not have a reason and finds the question presumptuous.",
+      "Patient is here about the thing he mentioned last time, which was not written down."
+    ],
+    "why": [
+      "The subject is centred. Centred subjects indicate a chief complaint.",
+      "Dominant hue {hex}. Classic presentation."
+    ]
+  },
+
+  "current_medications": {
+    "mild": [
+      "one (1) beige oval, two (2) vitamins purchased under duress, something for the thing",
+      "nothing regular, plus paracetamol when it's bad"
+    ],
+    "spicy": [
+      "the small white one, the other small white one, and a third he stopped without telling anyone",
+      "eye drops (2 kinds?), an inhaler he does not use, aspirin",
+      "metformin, the nerve pill, and whatever the hospital started in {oldYear}"
+    ],
+    "unhinged": [
+      "Patient takes 'whatever's in the door of the fridge'.",
+      "Six medications. Patient can name one. It is not a medication.",
+      "The bottle in the photograph, plus five others of the same size and different opinions."
+    ],
+    "why": [
+      "Detected {contrast}% contrast, which is the contrast of a person on several things at once.",
+      "Photograph contains objects. Some objects are medication."
+    ]
+  },
+
+  "allergies": {
+    "mild": ["none", "penicillin"],
+    "spicy": [
+      "penicillin, ceiling fans, being asked twice",
+      "None known. None investigated.",
+      "sulfa — or the other one, the family is split"
+    ],
+    "unhinged": [
+      "Allergic to 'one of the antibiotics'. Which one is a long-running family argument.",
+      "No allergies. The patient has, however, reacted badly to several people.",
+      "None. Patient has never been given anything, so nothing has had the opportunity."
+    ],
+    "why": ["No rash visible in the photograph, which proves very little, and we will use it anyway."]
+  },
+
+  "past_conditions": {
+    "other": [
+      "Other: the 2009 thing",
+      "Other: whatever the hospital called it",
+      "Other: a heart murmur that resolved when nobody was looking",
+      "Other: 'nerves'",
+      "Other: something the patient describes with his hands"
+    ],
+    "why": [
+      "Boxes ticked on the balance of the pixels.",
+      "{brightness}% mean brightness. That's at least two conditions.",
+      "Ticked generously. It is easier to un-tick a box than to find one."
+    ]
+  },
+
+  "past_surgeries": {
+    "mild": ["knee, {oldYear}", "none"],
+    "spicy": [
+      "{oldYear}, something abdominal, went fine per patient, no scar located",
+      "Tonsils. Possibly someone else's tonsils.",
+      "gallbladder, {oldYear}. Or {oldYear2}. One of the two."
+    ],
+    "unhinged": [
+      "Three procedures. Patient recalls the car park at two of them.",
+      "'They took something out.' Records to follow. Records will not follow.",
+      "{oldYear}: keyhole. {oldYear2}: the other kind. Neither appears in any chart."
+    ],
+    "why": ["Scar tissue is invisible in a photograph, so we have assumed the maximum."]
+  },
+
+  "family_history": {
+    "mild": ["father: heart", "don't know"],
+    "spicy": [
+      "Father: heart. Mother: the same, but she denied it.",
+      "Diabetes on one side. Which side is disputed.",
+      "Glaucoma, allegedly, in an aunt nobody can name"
+    ],
+    "unhinged": [
+      "Father: everything. Mother: also everything, but later. Sibling: unaccounted for since {oldYear}.",
+      "Family history strong. Family weak. Patient declined to elaborate, then elaborated for nine minutes.",
+      "Both parents died of 'old age' at 58. This has never been questioned by anyone."
+    ],
+    "why": [
+      "Family resemblance assessed from a photograph containing no family.",
+      "Hereditary risk inferred from the {orientation} framing."
+    ]
+  }
+}

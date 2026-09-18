@@ -1,0 +1,80 @@
+<div class="page">
+  <header class="masthead">
+    <h1>One photo. Entire form.</h1>
+    <p class="strap">
+      Our patient will only communicate in photographs. Upload one and the intake form fills itself
+      in — every field, no questions, total confidence.
+    </p>
+  </header>
+
+  <section class="intake">
+    <label class="drop" (dragover)="$event.preventDefault()" (drop)="onDrop($event)">
+      <input type="file" accept="image/*" capture="environment" (change)="onFile($event)" hidden />
+      @if (photoUrl(); as url) {
+        <img class="preview" [src]="url" [alt]="photoName()" />
+      } @else {
+        <span class="drop-icon" aria-hidden="true">📷</span>
+        <span class="drop-text">Drop a photo, or tap to take one</span>
+        <span class="drop-sub">Anything at all. It will not change how certain we are.</span>
+      }
+    </label>
+
+    <div class="samples">
+      <span class="samples-label">or try</span>
+      @for (sample of samples; track sample.file) {
+        <button type="button" class="chip" (click)="useSample(sample)">{{ sample.label }}</button>
+      }
+    </div>
+
+    @if (error(); as message) {
+      <p class="error">{{ message }}</p>
+    }
+  </section>
+
+  @if (signals()) {
+    <section class="verdict">
+      <p class="read">{{ verdict() }}</p>
+      <div class="controls">
+        <label class="chaos">
+          <span>Tone: <strong>{{ chaosLabel() }}</strong></span>
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="1"
+            [value]="chaos()"
+            (input)="setChaos($event)"
+            aria-label="How unhinged should the guesses be"
+          />
+        </label>
+        <button type="button" class="action" (click)="guessAgain()">Guess again</button>
+        <button type="button" class="action" (click)="copyJson()">
+          {{ copied() ? 'Copied' : 'Copy as JSON' }}
+        </button>
+        <button type="button" class="action" (click)="print()">Print</button>
+      </div>
+    </section>
+
+    <app-intake-form
+      [rows]="rows()"
+      [revealed]="revealed()"
+      (edit)="onEdit($event)"
+      (toggleCondition)="onToggleCondition($event)"
+      (reroll)="reroll($event)"
+    />
+  }
+
+  <footer class="footer">
+    <p>
+      <strong>No model. No API. No network.</strong> Every answer is drawn from a hand-written list
+      by a random number generator seeded with your photo's bytes — which is why the same photo
+      always gives the same form, and why the confidence scores mean nothing whatsoever.
+    </p>
+    <p class="small">
+      Built for
+      <a href="https://github.com/tavinathanson/patient-intake-party">Patient Intake Party</a>.
+      Synthetic patients, invented answers, not medical advice. The point: a form filled entirely
+      with assumptions looks exactly like a real one until somebody checks.
+    </p>
+  </footer>
+</div>

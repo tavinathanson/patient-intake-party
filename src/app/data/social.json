@@ -1,0 +1,61 @@
+{
+  "tobacco": {
+    "mild": ["Never", "Former (quit {oldYear})"],
+    "spicy": [
+      "Former (quit {oldYear}, resumed {oldYear2}, quit again during this intake)",
+      "Current. Patient describes the amount as 'socially, but constantly'."
+    ],
+    "unhinged": [
+      "Never. Patient smells strongly of a different answer.",
+      "Former (quit {oldYear}). Also current. Both boxes were ticked with conviction.",
+      "Current, but only outdoors, and the patient is usually outdoors."
+    ],
+    "why": ["Warm cast at {hex}. Tobacco-adjacent.", "40 years of anything leaves a colour."]
+  },
+
+  "alcohol": {
+    "mild": ["None", "Occasional"],
+    "spicy": [
+      "Occasional (defined by the patient as 'when it's around')",
+      "None. Patient asked what counts. Patient was not told. Patient answered 'none'."
+    ],
+    "unhinged": [
+      "Daily, but only the one, and the one is not measured.",
+      "Occasional. Patient laughed. We have recorded the laugh.",
+      "None since {oldYear}, excluding weddings, funerals, and Tuesdays."
+    ],
+    "why": ["Inferred from image saturation. This is a saturated individual."]
+  },
+
+  "drugs": {
+    "mild": ["No", "No (asked once, did not press)"],
+    "spicy": [
+      "No. Patient answered before the question had finished.",
+      "No. The follow-up question was skipped by whoever filled in this form."
+    ],
+    "unhinged": [
+      "No, but the patient would like the record to show that he was asked.",
+      "No. Patient asked whether the doctor was going to ask about anything fun.",
+      "No. Patient's answer arrived from a different room."
+    ],
+    "why": ["Nothing in the photograph suggests otherwise, and we looked properly."]
+  },
+
+  "signature": {
+    "mild": ["{firstName} {lastName}", "an X, drawn with confidence"],
+    "spicy": [
+      "{firstName} {lastName} for the patient. The patient was present.",
+      "Signature illegible. Confidence high."
+    ],
+    "unhinged": [
+      "{firstName}, on behalf of the patient, on behalf of {firstName}.",
+      "Signed by whoever took the photograph. Relationship: photographer.",
+      "{firstName} {lastName} — she signed it, he watched, neither read it.",
+      "Unsigned. The form was completed with such certainty that a signature felt redundant."
+    ],
+    "why": [
+      "A photograph is a kind of signature, if you don't think about it.",
+      "Signature reconstructed from the {ratio} aspect ratio."
+    ]
+  }
+}

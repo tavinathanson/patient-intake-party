@@ -1,0 +1,142 @@
+{
+  "filled_out_by": {
+    "mild": [
+      "{firstName} {lastName}, {relationship}",
+      "The patient, unassisted, with visible reluctance",
+      "{firstName}, who was already here for something else"
+    ],
+    "spicy": [
+      "{firstName} {lastName} ({relationship}), who did not consult the patient",
+      "Front desk, from memory",
+      "Nobody. This form completed itself from a photograph."
+    ],
+    "unhinged": [
+      "The photograph.",
+      "{firstName}, {relationship}, dictating over speakerphone from a car wash",
+      "Unclear. The handwriting matches three separate people."
+    ],
+    "why": [
+      "Someone took this photograph. Someone is therefore responsible.",
+      "The framing suggests a helper. Helpers fill in forms."
+    ]
+  },
+
+  "date": {
+    "mild": ["{today}", "{today} (approximately)"],
+    "spicy": [
+      "{today}, or possibly the {weekday} before",
+      "{today}. Confirmed by the quality of the light in the photograph."
+    ],
+    "unhinged": [
+      "{today}. Time of day: late. Season: ongoing.",
+      "The photograph reads {oldYear}. We are proceeding as though it is {oldYear}."
+    ],
+    "why": ["Mean brightness {brightness}%. That is an afternoon."]
+  },
+
+  "name": {
+    "mild": ["{firstName} {lastName}", "{firstName} {lastName} (spelling estimated)"],
+    "spicy": [
+      "{firstName} {lastName}, though he goes by something shorter that nobody has written down",
+      "{firstName} — surname deduced from the shape of the hand"
+    ],
+    "unhinged": [
+      "{firstName} {lastName}, or {firstName2} {lastName2}. Both were considered. We went with the first.",
+      "Legal name withheld by the photograph.",
+      "{firstName} {lastName}. He will say that isn't it. It is."
+    ],
+    "why": [
+      "Dominant hue {hex}. Only a {firstName} photographs like that.",
+      "A {orientation} photograph. Names of this length are typical."
+    ]
+  },
+
+  "date_of_birth": {
+    "mild": ["{dob}", "{dob} (year firm, month negotiable)"],
+    "spicy": [
+      "{dob} — the jawline is mid-century",
+      "{dobYear}. Day and month assigned for completeness."
+    ],
+    "unhinged": [
+      "{dob}, although the patient has been described as 'ageless' by nobody.",
+      "{dobYear}. The patient predates this photograph by a comfortable margin.",
+      "{dob}. Patient disputes this and cannot produce an alternative."
+    ],
+    "why": [
+      "Contrast {contrast}%. Consistent with a {dobYear} birth.",
+      "Nothing in the photograph rules out {dobYear}."
+    ]
+  },
+
+  "address": {
+    "mild": ["{num} {street}, {town}", "{num} {street}"],
+    "spicy": [
+      "{street}, the one with the dog",
+      "{num} {street} — {town} was crossed out and rewritten twice"
+    ],
+    "unhinged": [
+      "Unnumbered {street}. Post is left with {firstName}.",
+      "Address given as 'you know the one'. We do not.",
+      "{num} {street}. Patient has not lived there since {oldYear} and gives it anyway."
+    ],
+    "why": ["Photograph taken indoors. Therefore: an address."]
+  },
+
+  "phone": {
+    "mild": ["555-0{num3}", "555-0{num3} (mobile)"],
+    "spicy": [
+      "555-0{num3} — rings, not answered",
+      "555-0{num3}, which is {firstName}'s number, not the patient's"
+    ],
+    "unhinged": [
+      "555-0{num3}. Patient advises calling 'after the programme'.",
+      "No phone. Reachable via the neighbour's gate.",
+      "555-0{num3}. Two digits are guesses. They are load-bearing."
+    ],
+    "why": ["{w}×{h} pixels. The last three digits follow from this."]
+  },
+
+  "insurance": {
+    "mild": ["{insurer}", "{insurer}, through work"],
+    "spicy": [
+      "{insurer}. The card was photographed, but not in this photograph.",
+      "Yes."
+    ],
+    "unhinged": [
+      "{insurer}, lapsed, reinstated, currently theoretical",
+      "Insured. The patient is confident. We are confident that the patient is confident.",
+      "{insurer}. Also possibly none. The form does not have a box for that."
+    ],
+    "why": [
+      "The photograph has {kb} kB of detail. People with {insurer} take photographs like this."
+    ]
+  },
+
+  "member_id": {
+    "mild": ["{id}", "{id} (copied from the card)"],
+    "spicy": [
+      "{id} — I am certain about the letter at the end",
+      "{id}. Possibly a different {id}."
+    ],
+    "unhinged": [
+      "{id}. Digits four through seven are a formality.",
+      "Left blank deliberately. It was going to be wrong.",
+      "{id}, transposed. Somewhere. We have not identified where."
+    ],
+    "why": ["Derived from the file size. Member IDs and file sizes are both numbers."]
+  },
+
+  "emergency_contact": {
+    "mild": ["{firstName} {lastName}, {relationship}, 555-0{num3}"],
+    "spicy": [
+      "{firstName}, {relationship}, has a key, will not answer",
+      "{firstName} {lastName}, {relationship}, 555-0{num3} — reachable evenings, in theory"
+    ],
+    "unhinged": [
+      "{firstName}, {relationship}. Listed as 'emergency', described by the patient as 'a bit much'.",
+      "In an emergency the patient would prefer that we did not.",
+      "{firstName} {lastName}, {relationship}, unaware of this arrangement."
+    ],
+    "why": ["Someone is holding this camera steady. That is the contact."]
+  }
+}
