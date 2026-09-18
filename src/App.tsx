@@ -15,6 +15,8 @@ import {
 import './App.css';
 
 const ENGINE_MOVETIME_MS = 600;
+const CLOCK_MS = 60_000;
+const CLOCK_TICK_MS = 100;
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const UCI_MOVE = /^([a-h][1-8])([a-h][1-8])([qrbn])?$/;
 
@@ -41,10 +43,35 @@ function shuffleLetters(current: Letters): Letters {
 
 type EngineStatus = 'loading' | 'ready' | 'thinking' | 'error' | 'stopped';
 
+type Side = 'w' | 'b';
+
 type Outcome =
   | { kind: 'playing'; inCheck: boolean }
-  | { kind: 'checkmate'; winner: 'w' | 'b' }
-  | { kind: 'draw'; reason: string };
+  | { kind: 'checkmate'; winner: Side }
+  | { kind: 'draw'; reason: string }
+  | { kind: 'timeout'; loser: Side };
+
+/** Remaining time per side; the running side's time is measured from `since`. */
+interface ClockState {
+  w: number;
+  b: number;
+  running: Side | null;
+  since: number;
+}
+
+type ClockView = Omit<ClockState, 'since'>;
+
+/** A human move that is on the board but not yet confirmed by the clock. */
+interface PendingMove {
+  from: Square;
+  to: Square;
+}
+
+function formatClock(ms: number): string {
+  if (ms < 10_000) return (Math.floor(ms / 100) / 10).toFixed(1);
+  const seconds = Math.ceil(ms / 1000);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
 
 function outcomeOf(game: Chess): Outcome {
   if (game.isCheckmate()) return { kind: 'checkmate', winner: game.turn() === 'w' ? 'b' : 'w' };
@@ -76,6 +103,9 @@ export default function App() {
   // Held from the moment a human move is accepted until Black's reply lands.
   const moveLockRef = useRef(false);
   const submittedRef = useRef(false);
+  // Set synchronously when a human move lands; cleared by the clock press.
+  const pendingMoveRef = useRef<PendingMove | null>(null);
+  const clockRef = useRef<ClockState>({ w: CLOCK_MS, b: CLOCK_MS, running: null, since: 0 });
 
   const [fen, setFen] = useState(() => gameRef.current.fen());
   const [outcome, setOutcome] = useState<Outcome>({ kind: 'playing', inCheck: false });
@@ -93,6 +123,8 @@ export default function App() {
   const [lastTyped, setLastTyped] = useState<{ letter: string; field: FieldId } | null>(null);
   const [legalMovesPlayed, setLegalMovesPlayed] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [pendingMove, setPendingMoveState] = useState<PendingMove | null>(null);
+  const [clock, setClock] = useState<ClockView>({ w: CLOCK_MS, b: CLOCK_MS, running: null });
 
   const summaryButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -111,7 +143,73 @@ export default function App() {
     setLegalTargets([]);
   }
 
+  function setPendingMove(next: PendingMove | null) {
+    pendingMoveRef.current = next;
+    setPendingMoveState(next);
+  }
+
+  // ---- chess clock ----------------------------------------------------------
+
+  function publishClock() {
+    const c = clockRef.current;
+    const elapsed = c.running ? performance.now() - c.since : 0;
+    setClock({
+      w: c.running === 'w' ? Math.max(0, c.w - elapsed) : c.w,
+      b: c.running === 'b' ? Math.max(0, c.b - elapsed) : c.b,
+      running: c.running,
+    });
+  }
+
+  function pauseClock() {
+    const c = clockRef.current;
+    if (c.running) {
+      c[c.running] = Math.max(0, c[c.running] - (performance.now() - c.since));
+      c.running = null;
+    }
+    publishClock();
+  }
+
+  function runClock(side: Side) {
+    pauseClock();
+    const c = clockRef.current;
+    c.running = side;
+    c.since = performance.now();
+    publishClock();
+  }
+
+  function resetClock() {
+    clockRef.current = { w: CLOCK_MS, b: CLOCK_MS, running: null, since: 0 };
+    publishClock();
+  }
+
+  function isFlagged(): boolean {
+    return clockRef.current.w <= 0 || clockRef.current.b <= 0;
+  }
+
+  /** `side` ran out of time: that side loses and play stops. */
+  function flag(side: Side) {
+    const c = clockRef.current;
+    c[side] = 0;
+    c.running = null;
+    publishClock();
+    stopEngine();
+    moveLockRef.current = true;
+    setPendingMove(null);
+    clearSelection();
+    setEngineStatus('stopped');
+    setOutcome({ kind: 'timeout', loser: side });
+  }
+
+  const tickRef = useRef(() => {});
+  tickRef.current = () => {
+    const c = clockRef.current;
+    if (!c.running) return;
+    if (c[c.running] - (performance.now() - c.since) <= 0) flag(c.running);
+    else publishClock();
+  };
+
   function failEngine(err: unknown) {
+    pauseClock();
     generationRef.current++;
     engineRef.current?.dispose();
     engineRef.current = null;
@@ -125,6 +223,7 @@ export default function App() {
     if (!engine) return;
     const generation = generationRef.current;
     setEngineStatus('thinking');
+    runClock('b');
     engine.bestMove([...uciHistoryRef.current], ENGINE_MOVETIME_MS).then(
       (uci) => {
         if (generation !== generationRef.current) return;
@@ -156,7 +255,10 @@ export default function App() {
     uciHistoryRef.current.push(uci);
     setFen(game.fen());
     setLastMove({ from, to });
-    setOutcome(outcomeOf(game));
+    const next = outcomeOf(game);
+    setOutcome(next);
+    if (next.kind === 'playing') runClock('w');
+    else pauseClock();
     moveLockRef.current = false;
     setEngineStatus('ready');
   }
@@ -167,14 +269,21 @@ export default function App() {
     engineRef.current?.dispose();
     const engine = createEngine();
     engineRef.current = engine;
+    pauseClock();
     setEngineError(null);
     setEngineStatus('loading');
     engine.ready().then(
       () => {
         if (generation !== generationRef.current) return;
         const game = gameRef.current;
-        if (!game.isGameOver() && game.turn() === 'b') requestEngineReply();
-        else setEngineStatus('ready');
+        if (game.isGameOver() || isFlagged() || submittedRef.current) {
+          setEngineStatus('ready');
+        } else if (game.turn() === 'b' && !pendingMoveRef.current) {
+          requestEngineReply();
+        } else {
+          setEngineStatus('ready');
+          runClock('w');
+        }
       },
       (err) => {
         if (generation !== generationRef.current) return;
@@ -200,8 +309,17 @@ export default function App() {
     if (submitted) summaryButtonRef.current?.focus();
   }, [submitted]);
 
+  useEffect(() => {
+    const id = setInterval(() => tickRef.current(), CLOCK_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
   const boardLive =
-    !submitted && engineStatus === 'ready' && outcome.kind === 'playing' && fen.split(' ')[1] === 'w';
+    !submitted &&
+    !pendingMove &&
+    engineStatus === 'ready' &&
+    outcome.kind === 'playing' &&
+    fen.split(' ')[1] === 'w';
 
   function tryHumanMove(from: Square, to: Square) {
     // Lock synchronously, before anything else can run.
@@ -217,20 +335,36 @@ export default function App() {
       return;
     }
 
-    // Accepted: capture the field and the letter as they are right now.
+    // On the board, but it only counts once the clock is pressed. White's
+    // clock keeps running until then.
+    uciHistoryRef.current.push(move.from + move.to + (move.promotion ?? ''));
+    setPendingMove({ from: move.from, to: move.to });
+    clearSelection();
+    setFen(game.fen());
+    setLastMove({ from: move.from, to: move.to });
+    // A move that ends the game ends it at once, as over the board.
+    if (game.isGameOver()) confirmMove();
+  }
+
+  /** The clock press: confirms the pending move, types its letter, hands over. */
+  function confirmMove() {
+    const pending = pendingMoveRef.current;
+    if (!pending || submittedRef.current) return;
+    setPendingMove(null);
+
+    // Confirmed: capture the field and the letter as they are right now.
     const field = activeFieldRef.current;
-    const letter = lettersRef.current[move.to];
+    const letter = lettersRef.current[pending.to];
     setAnswers((prev) => ({ ...prev, [field]: prev[field] + letter }));
     setLastTyped({ letter, field });
     setLegalMovesPlayed((n) => n + 1);
 
-    uciHistoryRef.current.push(move.from + move.to + (move.promotion ?? ''));
-    clearSelection();
-    setFen(game.fen());
-    setLastMove({ from: move.from, to: move.to });
-    const next = outcomeOf(game);
+    const next = outcomeOf(gameRef.current);
     setOutcome(next);
-    if (next.kind !== 'playing') return; // game over: nothing to ask Stockfish
+    if (next.kind !== 'playing') {
+      pauseClock(); // game over: nothing to ask Stockfish
+      return;
+    }
     requestEngineReply();
   }
 
@@ -257,6 +391,8 @@ export default function App() {
     gameRef.current = new Chess();
     uciHistoryRef.current = [];
     moveLockRef.current = false;
+    setPendingMove(null);
+    resetClock();
     clearSelection();
     setFen(gameRef.current.fen());
     setLastMove(null);
@@ -289,10 +425,14 @@ export default function App() {
   }
 
   const canReroll =
-    !submitted && outcome.kind === 'playing' && engineStatus !== 'thinking' && fen.split(' ')[1] === 'w';
+    !submitted &&
+    !pendingMove &&
+    outcome.kind === 'playing' &&
+    engineStatus !== 'thinking' &&
+    fen.split(' ')[1] === 'w';
 
   function reroll() {
-    if (!canReroll || moveLockRef.current || gameRef.current.turn() !== 'w') return;
+    if (!canReroll || moveLockRef.current || pendingMoveRef.current || gameRef.current.turn() !== 'w') return;
     setLetters(shuffleLetters(lettersRef.current));
   }
 
@@ -317,7 +457,9 @@ export default function App() {
     if (submittedRef.current) return;
     submittedRef.current = true;
     stopEngine();
+    pauseClock();
     moveLockRef.current = true;
+    setPendingMove(null);
     clearSelection();
     setEngineStatus('stopped');
     setSubmitted(true);
@@ -350,6 +492,14 @@ export default function App() {
         ? 'CHECKMATE! You beat Stockfish. The front desk is stunned.'
         : 'Checkmate. Stockfish wins this round.';
     hint = 'Your answers are safe. REMATCH keeps them; FULL RESET clears everything.';
+  } else if (outcome.kind === 'timeout') {
+    status = 'timeout';
+    statusLabel = outcome.loser === 'w' ? 'TIME!' : 'OUT OF TIME';
+    message =
+      outcome.loser === 'w'
+        ? "Time's up! Your clock ran out, so you lose."
+        : 'Stockfish ran out of time. You win on time!';
+    hint = 'Your answers are safe. REMATCH keeps them; FULL RESET clears everything.';
   } else if (outcome.kind === 'draw') {
     status = 'draw';
     statusLabel = 'DRAW';
@@ -365,6 +515,11 @@ export default function App() {
     statusLabel = 'CASTING…';
     message = outcome.inCheck ? 'CHECK! Stockfish is thinking…' : 'Stockfish is thinking…';
     hint = [typedHint, "Black's moves type nothing."].filter(Boolean).join(' ');
+  } else if (pendingMove) {
+    status = 'pending';
+    statusLabel = 'PRESS CLOCK';
+    message = `Press your clock to confirm ${pendingMove.from}→${pendingMove.to}. It types “${letters[pendingMove.to]}” into: ${nextQuestion}`;
+    hint = 'Your clock keeps running until you press it.';
   } else if (outcome.inCheck) {
     status = 'check';
     statusLabel = 'CHECK!';
@@ -385,7 +540,11 @@ export default function App() {
         : 'Stockfish won by checkmate'
       : outcome.kind === 'draw'
         ? `Draw by ${outcome.reason}`
-        : 'Game in progress';
+        : outcome.kind === 'timeout'
+          ? outcome.loser === 'w'
+            ? 'Patient lost on time'
+            : 'Stockfish lost on time'
+          : 'Game in progress';
 
   return (
     <div className="app">
@@ -405,6 +564,24 @@ export default function App() {
           <div className="app-enemy jrpg-window">
             <span className="app-enemy-name">STOCKFISH 19</span>
             <span className={`app-status app-status--${status}`}>{statusLabel}</span>
+          </div>
+          <div className="app-clock" role="group" aria-label="Chess clock, one minute per side">
+            <div
+              className={`app-clock-face${clock.running === 'b' ? ' is-running' : ''}${clock.b < 10_000 ? ' is-low' : ''}`}
+            >
+              <span className="app-clock-name">STOCKFISH</span>
+              <span className="app-clock-time">{formatClock(clock.b)}</span>
+            </div>
+            <button
+              type="button"
+              className={`app-clock-face app-clock-press${clock.running === 'w' ? ' is-running' : ''}${clock.w < 10_000 ? ' is-low' : ''}${pendingMove ? ' is-armed' : ''}`}
+              onClick={confirmMove}
+              disabled={!pendingMove || submitted}
+              aria-label={`Press your clock to confirm your move. ${formatClock(clock.w)} left.`}
+            >
+              <span className="app-clock-name">{pendingMove ? 'PRESS ME!' : 'YOUR CLOCK'}</span>
+              <span className="app-clock-time">{formatClock(clock.w)}</span>
+            </button>
           </div>
           <div className="app-board-frame">
             <ChessBoard
