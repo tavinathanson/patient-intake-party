@@ -1,0 +1,987 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hands-Only Intake</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Caveat:wght@500;700&display=swap">
+
+<style>
+  /* Colors. Light by default, dark if the viewer prefers it. */
+  :root {
+    --paper: #FAF8F2;
+    --card: #FFFFFF;
+    --ink: #26282C;
+    --muted: #6C7079;
+    --line: #BFC2C9;
+    --o: #1E5BB8;
+    --x: #C43A2E;
+    --note: #FFF7D6;
+    --focus: #F0B429;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #1A1B1E;
+      --card: #232428;
+      --ink: #E9E7E1;
+      --muted: #9A9DA6;
+      --line: #4E525B;
+      --o: #7FB0FF;
+      --x: #FF8A7A;
+      --note: #2E2A1C;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 17px/1.5 "Atkinson Hyperlegible", system-ui, sans-serif;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 32px 20px 80px; }
+  h1 { font-size: 2rem; margin: 0 0 4px; text-wrap: balance; }
+  h2 {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin: 40px 0 12px;
+  }
+  p { max-width: 64ch; margin: 0 0 10px; }
+  .lede { font-size: 1.15rem; }
+  footer { margin-top: 60px; color: var(--muted); font-size: .85rem; }
+  [hidden] { display: none !important; }
+
+  .btn {
+    font: inherit;
+    font-weight: 700;
+    padding: 9px 16px;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--ink); color: var(--paper); }
+  .btn.big { font-size: 1.2rem; padding: 14px 30px; }
+  .btn:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  /* ---------- The stage: full-bleed camera with the form painted over it ---------- */
+
+  #stage { position: fixed; inset: 0; background: #0B0D12; overflow: hidden; }
+  #cam {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);          /* compositing only. Landmarks stay unmirrored. */
+  }
+  /* Keep the middle of the frame calm so the choices read as background, not a menu. */
+  #stage::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 46% 60% at 50% 46%, transparent 40%, rgba(6,8,14,.55) 100%);
+  }
+
+  #topbar {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 3;
+    padding: 18px 24px 34px;
+    background: linear-gradient(rgba(6,8,14,.82), transparent);
+    color: #fff; text-align: center; pointer-events: none;
+  }
+  #qnum { font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; opacity: .75; }
+  #qtext { margin: 4px 0 0; font-size: clamp(22px, 3.2vw, 40px); font-weight: 700; text-wrap: balance; }
+
+  .zone {
+    position: absolute; z-index: 2;
+    display: grid; place-items: center;
+    padding: 18px; border: 0;
+    border-radius: 22px;
+    background: rgba(12,14,20,.42);
+    backdrop-filter: blur(8px) saturate(1.3);
+    -webkit-backdrop-filter: blur(8px) saturate(1.3);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.22);
+    color: #fff; font: 700 clamp(20px, 3.2vw, 44px)/1.15 "Atkinson Hyperlegible", system-ui, sans-serif;
+    text-align: center; text-wrap: balance; cursor: pointer;
+    transition: background .12s, box-shadow .12s, transform .12s;
+  }
+  .zone:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+  .zone.hot { background: rgba(30,110,220,.55); box-shadow: inset 0 0 0 4px #7fb0ff; }
+  .zone.locked { background: rgba(40,160,90,.78); box-shadow: inset 0 0 0 4px #6ee7a0; transform: scale(1.03); }
+  .zone .key { display: block; margin-top: 10px; font-size: .5em; font-weight: 400; opacity: .6; }
+
+  .z-c  { left: 28%; right: 28%; top: 32%; height: 36%; }
+  .z-l  { left: 2%;  top: 17%; width: 30%; height: 66%; }
+  .z-r  { right: 2%; top: 17%; width: 30%; height: 66%; }
+  .z-bc { left: 34%; right: 34%; bottom: 4%; height: 26%; }
+  @media (max-aspect-ratio: 3/4) {
+    .z-l  { left: 3%; right: 3%; width: auto; top: 20%; height: 22%; }
+    .z-r  { left: 3%; right: 3%; width: auto; top: 45%; height: 22%; }
+    .z-bc { left: 3%; right: 3%; bottom: 6%; height: 22%; }
+  }
+
+  /* One div for the pointer. The ring is a conic-gradient driven by --p. */
+  #cursor {
+    position: absolute; left: 0; top: 0; z-index: 4;
+    width: 96px; height: 96px; margin: -48px 0 0 -48px;
+    border-radius: 50%; pointer-events: none; will-change: transform;
+    background: conic-gradient(#6ee7a0 calc(var(--p, 0) * 360deg), rgba(255,255,255,.20) 0);
+  }
+  #cursor::after {
+    content: ''; position: absolute; inset: 9px; border-radius: 50%;
+    background: rgba(10,12,18,.5); box-shadow: inset 0 0 0 2px rgba(255,255,255,.55);
+  }
+  #cursor.undo { background: conic-gradient(#f0b429 calc(var(--p, 0) * 360deg), rgba(255,255,255,.20) 0); }
+
+  .z-skip {
+    right: 3%; bottom: 5%; width: 22%; height: 14%;
+    font-size: clamp(13px, 1.5vw, 20px); background: rgba(12,14,20,.3);
+  }
+
+  #dance {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-items: center; align-content: center; gap: 18px;
+    pointer-events: none; text-align: center; color: #fff;
+  }
+  #dance .count { display: flex; gap: 10px; }
+  #dance .count i {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(255,255,255,.28); transition: background .1s, transform .1s;
+  }
+  #dance .count i.on { background: #6ee7a0; transform: scale(1.45); }
+  #dancesub { font-size: clamp(15px, 1.8vw, 22px); opacity: .8; margin: 0; }
+  #dancebig {
+    margin: 0; font: 700 clamp(30px, 7vw, 86px)/1.05 "Atkinson Hyperlegible", system-ui, sans-serif;
+    text-shadow: 0 3px 18px rgba(0,0,0,.6); text-wrap: balance; max-width: 15ch;
+  }
+  #stage.dancing::after { background: radial-gradient(ellipse 60% 70% at 50% 50%, transparent 30%, rgba(6,8,14,.6) 100%); }
+  #stage.dancing #topbar { background: none; }
+  .beatpulse { animation: pulse .18s ease-out; }
+  @keyframes pulse { from { transform: scale(1.06); } }
+  @media (prefers-reduced-motion: reduce) {
+    .beatpulse { animation: none; }
+    #dance .count i.on { transform: none; }
+  }
+
+  #hint {
+    position: absolute; left: 50%; bottom: 3%; z-index: 5;
+    transform: translateX(-50%);
+    padding: 9px 18px; border-radius: 999px;
+    background: rgba(6,8,14,.72); color: #fff; font-size: .95rem;
+    pointer-events: none; text-align: center;
+  }
+  #stage.has-bc #hint { bottom: auto; top: 76%; }
+
+  /* ---------- The summary ---------- */
+
+  .meta { color: var(--muted); margin-bottom: 4px; }
+  .rows { border-top: 1px solid var(--line); }
+  .row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px;
+    padding: 12px 0 12px 14px;
+    border-bottom: 1px solid var(--line);
+    border-left: 4px solid transparent;
+  }
+  .row.clash { border-left-color: var(--x); background: color-mix(in srgb, var(--x) 6%, transparent); }
+  @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
+  .row .k { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .row .v { font-weight: 700; }
+  .row.clash .said .v { color: var(--x); }
+
+  .flags { list-style: none; margin: 0; padding: 0; }
+  .flags li { padding: 10px 0 10px 14px; border-left: 4px solid var(--line); margin-bottom: 8px; }
+  .flags li.high { border-left-color: var(--x); }
+  .flags li.watch { border-left-color: var(--focus); }
+  .flags b { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+  .note {
+    padding: 18px 22px; background: var(--note); box-shadow: 0 2px 0 var(--line);
+    transform: rotate(-.5deg); font-family: Caveat, "Segoe Print", cursive;
+    font-size: 1.35rem; line-height: 1.35;
+  }
+  .note h3 {
+    margin: 0 0 6px;
+    font: 700 1.1rem "Atkinson Hyperlegible", system-ui, sans-serif;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--muted);
+  }
+  .note ul { list-style: none; margin: 0; padding: 0; }
+  .banner {
+    padding: 10px 14px; border-radius: 8px; margin: 0 0 16px;
+    background: var(--note); border: 1px solid var(--line); font-size: .95rem;
+  }
+</style>
+
+<!-- ---------- Intro ---------- -->
+<main id="intro">
+  <h1>Hands-Only Intake</h1>
+  <p class="lede">
+    Constraint: <b>the patient answers entirely on camera.</b>
+    No keyboard, no mouse, no voice. The answers are painted around you like a
+    virtual background &mdash; <b>point at one and hold still</b> until the ring fills.
+  </p>
+  <p class="hint" style="color:var(--muted)">
+    Make a fist and hold to go back a question. Nothing is recorded and nothing leaves
+    this device &mdash; the video never goes anywhere, only the answer you land on.
+    Works best in Chrome, in a room where your hand is lit.
+  </p>
+  <p class="hint" style="color:var(--muted)">
+    There is a 20-second dance break halfway through. Point at <b>Skip ahead</b> to
+    step over it, or <a href="?nodance=1">turn it off entirely</a>.
+  </p>
+  <p id="loadstate" class="meta">Loading the hand-tracking model&hellip;</p>
+  <p><button class="btn primary big" id="start" type="button">Turn on my camera</button></p>
+  <p class="meta" id="modelink">No camera? <a href="?nocv=1">Do it with taps instead.</a></p>
+  <footer>Part of <a href="https://github.com/tavinathanson/patient-intake-party">patient-intake-party</a>.</footer>
+</main>
+
+<!-- ---------- Stage ---------- -->
+<div id="stage" hidden>
+  <video id="cam" playsinline muted></video>
+  <div id="topbar"><div id="qnum"></div><p id="qtext"></p></div>
+  <div id="dance" hidden>
+    <p id="dancesub"></p>
+    <p id="dancebig"></p>
+    <div class="count" id="dancecount"></div>
+  </div>
+  <div id="cursor" hidden></div>
+  <div id="hint" hidden></div>
+</div>
+
+<!-- ---------- Summary ---------- -->
+<main id="summary" hidden></main>
+
+<script type="module">
+
+// ---------- The chart. What the clinic already believes. ----------
+// From patients/glp1/what-the-clinic-knows.md and weight.csv.
+
+const CHART = {
+  name: 'Papaya Radish',
+  line: '38 F · 6-month follow-up, semaglutide',
+  open: 'Portal message 6/16 forwarded to Dr. Pepper. No reply logged.',
+  nadir: 191.9, nadirOn: 'Jul 21', latest: 195.3, latestOn: 'Sep 1',
+};
+
+// ---------- The intake. Edit this. ----------
+// Each question: id, text, and 2-3 choices. A choice may carry:
+//   said:  how the answer reads in the transcript
+//   chart: what the chart believes, when the answer contradicts it
+//   flag:  { level: 'high' (clinician must see) | 'watch', note: what the care team reads }
+// The first round is practice. It proves hand tracking works before anything counts.
+
+const QUESTIONS = [
+  { id: 'practice', practice: true, text: 'Point at the box and hold still.',
+    choices: [{ label: "I'm ready" }] },
+
+  { id: 'dose', text: 'How much are you taking each week?',
+    choices: [
+      { label: '0.5 mg', said: '0.5 mg weekly',
+        chart: 'Semaglutide 1.0 mg weekly, increased June',
+        flag: { level: 'high', note: 'She went back down to 0.5 mg on her own. The chart never caught it, so every note since June is describing a dose she is not taking.' } },
+      { label: '1.0 mg', said: '1.0 mg weekly' },
+      { label: 'Not sure', said: 'does not know her dose',
+        chart: 'Semaglutide 1.0 mg weekly, increased June',
+        flag: { level: 'high', note: 'Cannot state her own dose. Confirm the pen in hand before refilling.' } },
+    ] },
+
+  { id: 'sick', text: 'Any nausea in the last month?',
+    choices: [
+      { label: 'None', said: 'no nausea' },
+      { label: 'A little', said: 'mild nausea' },
+      { label: 'Throwing up', said: 'vomiting',
+        chart: 'Tolerating the June increase; no side effects reported',
+        flag: { level: 'high', note: 'Active vomiting. Hold any escalation and check hydration.' } },
+    ] },
+
+  { id: 'missed', text: 'Missed any shots since July?',
+    choices: [
+      { label: 'No', said: 'no missed doses' },
+      { label: 'Pharmacy ran out', said: 'missed doses — pharmacy supply',
+        chart: 'Continuous fills, no gaps on record',
+        flag: { level: 'high', note: 'A supply gap, not an adherence problem. This is the likely explanation for the August weight rebound — it is not a plateau, and the dose does not need changing for it.' } },
+      { label: 'Felt sick', said: 'skipped doses because of side effects',
+        chart: 'Continuous fills, no gaps on record',
+        flag: { level: 'high', note: 'Holding her own doses for side effects without telling anyone.' } },
+    ] },
+
+  // Halfway. Three questions down, three to go -- stand up and shake it out.
+  { id: 'dancebreak', dance: true, text: 'Dance break.',
+    choices: [{ label: 'Skip ahead' }] },
+
+  { id: 'pen', text: 'Where does your pen come from?',
+    choices: [
+      { label: 'Our pharmacy', said: 'the clinic pharmacy' },
+      { label: 'Mail order', said: 'a mail-order pharmacy' },
+      { label: 'Family sent it', said: 'a pen a relative mailed her',
+        chart: 'Dispensed through the clinic pharmacy',
+        flag: { level: 'high', note: 'Injecting from an unverified source. Product, concentration and dose are all unconfirmed. Ask her to bring the pen in, or to photograph the label.' } },
+    ] },
+
+  { id: 'baby', text: 'Thinking about getting pregnant?',
+    choices: [
+      { label: 'No plans', said: 'not planning a pregnancy' },
+      { label: 'Someday', said: 'pregnancy someday',
+        flag: { level: 'watch', note: 'Raise contraception and the pre-conception washout now rather than later.' } },
+      { label: 'Within a year', said: 'trying to conceive within the year',
+        chart: 'Prenatal vitamin active alongside an active GLP-1',
+        flag: { level: 'high', note: 'The conversation nobody has had. GLP-1s are stopped well before conception, and PCOS means fertility can return quickly on treatment. The chart has listed a prenatal vitamin next to an active GLP-1 for months.' } },
+    ] },
+
+  { id: 'waiting', text: 'Are you waiting on an answer from us?',
+    choices: [
+      { label: 'No', said: 'nothing outstanding' },
+      { label: 'Yes, still waiting', said: 'still waiting on the clinic',
+        chart: 'Message forwarded 6/16. Thread shows no reply.',
+        flag: { level: 'high', note: 'She asked about the dose on 6/16 and never heard back. Three months of silence is why the chart is wrong. Close this loop before the visit starts.' } },
+    ] },
+];
+
+// ---------- The dance break. Edit this. ----------
+// The classic 16 counts, one move per beat. The tune underneath is original --
+// the real Macarena is Los del Rio's copyright, so we play something else at
+// the same tempo rather than shipping a transcription of it.
+
+const MOVES = [
+  'Right arm out, palm down', 'Left arm out, palm down',
+  'Right palm up', 'Left palm up',
+  'Right hand to left shoulder', 'Left hand to right shoulder',
+  'Right hand behind your head', 'Left hand behind your head',
+  'Right hand to left hip', 'Left hand to right hip',
+  'Hand on your right hip', 'Hand on your left hip',
+  'Wiggle', 'Wiggle', 'Wiggle those hips', 'Jump and turn!',
+];
+
+const BPM = 103, ROUNDS = 2, COUNT_IN = 4;
+
+// Always-on notes, derived from the chart rather than from an answer.
+const RULES = [
+  a => a.dose && a.dose.label !== '1.0 mg' &&
+    ['high', 'The medication list is wrong. Update it before you prescribe.'],
+  () => ['watch', 'Weight: ' + CHART.nadir + ' lb on ' + CHART.nadirOn + ', ' + CHART.latest +
+    ' lb on ' + CHART.latestOn + ' (+' + (CHART.latest - CHART.nadir).toFixed(1) + ' lb). The rebound is new.'],
+  () => ['watch', CHART.open],
+];
+
+// ---------- Tuning ----------
+
+const DWELL_MS = 1200;      // hold this long to lock an answer in
+const DECAY = 2.0;          // progress drains this many ms per ms when you drift off
+const COOLDOWN = 900;       // no commits or undos for this long after either
+const ADVANCE_DELAY = 650;  // let the green flash land before the next question
+const UNDO_MS = 600;        // hold a fist this long to go back
+const FRAME_MS = 66;        // ~15fps is plenty and keeps a core free
+
+const WASM_DIR = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm';
+const BUNDLE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs';
+const MODEL = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task';
+
+const SLOTS = { 1: ['z-c'], 2: ['z-l', 'z-r'], 3: ['z-l', 'z-r', 'z-bc'] };
+
+// The rounds that actually count, for numbering and for the transcript.
+const REAL = QUESTIONS.filter(q => !q.practice && !q.dance);
+
+// ---------- State ----------
+
+const PARAMS = new URLSearchParams(location.search);
+const CV_OFF = PARAMS.has('nocv');
+
+// The real record, if somebody dropped one next to index.html. It is gitignored
+// and never deploys, so anywhere but this laptop falls back to the synth.
+const SONG_URL = 'macarena.mp3';
+const SONG_START = Number(PARAMS.get('t')) || 0;    // ?t=22 to start on the chorus
+const SONG_BPM = Number(PARAMS.get('bpm')) || BPM;  // ?bpm=105 to nudge the sync
+
+let songEl = null;
+fetch(SONG_URL, { method: 'HEAD' })
+  .then(r => {
+    if (!r.ok) return;
+    songEl = new Audio(SONG_URL);
+    songEl.preload = 'auto';        // have metadata ready so currentTime is seekable
+    songEl.load();
+  })
+  .catch(() => { /* no track, synth it is */ });
+
+// Some rooms are not dance-break rooms.
+if (PARAMS.has('nodance')) {
+  const i = QUESTIONS.findIndex(q => q.dance);
+  if (i >= 0) QUESTIONS.splice(i, 1);
+}
+
+const $ = id => document.getElementById(id);
+const video = $('cam'), stage = $('stage'), cursor = $('cursor'), hintBox = $('hint');
+
+let recognizer = null, modelReady = null, stream = null;
+let current = 0;                       // index into QUESTIONS
+const answers = {};                    // question id -> the chosen choice object
+let startedAt = 0;
+
+let dwell = { zone: null, p: 0 };
+let fistMs = 0, cooldownUntil = 0, advancing = false;
+let noHandSince = 0, handEverSeen = false, questionShownAt = 0;
+let vRect = null, zoneRects = [];
+
+// ---------- Boot: fetch the model while the intro is still being read ----------
+// The camera needs a user gesture. The model does not, so the 8.4MB download
+// overlaps with the time somebody spends reading the first screen.
+
+if (!CV_OFF) {
+  modelReady = initModel()
+    .then(() => { $('loadstate').textContent = 'Hand tracking ready.'; })
+    .catch(err => {
+      console.warn('Hand tracking unavailable:', err);
+      recognizer = null;
+      $('loadstate').textContent = 'Hand tracking could not load. You can still tap or use the number keys.';
+    });
+} else {
+  $('loadstate').textContent = 'Hand tracking off. Tap a box or press 1-3.';
+  $('start').textContent = 'Start';
+  // The way back. Without this, ?nocv=1 is a one-way door.
+  $('modelink').innerHTML = 'Got a camera after all? <a href="./">Answer by pointing instead.</a>';
+}
+
+async function initModel() {
+  const { FilesetResolver, GestureRecognizer } = await import(BUNDLE);
+  const fileset = await FilesetResolver.forVisionTasks(WASM_DIR);
+  const opts = {
+    baseOptions: { modelAssetPath: MODEL, delegate: 'GPU' },
+    runningMode: 'VIDEO',
+    numHands: 1,                       // most confident hand; decay absorbs any flicker
+    minHandDetectionConfidence: 0.4,   // the 0.5 default is too strict in bad light
+    minHandPresenceConfidence: 0.4,
+    minTrackingConfidence: 0.4,
+  };
+  try {
+    recognizer = await GestureRecognizer.createFromOptions(fileset, opts);
+  } catch (e) {
+    opts.baseOptions.delegate = 'CPU';
+    recognizer = await GestureRecognizer.createFromOptions(fileset, opts);
+  }
+}
+
+// ---------- Start ----------
+
+$('start').onclick = async () => {
+  $('start').disabled = true;
+  try {
+    if (CV_OFF) throw new Error('hand tracking off');
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      // Inference cost is O(pixels). 640x480 is the single biggest performance lever.
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
+    });
+    video.srcObject = stream;
+    await video.play();
+  } catch (e) {
+    console.warn('No camera:', e);
+    stream = null;
+    video.hidden = true;
+  }
+
+  if (modelReady) await modelReady;
+
+  // Build the inference graph now, behind the intro, so the 300ms first call
+  // never lands on a frame anybody is looking at.
+  if (recognizer && stream && video.readyState >= 2) {
+    try { recognizer.recognizeForVideo(video, performance.now()); } catch (e) { /* first frame */ }
+  }
+
+  $('intro').hidden = true;
+  stage.hidden = false;
+  startedAt = Date.now();
+  renderQuestion();
+  requestAnimationFrame(loop);
+};
+
+// ---------- Rendering ----------
+
+function renderQuestion() {
+  const q = QUESTIONS[current];
+
+  stopBreak();
+  $('qnum').textContent = q.practice ? 'Practice'
+    : q.dance ? 'Halfway'
+    : 'Question ' + (REAL.indexOf(q) + 1) + ' of ' + REAL.length;
+  $('qtext').textContent = q.text;
+
+  for (const old of stage.querySelectorAll('.zone')) old.remove();
+  const slots = q.dance ? ['z-skip'] : SLOTS[q.choices.length];
+  stage.classList.toggle('has-bc', slots.includes('z-bc'));
+
+  q.choices.forEach((choice, i) => {
+    const btn = el('button', 'zone ' + slots[i]);
+    btn.type = 'button';
+    btn.dataset.id = choice.label;
+    btn.innerHTML = esc(choice.label) + '<span class="key">or press ' + (i + 1) + '</span>';
+    // The same commit path the dwell uses, so a tap can never diverge from a point.
+    btn.onclick = () => commit(choice.label, performance.now());
+    stage.append(btn);
+  });
+
+  dwell = { zone: null, p: 0 };
+  fistMs = 0;
+  questionShownAt = performance.now();
+  setRing(0, null);
+  recacheRects();
+  showHint(startHintFor(q));
+  if (q.dance) startBreak();
+}
+
+function startHintFor(q) {
+  if (q.dance) return '';
+  if (!liveCV()) return 'Tap a box, or press 1' + (q.choices.length > 1 ? '-' + q.choices.length : '') + '.';
+  return q.practice ? 'Raise one hand and point at the box.' : '';
+}
+
+function recacheRects() {
+  vRect = video.getBoundingClientRect();
+  zoneRects = [...stage.querySelectorAll('.zone')].map(e => ({ id: e.dataset.id, el: e, b: e.getBoundingClientRect() }));
+}
+addEventListener('resize', recacheRects);
+addEventListener('orientationchange', recacheRects);
+
+// ---------- Coordinates ----------
+// The ONLY place a coordinate is flipped. MediaPipe samples the decoded frame,
+// which is unmirrored, while CSS scaleX(-1) mirrors only what is composited --
+// so x needs flipping and y never does. object-fit: cover also crops, which is
+// the second transform: without it the dot drifts by a fifth of the viewport on
+// any window whose aspect ratio is not the camera's.
+
+function pointToScreen(nx, ny) {
+  const vw = video.videoWidth || 640, vh = video.videoHeight || 480;
+  const s = Math.max(vRect.width / vw, vRect.height / vh);
+  const dw = vw * s, dh = vh * s;
+  const ox = vRect.left + (vRect.width - dw) / 2;
+  const oy = vRect.top + (vRect.height - dh) / 2;
+  return { x: ox + (1 - nx) * dw, y: oy + ny * dh };
+}
+
+function zoneAt(px, py) {
+  for (const z of zoneRects) {
+    if (px >= z.b.left && px <= z.b.right && py >= z.b.top && py <= z.b.bottom) return z.id;
+  }
+  return null;
+}
+
+// ---------- The loop ----------
+
+const liveCV = () => !!(recognizer && stream && !CV_OFF);
+
+let lastTs = 0, lastFrame = 0;
+
+function loop(now) {
+  requestAnimationFrame(loop);
+  if (!liveCV() || stage.hidden) { lastFrame = now; return; }
+  if (document.hidden || video.readyState < 2) { lastFrame = now; return; }
+  if (now - lastFrame < FRAME_MS) return;
+
+  const dt = Math.min(now - lastFrame, 200);   // a stall must not fill the ring
+  lastFrame = now;
+
+  let ts = Math.round(now);
+  if (ts <= lastTs) ts = lastTs + 1;           // must increase, or it throws
+  lastTs = ts;
+
+  let res;
+  try { res = recognizer.recognizeForVideo(video, ts); } catch (e) { return; }
+
+  update(res.landmarks[0], res.gestures[0]?.[0]?.categoryName ?? 'None', dt, now);
+}
+
+// Landmark 8 is the index fingertip, tracked every frame regardless of gesture.
+// The built-in Pointing_Up class is trained on a roughly vertical finger, so it
+// misses a hand pointing down and to the side -- exactly what the bottom zone needs.
+
+function update(hand, gesture, dt, now) {
+  const fisted = gesture === 'Closed_Fist';
+  if (hand) { handEverSeen = true; noHandSince = 0; }
+  if (hand && QUESTIONS[current].dance) danceSeen = true;
+
+  if (!hand || fisted || now < cooldownUntil || advancing) {
+    drain(dt);
+    cursor.hidden = !hand;
+    if (fisted) holdFist(dt, now); else fistMs = 0;
+    if (!hand) {
+      if (!noHandSince) noHandSince = now;
+      if (now - noHandSince > 1500) showHint('Raise one hand.');
+    }
+    idleNudge(now);
+    return;
+  }
+
+  fistMs = 0;
+  cursor.hidden = false;
+  showHint('');
+
+  const p = pointToScreen(hand[8].x, hand[8].y);
+  cursor.style.transform = 'translate3d(' + p.x + 'px,' + p.y + 'px,0)';
+
+  const hit = zoneAt(p.x, p.y);
+  if (hit && hit === dwell.zone) dwell.p += dt;
+  else if (hit) { dwell.zone = hit; dwell.p = dt; }
+  else drain(dt);
+
+  setHot(dwell.zone);
+  setRing(dwell.p / DWELL_MS, null);
+  idleNudge(now);
+
+  if (dwell.p >= DWELL_MS) commit(dwell.zone, now);
+}
+
+// Drain rather than reset: one dropped frame or a moment of jitter should cost
+// progress, not wipe it. Same line gives the ring its drain-back animation.
+function drain(dt) {
+  dwell.p = Math.max(0, dwell.p - dt * DECAY);
+  if (!dwell.p) dwell.zone = null;
+  setHot(dwell.zone);
+  setRing(dwell.p / DWELL_MS, null);
+}
+
+function holdFist(dt, now) {
+  fistMs += dt;
+  setRing(fistMs / UNDO_MS, 'undo');
+  if (fistMs >= UNDO_MS && now >= cooldownUntil && current > 0) {
+    fistMs = 0;
+    cooldownUntil = now + COOLDOWN + UNDO_MS;   // shares the clock with commit
+    goBack();
+  }
+}
+
+function idleNudge(now) {
+  if (!handEverSeen && now - questionShownAt > 25000) showHint('Trouble? Tap a box instead.');
+}
+
+function setHot(id) {
+  for (const z of zoneRects) z.el.classList.toggle('hot', !advancing && z.id === id);
+}
+
+function setRing(f, mode) {
+  cursor.style.setProperty('--p', Math.max(0, Math.min(1, f)));
+  cursor.classList.toggle('undo', mode === 'undo');
+}
+
+function showHint(text) {
+  hintBox.textContent = text;
+  hintBox.hidden = !text;
+}
+
+// ---------- Committing ----------
+
+function commit(label, now) {
+  if (advancing || stage.hidden) return;
+  const q = QUESTIONS[current];
+  const choice = q.choices.find(c => c.label === label);
+  if (!choice) return;
+
+  advancing = true;
+  cooldownUntil = now + COOLDOWN;
+  dwell = { zone: null, p: 0 };
+  fistMs = 0;
+  setRing(0, null);
+
+  if (!q.practice && !q.dance) answers[q.id] = choice;
+
+  for (const z of zoneRects) {
+    z.el.classList.remove('hot');
+    z.el.classList.toggle('locked', z.id === label);
+  }
+  showHint('');
+
+  setTimeout(() => { advancing = false; goNext(); }, ADVANCE_DELAY);
+}
+
+function goNext() {
+  current++;
+  if (current >= QUESTIONS.length) finish();
+  else renderQuestion();
+}
+
+function goBack() {
+  if (current === 0) return;
+  current--;
+  delete answers[QUESTIONS[current].id];
+  renderQuestion();
+}
+
+// Taps and keys run through commit() too, so there is no second code path to
+// keep in sync when hand tracking is unavailable.
+addEventListener('keydown', e => {
+  if (stage.hidden) return;
+  if (e.key === 'Backspace') { e.preventDefault(); return goBack(); }
+  const i = Number(e.key) - 1;
+  const choices = QUESTIONS[current].choices;
+  if (Number.isInteger(i) && i >= 0 && i < choices.length) commit(choices[i].label, performance.now());
+});
+
+// ---------- The summary ----------
+
+function finish() {
+  const seconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+
+  // Turn the camera off before the summary. The light going out is the point.
+  stopBreak();
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stage.hidden = true;
+
+  const flags = [];
+  for (const q of QUESTIONS) {
+    const a = answers[q.id];
+    if (a && a.flag) flags.push([a.flag.level, a.flag.note]);
+  }
+  for (const rule of RULES) {
+    const r = rule(answers);
+    if (r) flags.push(r);
+  }
+  const rank = { high: 0, watch: 1 };
+  flags.sort((a, b) => rank[a[0]] - rank[b[0]]);
+
+  const clashes = QUESTIONS.filter(q => answers[q.id]?.chart);
+
+  const root = $('summary');
+  root.hidden = false;
+  root.innerHTML =
+    '<h1>' + esc(CHART.name) + '</h1>' +
+    '<p class="meta">' + esc(CHART.line) + '</p>' +
+    '<p class="lede">Answered in ' + seconds + ' seconds by pointing at a camera. ' +
+      'No keyboard, no mouse, no voice. The video never left the device.</p>' +
+
+    (clashes.length ? '<h2>Chart says / she says</h2><div class="rows">' + clashes.map(q => {
+      const a = answers[q.id];
+      return '<div class="row clash">' +
+        '<div><div class="k">The chart</div><div class="v">' + esc(a.chart) + '</div></div>' +
+        '<div class="said"><div class="k">She just said</div><div class="v">' + esc(a.said) + '</div></div>' +
+        '</div>';
+    }).join('') + '</div>' : '<h2>Chart says / she says</h2><p>Nothing she said contradicts the chart.</p>') +
+
+    '<h2>Read this first</h2><ul class="flags">' + flags.map(([level, note]) =>
+      '<li class="' + level + '"><b>' + (level === 'high' ? 'Needs review' : 'Worth a glance') + '</b>' +
+      esc(note) + '</li>').join('') + '</ul>' +
+
+    '<h2>Everything she said</h2><div class="note"><h3>Note for the care team</h3><ul>' +
+      REAL.map(q => {
+        const a = answers[q.id];
+        return '<li>' + esc(q.text.replace(/\?$/, '')) + ': ' + esc(a ? (a.said || a.label) : 'not answered') + '.</li>';
+      }).join('') + '</ul></div>' +
+
+    '<p style="margin-top:24px">' +
+      '<button class="btn primary" id="copy" type="button">Copy for the chart</button> ' +
+      '<button class="btn" id="again" type="button">Start over</button></p>' +
+    '<footer>Part of <a href="https://github.com/tavinathanson/patient-intake-party">patient-intake-party</a>.</footer>';
+
+  $('copy').onclick = async e => {
+    try {
+      await navigator.clipboard.writeText(plainText(flags, clashes, seconds));
+      e.target.textContent = 'Copied';
+    } catch (err) {
+      e.target.textContent = 'Copy blocked by the browser';
+    }
+  };
+  $('again').onclick = () => location.reload();
+}
+
+function plainText(flags, clashes, seconds) {
+  const lines = [
+    CHART.name + ' — ' + CHART.line,
+    'Video intake, ' + seconds + 's, answered by pointing.',
+    '',
+  ];
+  if (clashes.length) {
+    lines.push('CHART VS PATIENT');
+    for (const q of clashes) {
+      lines.push('- chart: ' + answers[q.id].chart);
+      lines.push('  said:  ' + answers[q.id].said);
+    }
+    lines.push('');
+  }
+  lines.push('READ FIRST');
+  for (const [level, note] of flags) lines.push('- [' + level + '] ' + note);
+  lines.push('', 'ANSWERS');
+  for (const q of REAL) {
+    const a = answers[q.id];
+    lines.push('- ' + q.text.replace(/\?$/, '') + ': ' + (a ? (a.said || a.label) : 'not answered'));
+  }
+  return lines.join('\n');
+}
+
+// ---------- The dance break ----------
+// Three questions in, stand up and shake it out. Everything here is synthesized
+// on the fly: no audio files, no assets, nothing to download.
+
+let brk = null, danceSeen = false;
+
+function startBreak() {
+  const beat = 60 / SONG_BPM;
+  const totalBeats = COUNT_IN + MOVES.length * ROUNDS;
+  const dance = $('dance'), big = $('dancebig'), sub = $('dancesub'), dots = $('dancecount');
+
+  danceSeen = false;
+  dance.hidden = false;
+  stage.classList.add('dancing');
+  dots.innerHTML = '';
+  for (let i = 0; i < 8; i++) dots.append(el('i'));
+
+  let ctx = null, master = null, song = null, elapsed = null;
+
+  if (songEl && songEl.readyState >= 1) {
+    // Drive the coaching off the record's own clock, so the counts cannot drift
+    // away from the music no matter how the browser schedules us.
+    song = songEl;
+    const from = Math.max(0, SONG_START - COUNT_IN * beat);
+    try { song.currentTime = from; } catch (e) { /* not seekable yet */ }
+    song.volume = 0.85;
+    song.play().catch(() => { /* autoplay refused: the break runs silent */ });
+    elapsed = () => song.currentTime - from;
+  } else {
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume();
+    } catch (e) { ctx = null; }             // silent dance break is still a dance break
+
+    const t0 = ctx ? ctx.currentTime + 0.25 : 0;
+    const started = performance.now();
+    elapsed = ctx ? () => ctx.currentTime - t0 : () => (performance.now() - started) / 1000;
+    if (ctx) master = playLoop(ctx, t0, beat, totalBeats);
+  }
+
+  let shown = -1;
+  const tick = setInterval(() => {
+    const b = Math.floor(elapsed() / beat);
+    if (b === shown || b < 0) return;
+    shown = b;
+    if (b >= totalBeats) return finishBreak();
+
+    const idx = b - COUNT_IN;
+    if (idx < 0) {
+      sub.textContent = 'Stand up. Arms ready.';
+      big.textContent = String(COUNT_IN - b);
+    } else {
+      const move = idx % MOVES.length;
+      sub.textContent = 'Count ' + (move + 1) + ' of 16 · round ' +
+        (Math.floor(idx / MOVES.length) + 1) + ' of ' + ROUNDS;
+      big.textContent = MOVES[move];
+    }
+    for (const [i, d] of [...dots.children].entries()) d.classList.toggle('on', i === b % 8);
+    big.classList.remove('beatpulse'); void big.offsetWidth; big.classList.add('beatpulse');
+  }, 40);
+
+  brk = { ctx, master, song, tick, end: 0, done: false };
+}
+
+function finishBreak() {
+  if (!brk || brk.done) return;
+  brk.done = true;
+  clearInterval(brk.tick);
+  $('dancesub').textContent = '';
+  $('dancebig').textContent = danceSeen ? 'Nice moves.' : 'Back to it.';
+  brk.end = setTimeout(() => { if (!advancing) goNext(); }, 1400);
+}
+
+function stopBreak() {
+  if (!brk) return;
+  clearInterval(brk.tick);
+  clearTimeout(brk.end);
+  const { ctx, master, song } = brk;
+  brk = null;
+
+  if (song) {
+    const from = song.volume;
+    let step = 0;
+    const fade = setInterval(() => {
+      step++;
+      song.volume = Math.max(0, from * (1 - step / 8));
+      if (step >= 8) { clearInterval(fade); song.pause(); song.volume = from; }
+    }, 25);
+  }
+
+  if (ctx) {
+    // Ramp before closing, or you get a click on the way out.
+    try {
+      if (master) {
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value || 0.0001, ctx.currentTime);
+        master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+      }
+    } catch (e) { /* context already dead */ }
+    setTimeout(() => { try { ctx.close(); } catch (e) {} }, 120);
+  }
+  $('dance').hidden = true;
+  stage.classList.remove('dancing');
+}
+
+// An original loop at Macarena tempo -- not the Macarena, which is Los del Rio's.
+// Four bars of i-VII-VI-V under an A-minor-pentatonic riff, shaker on the
+// eighths, clap on two and four. The whole break is short enough to schedule
+// up front on the audio clock, so no lookahead scheduler is needed.
+
+function playLoop(ctx, t0, beat, totalBeats) {
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.0001, t0);
+  master.gain.exponentialRampToValueAtTime(0.5, t0 + 0.3);
+  master.connect(ctx.destination);
+
+  const noise = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.4), ctx.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+
+  const BASS = [110, 98, 87.31, 82.41];                   // A2 G2 F2 E2
+  const SCALE = [440, 523.25, 587.33, 659.25, 783.99];    // A minor pentatonic
+  const RIFF = [
+    [0, null, 2, 0, null, 1, null, 0],
+    [1, null, 0, null, 2, null, 1, null],
+    [2, null, 3, 2, null, 1, null, 0],
+    [3, null, 2, null, 1, null, 0, null],
+  ];
+
+  const bars = Math.ceil(totalBeats / 4);
+  for (let bar = 0; bar < bars; bar++) {
+    const bt = t0 + bar * 4 * beat;
+    const root = BASS[bar % 4];
+    tone(ctx, master, bt, root, beat * 0.9, 'triangle', 0.55);
+    tone(ctx, master, bt + beat * 2.5, root, beat * 0.6, 'triangle', 0.4);
+
+    RIFF[bar % 4].forEach((step, i) => {
+      if (step === null) return;
+      tone(ctx, master, bt + i * beat / 2, SCALE[step], 0.3, 'triangle', 0.3);
+    });
+
+    for (let i = 0; i < 8; i++) hit(ctx, master, noise, bt + i * beat / 2, 6500, 1, 0.05, i % 2 ? 0.22 : 0.12);
+    hit(ctx, master, noise, bt + beat, 1500, 0.7, 0.15, 0.5);
+    hit(ctx, master, noise, bt + beat * 3, 1500, 0.7, 0.15, 0.5);
+  }
+
+  const end = t0 + totalBeats * beat;
+  master.gain.setValueAtTime(0.5, end - 0.3);
+  master.gain.exponentialRampToValueAtTime(0.0001, end);
+  return master;
+}
+
+function tone(ctx, out, t, freq, dur, type, peak) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(out);
+  o.start(t); o.stop(t + dur + 0.02);
+}
+
+function hit(ctx, out, buf, t, freq, q, dur, peak) {
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(peak, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp); bp.connect(g); g.connect(out);
+  src.start(t); src.stop(t + dur + 0.05);
+}
+
+// ---------- Helpers ----------
+
+function el(tag, className) {
+  const e = document.createElement(tag);
+  if (className) e.className = className;
+  return e;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+</script>
