@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intake Rush Hour</title>
+<style>
+  :root {
+    --cell: 74px;
+    --board-bg: #2b2f36;
+    --lane-bg: #383e47;
+    --exit-glow: #ffd54a;
+    --locked: #6b7280;
+    --text: #f4f4f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #1b1e24, #12141a);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: 28px;
+    letter-spacing: 0.5px;
+  }
+  .subtitle {
+    margin: 0 0 20px;
+    color: #a8adb8;
+    font-size: 14px;
+    text-align: center;
+    max-width: 520px;
+  }
+  .hud {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .hud .stat {
+    background: #23262d;
+    border: 1px solid #3a3f48;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  .hud .stat b { color: var(--exit-glow); }
+  button.control {
+    background: #3a3f48;
+    color: var(--text);
+    border: 1px solid #4c525d;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button.control:hover { background: #454b56; }
+
+  .board-wrap {
+    position: relative;
+    padding: 14px;
+    background: var(--board-bg);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+  }
+  .board {
+    position: relative;
+    display: grid;
+    background: var(--lane-bg);
+    border-radius: 8px;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: var(--cell) var(--cell);
+  }
+  .exit-marker {
+    position: absolute;
+    background: repeating-linear-gradient(
+      45deg, var(--exit-glow), var(--exit-glow) 8px, #1b1e24 8px, #1b1e24 16px
+    );
+    box-shadow: 0 0 24px 4px rgba(255, 213, 74, 0.55);
+    border-radius: 4px;
+  }
+  .car {
+    position: absolute;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1b1e24;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35), inset 0 0 0 2px rgba(255,255,255,0.15);
+    transition: box-shadow 0.15s ease, filter 0.15s ease, opacity 0.4s ease, transform 0.4s ease;
+    touch-action: none;
+  }
+  .car .plate {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+  .car.locked {
+    filter: grayscale(0.55) brightness(0.75);
+    cursor: pointer;
+  }
+  .car.locked::after {
+    content: "🔒";
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 13px;
+  }
+  .car.unlocked {
+    cursor: grab;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4), inset 0 0 0 2px var(--exit-glow);
+  }
+  .car.unlocked::after {
+    content: "🔓";
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 13px;
+  }
+  .car.dragging {
+    cursor: grabbing;
+    filter: brightness(1.08);
+    z-index: 50;
+  }
+  .car.exiting {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  .legend {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    max-width: 620px;
+  }
+  .legend .chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #23262d;
+    border: 1px solid #3a3f48;
+    border-radius: 999px;
+    padding: 5px 10px 5px 6px;
+    font-size: 12px;
+  }
+  .legend .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+  }
+  .legend .chip.done { opacity: 0.4; text-decoration: line-through; }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 11, 14, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  .modal {
+    background: #1f2229;
+    border: 1px solid #3a3f48;
+    border-radius: 14px;
+    max-width: 440px;
+    width: 100%;
+    padding: 22px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .modal .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .modal .modal-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .modal h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+  .modal .modal-sub {
+    margin: 2px 0 16px;
+    color: #a8adb8;
+    font-size: 13px;
+  }
+  .modal .question {
+    font-size: 15px;
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .modal .field-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .modal .text-input {
+    background: #2c313a;
+    border: 1px solid #454b56;
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 100%;
+  }
+  .modal .text-input:focus {
+    outline: none;
+    border-color: var(--exit-glow);
+  }
+  .modal .checkbox-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .modal .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .modal .toggle-row {
+    display: flex;
+    gap: 8px;
+  }
+  .modal .toggle-btn {
+    flex: 1;
+    background: #2c313a;
+    border: 1px solid #454b56;
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .modal .toggle-btn:hover { background: #363c46; border-color: #5a616e; }
+  .modal .toggle-btn.selected {
+    background: #1f4a2e;
+    border-color: #3bbf6a;
+  }
+  .modal .follow-up {
+    margin-top: 8px;
+  }
+  .modal .feedback {
+    margin-top: 12px;
+    font-size: 13px;
+    min-height: 18px;
+  }
+  .modal .feedback.ok { color: #6fdc94; }
+  .modal .feedback.bad { color: #ff8a8a; }
+  .modal .modal-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .modal .close-btn {
+    background: transparent;
+    border: none;
+    color: #a8adb8;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .win-banner {
+    margin-top: 18px;
+    background: linear-gradient(135deg, #2f6e4a, #234d34);
+    border: 1px solid #3bbf6a;
+    border-radius: 12px;
+    padding: 14px 20px;
+    text-align: center;
+    max-width: 480px;
+  }
+  .win-banner h2 { margin: 0 0 4px; font-size: 18px; }
+  .win-banner p { margin: 0; font-size: 13px; color: #cdeed9; }
+</style>
+</head>
+<body>
+
+<h1>🚗 Intake Rush Hour</h1>
+<p class="subtitle">Plum's intake form is stuck in the lot, one blank field per car. Tap a locked car, fill in
+  that field yourself, then drag it out through the gate &mdash; any direction, any way you can clear a path.</p>
+
+<div class="hud">
+  <div class="stat">Fields filled: <b id="stat-done">0</b> / <b id="stat-total">10</b></div>
+  <div class="stat">Moves: <b id="stat-moves">0</b></div>
+  <button class="control" id="new-puzzle-btn">🔀 New lot</button>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div id="win-slot"></div>
+
+<div id="modal-slot"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const GRID = 8;
+  const CELL = 68;
+
+  // Exit is the middle-right edge, row 3 (0-indexed), col GRID (just off the board).
+  const EXIT_ROW = 3;
+
+  // One patient (Plum, from patients/glaucoma) filling out the front-desk
+  // intake form. Each car is one blank field on that form; filling it in
+  // unlocks the car so it can be driven out of the lot.
+  const FIELDS = [
+    {
+      id: "name",
+      name: "Name",
+      color: "#ef6c6c",
+      field: { type: "text", label: "Patient name", placeholder: "e.g. Plum Kohlrabi" }
+    },
+    {
+      id: "dob",
+      name: "Date of birth",
+      color: "#57b8ff",
+      field: { type: "text", label: "Date of birth", placeholder: "MM/DD/YYYY" }
+    },
+    {
+      id: "address",
+      name: "Address",
+      color: "#8bd450",
+      field: { type: "text", label: "Address", placeholder: "Street, city, state, zip" }
+    },
+    {
+      id: "phone",
+      name: "Phone",
+      color: "#f2b84b",
+      field: { type: "text", label: "Phone", placeholder: "(555) 555-5555" }
+    },
+    {
+      id: "insurance",
+      name: "Insurance",
+      color: "#b48bf2",
+      field: { type: "text", label: "Insurance & member ID", placeholder: "e.g. Medicare, member ID" }
+    },
+    {
+      id: "emergency",
+      name: "Emergency contact",
+      color: "#5ad1c9",
+      field: { type: "text", label: "Emergency contact", placeholder: "Name, relationship, phone" }
+    },
+    {
+      id: "reason",
+      name: "Reason for visit",
+      color: "#e08fd0",
+      field: { type: "text", label: "Reason for visit", placeholder: "Why are you here today?" }
+    },
+    {
+      id: "meds",
+      name: "Current medications",
+      color: "#ffb454",
+      field: { type: "text", label: "Current medications", placeholder: "Include OTC, vitamins, eye drops, inhalers" }
+    },
+    {
+      id: "allergies",
+      name: "Allergies",
+      color: "#9fd456",
+      field: {
+        type: "toggle",
+        label: "Do you have any allergies?",
+        options: ["None", "Yes (describe below)"],
+        followUp: { placeholder: "List allergies" }
+      }
+    },
+    {
+      id: "conditions",
+      name: "Past conditions",
+      color: "#f28b8b",
+      field: {
+        type: "checkboxes",
+        label: "Check all that apply",
+        options: [
+          "Arthritis", "Diabetes", "Kidney disease",
+          "Asthma", "Glaucoma", "Seizures",
+          "Cancer", "Heart disease", "Stroke",
+          "COPD / emphysema", "High blood pressure", "Thyroid disease",
+          "Depression / anxiety", "High cholesterol"
+        ]
+      }
+    }
+  ];
+
+  // Hand-generated, script-verified 8x8 layouts (no overlaps, all in bounds).
+  // {id, orient, len, row, col} — orient "h"/"v", coordinates are the car's
+  // top-left cell. Each layout has exactly one car starting on EXIT_ROW with
+  // room to slide right, so the puzzle is always solvable by clearing a path.
+  const LAYOUTS = [
+    [
+      { id: "name",       orient: "h", len: 3, row: 3, col: 4 },
+      { id: "dob",        orient: "h", len: 2, row: 2, col: 5 },
+      { id: "address",    orient: "v", len: 2, row: 5, col: 3 },
+      { id: "phone",      orient: "h", len: 3, row: 7, col: 2 },
+      { id: "insurance",  orient: "v", len: 2, row: 6, col: 6 },
+      { id: "emergency",  orient: "v", len: 2, row: 0, col: 2 },
+      { id: "reason",     orient: "v", len: 2, row: 2, col: 1 },
+      { id: "meds",       orient: "h", len: 2, row: 4, col: 2 },
+      { id: "allergies",  orient: "v", len: 2, row: 5, col: 0 },
+      { id: "conditions", orient: "v", len: 3, row: 0, col: 7 }
+    ],
+    [
+      { id: "name",       orient: "h", len: 3, row: 1, col: 2 },
+      { id: "dob",        orient: "h", len: 2, row: 2, col: 0 },
+      { id: "address",    orient: "h", len: 2, row: 0, col: 3 },
+      { id: "phone",      orient: "v", len: 2, row: 6, col: 1 },
+      { id: "insurance",  orient: "v", len: 2, row: 0, col: 7 },
+      { id: "emergency",  orient: "h", len: 2, row: 4, col: 0 },
+      { id: "reason",     orient: "h", len: 3, row: 3, col: 4 },
+      { id: "meds",       orient: "v", len: 2, row: 5, col: 3 },
+      { id: "allergies",  orient: "v", len: 2, row: 0, col: 5 },
+      { id: "conditions", orient: "h", len: 3, row: 2, col: 2 }
+    ],
+    [
+      { id: "name",       orient: "v", len: 3, row: 5, col: 1 },
+      { id: "dob",        orient: "h", len: 2, row: 7, col: 6 },
+      { id: "address",    orient: "h", len: 3, row: 0, col: 5 },
+      { id: "phone",      orient: "v", len: 3, row: 2, col: 7 },
+      { id: "insurance",  orient: "v", len: 2, row: 4, col: 5 },
+      { id: "emergency",  orient: "v", len: 2, row: 0, col: 0 },
+      { id: "reason",     orient: "h", len: 2, row: 3, col: 3 },
+      { id: "meds",       orient: "h", len: 2, row: 3, col: 0 },
+      { id: "allergies",  orient: "v", len: 2, row: 3, col: 2 },
+      { id: "conditions", orient: "v", len: 2, row: 5, col: 3 }
+    ]
+  ];
+
+  const boardEl = document.getElementById("board");
+  const legendEl = document.getElementById("legend");
+  const winSlot = document.getElementById("win-slot");
+  const modalSlot = document.getElementById("modal-slot");
+  const statDone = document.getElementById("stat-done");
+  const statMoves = document.getElementById("stat-moves");
+  const statTotal = document.getElementById("stat-total");
+
+  statTotal.textContent = LAYOUTS[0].length;
+
+  let cars = [];       // live state: { ...def, unlocked, exited, el }
+  let moves = 0;
+  let doneCount = 0;
+
+  boardEl.style.width = (GRID * CELL) + "px";
+  boardEl.style.height = (GRID * CELL) + "px";
+  boardEl.style.gridTemplateColumns = `repeat(${GRID}, ${CELL}px)`;
+  boardEl.style.gridTemplateRows = `repeat(${GRID}, ${CELL}px)`;
+
+  function pxCar(car) {
+    const w = car.orient === "h" ? car.len * CELL : CELL;
+    const h = car.orient === "v" ? car.len * CELL : CELL;
+    return { w, h, x: car.col * CELL, y: car.row * CELL };
+  }
+
+  function cellsOf(car, row, col) {
+    const list = [];
+    for (let i = 0; i < car.len; i++) {
+      if (car.orient === "h") list.push([row, col + i]);
+      else list.push([row + i, col]);
+    }
+    return list;
+  }
+
+  function occupied(excludeId) {
+    const set = new Set();
+    for (const c of cars) {
+      if (c.id === excludeId || c.exited) continue;
+      for (const [r, cc] of cellsOf(c, c.row, c.col)) set.add(r + "," + cc);
+    }
+    return set;
+  }
+
+  function buildBoard() {
+    boardEl.innerHTML = "";
+    legendEl.innerHTML = "";
+
+    // exit marker: a notch at the right edge on EXIT_ROW
+    const exitMarker = document.createElement("div");
+    exitMarker.className = "exit-marker";
+    exitMarker.style.left = (GRID * CELL) + "px";
+    exitMarker.style.top = (EXIT_ROW * CELL + 8) + "px";
+    exitMarker.style.width = "18px";
+    exitMarker.style.height = (CELL - 16) + "px";
+    document.querySelector(".board-wrap").appendChild(exitMarker);
+
+    for (const car of cars) {
+      const el = document.createElement("div");
+      el.className = "car locked";
+      el.dataset.id = car.id;
+      const { w, h, x, y } = pxCar(car);
+      el.style.width = w + "px";
+      el.style.height = h + "px";
+      el.style.left = x + "px";
+      el.style.top = y + "px";
+      el.style.background = car.color;
+      el.innerHTML = `<div><div>${car.name}</div><span class="plate">Plum's form</span></div>`;
+      boardEl.appendChild(el);
+      car.el = el;
+
+      attachInteractions(car);
+
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      chip.id = "chip-" + car.id;
+      chip.innerHTML = `<span class="swatch" style="background:${car.color}"></span>${car.name}`;
+      legendEl.appendChild(chip);
+    }
+  }
+
+  function attachInteractions(car) {
+    let dragState = null;
+
+    car.el.addEventListener("pointerdown", (e) => {
+      if (car.exited) return;
+      if (!car.unlocked) {
+        openQuestionModal(car);
+        return;
+      }
+      car.el.setPointerCapture(e.pointerId);
+      car.el.classList.add("dragging");
+      dragState = {
+        startX: e.clientX,
+        startY: e.clientY,
+        origRow: car.row,
+        origCol: car.col
+      };
+    });
+
+    car.el.addEventListener("pointermove", (e) => {
+      if (!dragState || car.exited) return;
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+
+      // Cars move freely in any of the 4 cardinal directions. Resolve the
+      // horizontal target first (against the car's current row), then the
+      // vertical target (against that new column), so a diagonal drag still
+      // slides the car cell-by-cell along both axes without clipping through
+      // a car that only blocks one of them.
+      const targetCol = clampMove(car, dragState.origCol, dx / CELL, "h");
+      car._pendingCol = targetCol;
+      const targetRow = clampMove(car, dragState.origRow, dy / CELL, "v");
+      car._pendingRow = targetRow;
+
+      car.el.style.left = (targetCol * CELL) + "px";
+      car.el.style.top = (targetRow * CELL) + "px";
+    });
+
+    car.el.addEventListener("pointerup", (e) => {
+      if (!dragState) return;
+      car.el.classList.remove("dragging");
+      finalizeDrag(car);
+      dragState = null;
+    });
+
+    car.el.addEventListener("pointercancel", () => {
+      dragState = null;
+      car.el.classList.remove("dragging");
+      snapToGrid(car);
+    });
+  }
+
+  // Finds the furthest free integer col (axis "h") or row (axis "v") a car
+  // can reach moving cell-by-cell toward `origin + deltaCells`, respecting
+  // other cars and using the car's *current* position (car.row/car.col) for
+  // the axis not being moved. On the exit row, a car sliding right is
+  // allowed to pass the right edge to exit the board.
+  function clampMove(car, origin, deltaCells, axis) {
+    const target = origin + deltaCells;
+    const blocked = occupied(car.id);
+
+    let pos = Math.round(origin);
+    const desired = Math.round(target);
+    while (pos !== desired) {
+      const step = desired > pos ? 1 : -1;
+      const next = pos + step;
+
+      if (axis === "h") {
+        const isRowExit = car.row === EXIT_ROW;
+        if (next > GRID - car.len) {
+          if (isRowExit && step > 0 && next <= GRID) { pos = next; continue; }
+          break;
+        }
+        if (next < 0) break;
+        const free = cellsOf(car, car.row, next).every(([r, cc]) => !blocked.has(r + "," + cc));
+        if (!free) break;
+        pos = next;
+      } else {
+        if (next > GRID - car.len || next < 0) break;
+        const currentCol = car._pendingCol !== undefined ? car._pendingCol : car.col;
+        const free = cellsOf(car, next, currentCol).every(([r, cc]) => !blocked.has(r + "," + cc));
+        if (!free) break;
+        pos = next;
+      }
+    }
+    return pos;
+  }
+
+  function finalizeDrag(car) {
+    const moved = car._pendingCol !== car.col || car._pendingRow !== car.row;
+    if (moved) {
+      moves++;
+      statMoves.textContent = moves;
+    }
+    car.col = car._pendingCol;
+    car.row = car._pendingRow;
+    car._pendingCol = undefined;
+    car._pendingRow = undefined;
+
+    if (car.row === EXIT_ROW && car.col >= GRID) {
+      exitCar(car);
+      return;
+    }
+    snapToGrid(car);
+  }
+
+  function snapToGrid(car) {
+    if (car.exited) return;
+    const { x, y } = pxCar(car);
+    car.el.style.left = x + "px";
+    car.el.style.top = y + "px";
+  }
+
+  function exitCar(car) {
+    car.exited = true;
+    car.el.classList.add("exiting");
+    car.el.style.left = ((GRID + 1) * CELL) + "px";
+    doneCount++;
+    statDone.textContent = doneCount;
+    const chip = document.getElementById("chip-" + car.id);
+    if (chip) chip.classList.add("done");
+    setTimeout(() => {
+      if (car.el && car.el.parentNode) car.el.parentNode.removeChild(car.el);
+    }, 450);
+    if (doneCount === cars.length) showWin();
+  }
+
+  function openQuestionModal(car) {
+    modalSlot.innerHTML = "";
+    const backdrop = document.createElement("div");
+    backdrop.className = "modal-backdrop";
+
+    const modal = document.createElement("div");
+    modal.className = "modal";
+
+    const f = car.field;
+    modal.innerHTML = `
+      <div class="modal-header">
+        <div class="modal-swatch" style="background:${car.color}"></div>
+        <div>
+          <h2>${car.name}</h2>
+          <div class="modal-sub">Plum Kohlrabi's intake form</div>
+        </div>
+      </div>
+      <div class="question">${f.label}</div>
+      <div class="field-input"></div>
+      <div class="feedback"></div>
+      <div class="modal-actions">
+        <button class="close-btn">Cancel</button>
+        <button class="submit-btn control">Save &amp; unlock</button>
+      </div>
+    `;
+
+    const inputEl = modal.querySelector(".field-input");
+    const feedbackEl = modal.querySelector(".feedback");
+    const submitBtn = modal.querySelector(".submit-btn");
+
+    let getAnswerFilled = () => false;
+
+    if (f.type === "text") {
+      inputEl.innerHTML = `<input type="text" class="text-input" placeholder="${f.placeholder || ""}">`;
+      const input = inputEl.querySelector("input");
+      input.focus();
+      getAnswerFilled = () => input.value.trim().length > 0;
+    } else if (f.type === "checkboxes") {
+      inputEl.innerHTML = `<div class="checkbox-list">${f.options.map((opt, i) => `
+        <label class="checkbox-row">
+          <input type="checkbox" data-idx="${i}"> ${opt}
+        </label>
+      `).join("")}</div>`;
+      // "None checked" still counts as a real, considered answer for this field.
+      getAnswerFilled = () => true;
+    } else if (f.type === "toggle") {
+      inputEl.innerHTML = `
+        <div class="toggle-row">
+          ${f.options.map((opt, i) => `<button type="button" class="toggle-btn" data-idx="${i}">${opt}</button>`).join("")}
+        </div>
+        <div class="follow-up" style="display:none;">
+          <input type="text" class="text-input follow-up-input" placeholder="${(f.followUp && f.followUp.placeholder) || ""}">
+        </div>
+      `;
+      const toggleBtns = [...inputEl.querySelectorAll(".toggle-btn")];
+      const followUp = inputEl.querySelector(".follow-up");
+      const followUpInput = inputEl.querySelector(".follow-up-input");
+      let selectedIdx = null;
+      toggleBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          selectedIdx = Number(btn.dataset.idx);
+          toggleBtns.forEach((b) => b.classList.toggle("selected", b === btn));
+          followUp.style.display = selectedIdx === 1 ? "block" : "none";
+          if (selectedIdx === 1) followUpInput.focus();
+        });
+      });
+      getAnswerFilled = () => selectedIdx === 0 || (selectedIdx === 1 && followUpInput.value.trim().length > 0);
+    }
+
+    function attemptSubmit() {
+      if (getAnswerFilled()) {
+        feedbackEl.textContent = "Saved — unlocking the car. Drag it out through the gate!";
+        feedbackEl.className = "feedback ok";
+        submitBtn.disabled = true;
+        setTimeout(() => {
+          unlockCar(car);
+          closeModal();
+        }, 500);
+      } else {
+        feedbackEl.textContent = "Fill this in before moving on.";
+        feedbackEl.className = "feedback bad";
+      }
+    }
+
+    submitBtn.addEventListener("click", attemptSubmit);
+    modal.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && f.type !== "checkboxes") attemptSubmit();
+    });
+
+    modal.querySelector(".close-btn").addEventListener("click", closeModal);
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    function closeModal() {
+      modalSlot.innerHTML = "";
+    }
+
+    backdrop.appendChild(modal);
+    modalSlot.appendChild(backdrop);
+  }
+
+  function unlockCar(car) {
+    car.unlocked = true;
+    car.el.classList.remove("locked");
+    car.el.classList.add("unlocked");
+  }
+
+  function showWin() {
+    winSlot.innerHTML = `
+      <div class="win-banner">
+        <h2>🎉 Lot's clear!</h2>
+        <p>Every field is filled in. Plum's form is ready for the doctor.</p>
+      </div>
+    `;
+  }
+
+  function newPuzzle() {
+    moves = 0;
+    doneCount = 0;
+    statMoves.textContent = "0";
+    statDone.textContent = "0";
+    winSlot.innerHTML = "";
+    modalSlot.innerHTML = "";
+
+    const layout = LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+    cars = layout.map((slot) => {
+      const meta = FIELDS.find((f) => f.id === slot.id);
+      return {
+        ...meta,
+        orient: slot.orient,
+        len: slot.len,
+        row: slot.row,
+        col: slot.col,
+        unlocked: false,
+        exited: false
+      };
+    });
+
+    buildBoard();
+  }
+
+  document.getElementById("new-puzzle-btn").addEventListener("click", newPuzzle);
+
+  newPuzzle();
+})();
+</script>
+
+</body>
+</html>
