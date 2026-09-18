@@ -127,6 +127,8 @@
   .log-item:last-child { border-bottom: none; }
   .log-q { font-weight: bold; }
   .log-meta { color: var(--muted); font-size: 0.9rem; }
+  .chip.junk { background: #e4e6e8; color: var(--muted); }
+  .flag { color: #b5462a; font-size: 0.95rem; }
   details { margin-top: 8px; }
   summary { cursor: pointer; font-weight: bold; }
 </style>
@@ -187,11 +189,34 @@
     </div>
   </section>
 
+  <!-- Phase 2b: crab trap (checkbox sections) -->
+  <section id="screen-trap" class="screen">
+    <div class="panel">
+      <div id="trap-title" class="banner"></div>
+      <div id="trap-prompt" class="hint" style="margin-top:0"></div>
+      <div class="howto">
+        🦀 <strong>How to crab:</strong> click the seafloor to throw your net. It lands
+        <em>roughly</em> where you aimed. Every crab under the net gets checked.
+        You get <strong>3 nets</strong> per section.
+      </div>
+      <div class="row" style="align-items:center">
+        <div id="trap-status" class="status" style="flex:1 1 300px"></div>
+        <span id="nets-left" style="font-weight:bold"></span>
+        <button id="trap-next">Next section →</button>
+      </div>
+      <canvas id="trap" width="900" height="420"></canvas>
+      <div style="margin-top:12px"><strong>🪣 Your bucket:</strong></div>
+      <div id="bucket" class="chips"></div>
+    </div>
+  </section>
+
   <!-- Phase 3: catch log -->
   <section id="screen-log" class="screen">
     <div class="panel">
       <h2>📋 Catch Log for the Care Team</h2>
       <div id="log"></div>
+      <h2 style="margin-top:24px">🦀 Crab Trap Haul</h2>
+      <div id="crab-log"></div>
       <details>
         <summary>What the patient actually typed</summary>
         <ul id="raw-answers"></ul>
@@ -501,7 +526,7 @@ $("use-btn").onclick = () => {
   $("card-overlay").classList.remove("show");
   resetHook();
   qIndex++;
-  if (qIndex >= QUESTION_ORDER.length) return showLog();
+  if (qIndex >= QUESTION_ORDER.length) return startTrap();
   startQuestion();
   setStatus(f.cat === cat ? "✅ Answer locked in. Next question!" : "🤔 The doctor will surely understand. Next question!", true);
 };
@@ -588,14 +613,334 @@ function draw() {
   }
 }
 
+// ---------- Phase 2b: crab trap ----------
+const randYear = () => 1975 + Math.floor(Math.random() * 50);
+const CRAB_SECTIONS = [
+  {
+    title: "Past conditions",
+    prompt: "Check all that apply. Or at least, catch all that apply.",
+    items: () => ["Arthritis", "Diabetes", "Kidney disease", "Asthma", "Glaucoma", "Seizures",
+      "Cancer", "Heart disease", "Stroke", "COPD / emphysema", "High blood pressure",
+      "Thyroid disease", "Depression / anxiety", "High cholesterol", "Other: ???"],
+  },
+  {
+    title: "Past surgeries",
+    prompt: "Procedure and year. The crabs will tell you the year.",
+    items: () => ["Appendix out", "Tonsils out", "Knee surgery", "Gallbladder removal", "C-section",
+      "Hernia repair", "Cataract surgery", "Back surgery", "Wisdom teeth"]
+      .map((s) => `${s} (${randYear()})`).concat(["No surgeries"]),
+  },
+  {
+    title: "Family history",
+    prompt: "Parents, siblings, children. Whoever ends up in the net.",
+    items: () => ["Parent", "Sibling", "Child"].flatMap((rel) =>
+      ["cancer", "diabetes", "heart disease", "stroke", "glaucoma"].map((c) => `${rel}: ${c}`)),
+  },
+  {
+    title: "Social history",
+    prompt: "Pick one per line. The net does not care.",
+    items: () => ["Tobacco: Never", `Tobacco: Former (quit ${randYear()})`, "Tobacco: Current",
+      "Alcohol: None", "Alcohol: Occasional", "Alcohol: Daily", "Drugs: No", "Drugs: Yes"],
+  },
+];
+const JUNK = ["🥾 Old boot", "Just a rock", "Seaweed", "Someone's sunglasses", "A single sock"];
+const NETS_PER_SECTION = 3;
+const AIM_WOBBLE = 75; // how far (px) the net can land from where you clicked
+
+const trapCanvas = $("trap");
+const tctx = trapCanvas.getContext("2d");
+const TW = trapCanvas.width, TH = trapCanvas.height;
+
+let trapIndex = 0;
+let crabs = [];
+let net = null;      // { sx, sy, tx, ty, r, t, landed, timer }
+let netsLeft = 0;
+let haul = [];       // [{ label, junk }]
+let trapResults = [];
+let trapMouse = null;
+
+function makeCrab(label, junk) {
+  tctx.font = "bold 12px Trebuchet MS, sans-serif";
+  const w = Math.max(50, tctx.measureText(label).width + 20);
+  return {
+    label, junk, w, h: 26,
+    x: w / 2 + 20 + Math.random() * (TW - w - 40),
+    y: 70 + Math.random() * (TH - 100),
+    vx: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.9),
+    pause: 0,
+    legPhase: Math.random() * 6,
+    caught: false,
+  };
+}
+
+function startTrap() {
+  trapIndex = 0;
+  trapResults = [];
+  showScreen("screen-trap");
+  startSection();
+}
+
+function startSection() {
+  const sec = CRAB_SECTIONS[trapIndex];
+  $("trap-title").textContent = `Section ${trapIndex + 1} of ${CRAB_SECTIONS.length}: ${sec.title}`;
+  $("trap-prompt").textContent = sec.prompt;
+  const junk = [...JUNK].sort(() => Math.random() - 0.5).slice(0, 2);
+  crabs = sec.items().map((l) => makeCrab(l, false)).concat(junk.map((j) => makeCrab(j, true)));
+  netsLeft = NETS_PER_SECTION;
+  haul = [];
+  net = null;
+  renderBucket();
+  updateNetsLeft();
+  trapStatus("Aim for the crabs that apply to you. The net has its own plans.");
+  $("trap-next").textContent = trapIndex === CRAB_SECTIONS.length - 1 ? "Finish → see catch log" : "Next section →";
+}
+
+function trapStatus(s) { $("trap-status").textContent = s; }
+function updateNetsLeft() { $("nets-left").textContent = `🕸️ Nets left: ${netsLeft}`; }
+
+function renderBucket() {
+  const b = $("bucket");
+  b.innerHTML = "";
+  if (!haul.length) {
+    b.innerHTML = '<span class="hint" style="margin:0">Empty. Like the ocean, if you believe the crabs.</span>';
+    return;
+  }
+  haul.forEach((c) => {
+    const chip = document.createElement("span");
+    chip.className = c.junk ? "chip junk" : "chip";
+    chip.textContent = `${c.junk ? "🗑️" : "☑️"} ${c.label}`;
+    b.appendChild(chip);
+  });
+}
+
+trapCanvas.addEventListener("pointermove", (e) => {
+  const r = trapCanvas.getBoundingClientRect();
+  trapMouse = { x: (e.clientX - r.left) * (TW / r.width), y: (e.clientY - r.top) * (TH / r.height) };
+});
+trapCanvas.addEventListener("pointerleave", () => { trapMouse = null; });
+trapCanvas.addEventListener("pointerdown", (e) => {
+  if (net) return;
+  if (netsLeft <= 0) { trapStatus("🕸️ Out of nets! Hit the Next button."); return; }
+  const r = trapCanvas.getBoundingClientRect();
+  const px = (e.clientX - r.left) * (TW / r.width);
+  const py = (e.clientY - r.top) * (TH / r.height);
+  const angle = Math.random() * Math.PI * 2;
+  const dist = Math.random() * AIM_WOBBLE;
+  net = {
+    sx: TW / 2, sy: 0,
+    tx: Math.max(40, Math.min(TW - 40, px + Math.cos(angle) * dist)),
+    ty: Math.max(50, Math.min(TH - 20, py + Math.sin(angle) * dist)),
+    r: 55 + Math.random() * 40,
+    t: 0, landed: false, timer: 0,
+  };
+  netsLeft--;
+  updateNetsLeft();
+  trapStatus("🕸️ Net away!");
+});
+
+function landNet() {
+  net.landed = true;
+  net.timer = 70;
+  const caught = crabs.filter((c) => !c.caught && Math.hypot(c.x - net.tx, c.y - net.ty) < net.r);
+  caught.forEach((c) => { c.caught = true; haul.push({ label: c.label, junk: c.junk }); });
+  renderBucket();
+  if (!caught.length) trapStatus("The net comes up empty. The crabs are laughing at you.");
+  else trapStatus(`🦀 Caught ${caught.length}: ${caught.map((c) => c.label).join(", ")}. All checked!`);
+}
+
+function updateTrap() {
+  for (const c of crabs) {
+    if (c.caught) continue;
+    if (c.pause > 0) { c.pause--; continue; }
+    c.x += c.vx;
+    c.legPhase += 0.3;
+    if (Math.random() < 0.005) c.pause = 30 + Math.random() * 60;
+    if (Math.random() < 0.004) c.vx *= -1;
+    if (c.x < c.w / 2 + 10 || c.x > TW - c.w / 2 - 10) {
+      c.vx *= -1;
+      c.x = Math.max(c.w / 2 + 10, Math.min(TW - c.w / 2 - 10, c.x));
+    }
+  }
+  if (net && !net.landed) {
+    net.t += 1 / 40;
+    if (net.t >= 1) { net.t = 1; landNet(); }
+  } else if (net && net.landed && --net.timer <= 0) {
+    crabs = crabs.filter((c) => !c.caught);
+    net = null;
+    if (netsLeft === 0) trapStatus(`${$("trap-status").textContent} Out of nets, hit Next.`);
+  }
+}
+
+function drawCrab(c) {
+  tctx.save();
+  tctx.translate(c.x, c.y);
+  if (!c.junk) {
+    // Legs
+    tctx.strokeStyle = "#b23a2a";
+    tctx.lineWidth = 3;
+    for (let i = 0; i < 3; i++) {
+      const wig = Math.sin(c.legPhase + i) * 3;
+      for (const side of [-1, 1]) {
+        tctx.beginPath();
+        tctx.moveTo(side * (c.w / 2 - 8 - i * 8), 4);
+        tctx.lineTo(side * (c.w / 2 - 2 - i * 8), 16 + wig);
+        tctx.stroke();
+      }
+    }
+    // Claws + eye stalks
+    tctx.fillStyle = "#e0533d";
+    for (const side of [-1, 1]) {
+      tctx.beginPath();
+      tctx.arc(side * (c.w / 2 + 5), -c.h / 2 + 2, 7, 0, Math.PI * 2);
+      tctx.fill();
+      tctx.fillStyle = "#1d2b36";
+      tctx.beginPath();
+      tctx.arc(side * 8, -c.h / 2 - 4, 3, 0, Math.PI * 2);
+      tctx.fill();
+      tctx.fillStyle = "#e0533d";
+    }
+  }
+  tctx.fillStyle = c.junk ? "#8a8f94" : "#e0533d";
+  tctx.beginPath();
+  tctx.ellipse(0, 0, c.w / 2, c.h / 2, 0, 0, Math.PI * 2);
+  tctx.fill();
+  tctx.fillStyle = "#fff";
+  tctx.font = "bold 12px Trebuchet MS, sans-serif";
+  tctx.textAlign = "center";
+  tctx.textBaseline = "middle";
+  tctx.fillText(c.label, 0, 1);
+  tctx.restore();
+}
+
+function drawNet(x, y, r) {
+  tctx.save();
+  tctx.beginPath();
+  tctx.arc(x, y, r, 0, Math.PI * 2);
+  tctx.fillStyle = "rgba(255,255,255,0.15)";
+  tctx.fill();
+  tctx.clip();
+  tctx.strokeStyle = "rgba(60,40,20,0.7)";
+  tctx.lineWidth = 1.5;
+  for (let d = -r; d <= r; d += 12) {
+    tctx.beginPath(); tctx.moveTo(x + d - r, y - r); tctx.lineTo(x + d + r, y + r); tctx.stroke();
+    tctx.beginPath(); tctx.moveTo(x + d + r, y - r); tctx.lineTo(x + d - r, y + r); tctx.stroke();
+  }
+  tctx.restore();
+  tctx.strokeStyle = "#5a3d1e";
+  tctx.lineWidth = 4;
+  tctx.beginPath();
+  tctx.arc(x, y, r, 0, Math.PI * 2);
+  tctx.stroke();
+}
+
+function drawTrap() {
+  const g = tctx.createLinearGradient(0, 0, 0, TH);
+  g.addColorStop(0, "#7ec8e3");
+  g.addColorStop(0.25, "#b9d9c9");
+  g.addColorStop(1, "#e6d3a3");
+  tctx.fillStyle = g;
+  tctx.fillRect(0, 0, TW, TH);
+  // Pebbles
+  tctx.fillStyle = "rgba(120,100,70,0.25)";
+  for (let i = 0; i < 30; i++) {
+    tctx.beginPath();
+    tctx.arc((i * 137) % TW, 120 + ((i * 89) % (TH - 130)), 3 + (i % 4), 0, Math.PI * 2);
+    tctx.fill();
+  }
+
+  crabs.forEach(drawCrab);
+
+  // Aim preview: where the net will *roughly* land
+  if (!net && netsLeft > 0 && trapMouse) {
+    tctx.save();
+    tctx.setLineDash([8, 6]);
+    tctx.strokeStyle = "rgba(29,43,54,0.6)";
+    tctx.lineWidth = 2;
+    tctx.beginPath();
+    tctx.arc(trapMouse.x, trapMouse.y, AIM_WOBBLE, 0, Math.PI * 2);
+    tctx.stroke();
+    tctx.restore();
+    tctx.fillStyle = "rgba(29,43,54,0.8)";
+    tctx.font = "12px Trebuchet MS, sans-serif";
+    tctx.textAlign = "center";
+    tctx.fillText("somewhere around here", trapMouse.x, trapMouse.y - AIM_WOBBLE - 6);
+  }
+
+  if (net) {
+    const t = net.t;
+    const x = net.sx + (net.tx - net.sx) * t;
+    const y = net.sy + (net.ty - net.sy) * t - Math.sin(Math.PI * t) * 120;
+    const r = 12 + (net.r - 12) * t;
+    tctx.strokeStyle = "#1d2b36";
+    tctx.lineWidth = 1.5;
+    tctx.beginPath();
+    tctx.moveTo(TW / 2, 0);
+    tctx.lineTo(x, y);
+    tctx.stroke();
+    drawNet(x, y, r);
+  }
+}
+
+$("trap-next").onclick = () => {
+  if (net) return;
+  trapResults.push({ title: CRAB_SECTIONS[trapIndex].title, caught: haul.slice(), netsUsed: NETS_PER_SECTION - netsLeft });
+  trapIndex++;
+  if (trapIndex >= CRAB_SECTIONS.length) return showLog();
+  startSection();
+};
+
 function loop() {
-  if (document.getElementById("screen-pond").classList.contains("active")) {
+  if ($("screen-pond").classList.contains("active")) {
     update();
     draw();
+  } else if ($("screen-trap").classList.contains("active")) {
+    updateTrap();
+    drawTrap();
   }
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+
+function renderCrabLog() {
+  const out = $("crab-log");
+  out.innerHTML = "";
+  trapResults.forEach((sec) => {
+    const div = document.createElement("div");
+    div.className = "log-item";
+    const q = document.createElement("div");
+    q.className = "log-q";
+    q.textContent = sec.title;
+    const a = document.createElement("div");
+    const real = sec.caught.filter((c) => !c.junk);
+    const junk = sec.caught.filter((c) => c.junk);
+    a.textContent = real.length ? `☑️ ${real.map((c) => c.label).join(", ")}` : "Nothing caught. Presumably immortal.";
+    const meta = document.createElement("div");
+    meta.className = "log-meta";
+    meta.textContent = `(${sec.netsUsed} nets thrown${junk.length ? ` · also hauled up: ${junk.map((c) => c.label).join(", ")}` : ""})`;
+    div.append(q, a, meta);
+
+    // Flag contradictions, e.g. Tobacco: Never AND Current
+    const flags = [];
+    const groups = {};
+    real.forEach((c) => {
+      const [grp, val] = c.label.split(": ");
+      if (val && /^(Tobacco|Alcohol|Drugs)$/.test(grp)) (groups[grp] = groups[grp] || []).push(val);
+    });
+    for (const [grp, vals] of Object.entries(groups)) {
+      if (vals.length > 1) flags.push(`⚠️ ${grp}: ${vals.join(" AND ")}. Schrödinger's patient.`);
+    }
+    if (real.some((c) => c.label === "No surgeries") && real.length > 1) {
+      flags.push("⚠️ Reports no surgeries, and also surgeries.");
+    }
+    flags.forEach((f) => {
+      const el = document.createElement("div");
+      el.className = "flag";
+      el.textContent = f;
+      div.appendChild(el);
+    });
+    out.appendChild(div);
+  });
+}
 
 // ---------- Phase 3 ----------
 function showLog() {
@@ -626,6 +971,7 @@ function showLog() {
     li.textContent = a;
     raw.appendChild(li);
   });
+  renderCrabLog();
   showScreen("screen-log");
 }
 
@@ -634,6 +980,9 @@ $("restart-btn").onclick = () => {
   renderChips();
   showScreen("screen-dump");
 };
+
+// Testing shortcut: open index.html#crabs to jump straight to the crab trap
+if (location.hash === "#crabs") startTrap();
 
 function showScreen(id) {
   document.querySelectorAll(".screen").forEach((s) => s.classList.toggle("active", s.id === id));
