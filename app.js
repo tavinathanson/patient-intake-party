@@ -30,16 +30,36 @@ const heldKeys=new Set();
 const difficulties={
   classic:{name:'Classic',speed:0,radius:51,description:'Stationary shooter. Use ← / → to adjust your aim. Full-size balloons, no blockers.'},
   drifter:{name:'Drifter',speed:180,radius:51,description:'The shooter moves on its own. Use ← / → to aim and time your shot.'},
+  windy:{name:'Windy',speed:0,radius:51,wind:850,description:'A steady crosswind bends every shot to the right. Aim well left of the balloon you want.'},
   bank:{name:'Bank Shot',speed:150,radius:48,description:'Automatic movement + a moving, rotating paddle. Ricochet off its face or the walls.'},
   orbit:{name:'Orbit',speed:0,radius:32,description:'Shooter on the outer track. Balloons on the inner orbit. Everything moves clockwise; ← / → aim relative to center.'},
   chaos:{name:'Chaos',speed:260,radius:38,description:'Faster movement, smaller drifting balloons, and two rotating paddles. Time your ricochet!'}
 };
 let difficulty='classic',travelDirection=1,baseAngle=0;
+const modeKeys=Object.keys(difficulties);
+// Every shot gets its own mode, so one playthrough shows all six. Round 01 asks twice
+// (age group, then exact age), which is why this counts shots rather than rounds.
+// Choosing a mode by hand pins it and stops the rotation.
+let pinnedDifficulty=null;
+function stageIndex(){return current===0?(ageBase===null?0:1):current+1;}
+function rotatedMode(){return pinnedDifficulty??modeKeys[stageIndex()%modeKeys.length];}
+const ROW_Y=70;
+// Widest spacing that still keeps the outermost balloon (plus any drift) inside the walls.
+function columnGap(radius,count){
+  const margin=radius+(difficulty==='chaos'?32:0)+12;
+  return Math.min(136,Math.floor((392-margin)/(count/2)));
+}
 function blockers(){
   if(simple)return [];
   if(difficulty==='bank')return [{x:400+Math.sin(elapsed*1.1)*125,y:265+Math.sin(elapsed*.8)*22,w:230,h:20,angle:Math.sin(elapsed*.95)*1.1}];
   if(difficulty==='chaos')return [{x:255+Math.sin(elapsed*1.3)*110,y:225,w:175,h:18,angle:elapsed*1.05},{x:540+Math.sin(elapsed*1.1+2)*95,y:290,w:145,h:18,angle:-elapsed*1.25+.6}];
   return [];
+}
+function announceMode(suffix){
+  const name=difficulties[difficulty].name;
+  feedback(pinnedDifficulty
+    ?`${name} mode, pinned. ${suffix}`
+    :`Mode ${String(stageIndex()+1).padStart(2,'0')} of ${String(modeKeys.length).padStart(2,'0')} · ${name}. ${suffix}`);
 }
 function feedback(message){$('shot-feedback').textContent=message;$('announcement').textContent=message;}
 
@@ -58,8 +78,10 @@ function makeBalloons(refresh=false){
     const start=current===0&&ageBase!==null?ageBase:0;
     items=Array.from({length:Math.min(5,pool.length)},(_,i)=>pool[(start+i)%pool.length]);
   }
-  balloons=items.map((label,i)=>({label,x:400+(i-items.length/2)*120,y:88,r:difficulties[difficulty].radius,color:palette[i%palette.length]}));
-  balloons.push({label:'↻ Shuffle',action:'shuffle',x:400+items.length/2*120,y:88,r:difficulties[difficulty].radius,color:'#396952'});
+  // Push the row as high and as wide as the canvas allows so shots have to travel farther.
+  const radius=difficulties[difficulty].radius,gap=columnGap(radius,items.length);
+  balloons=items.map((label,i)=>({label,x:400+(i-items.length/2)*gap,y:ROW_Y,r:radius,color:palette[i%palette.length]}));
+  balloons.push({label:'↻ Shuffle',action:'shuffle',x:400+items.length/2*gap,y:ROW_Y,r:radius,color:'#396952'});
   for(const balloon of balloons)balloon.baseX=balloon.x;
   refreshRemaining=10;
   canvas.setAttribute('aria-label',`Balloon shooter. Current answers: ${items.join(', ')}. Shoot the green Shuffle balloon to change the values immediately. Use left and right arrows to adjust your aim, and Space to fire. Aim with the mouse or angle slider. Values change every 10 seconds.`);
@@ -71,14 +93,20 @@ function renderSheet(){
 function load(index){
   current=index;origin.x=400;origin.y=410;baseAngle=0;heldKeys.clear();ageBase=null;pending=null;shot=null;particles=[];angle=0;$('aim').value=0;$('angle').textContent='0°';$('result').hidden=true;$('shoot').disabled=false;
   const q=questions[current];$('round').textContent=`ROUND ${String(current+1).padStart(2,'0')} / 05`;$('category').textContent=`${String(current+1).padStart(2,'0')} · ${selectedForm.toUpperCase()}`;$('question').textContent=q.title;$('hint').textContent=q.hint;
+  applyDifficulty(rotatedMode(),false);
   makeBalloons();renderSimple();renderSheet();
+  announceMode('Tap a mode to pin it.');
 }
 function renderSimple(){
   $('simple').hidden=!simple;$('simple').replaceChildren(...options().map(label=>{const button=document.createElement('button');button.textContent=label;button.disabled=pending!==null;button.onclick=()=>select(label);return button;}));
 }
 function select(label){
   if(current===0&&ageBase===null&&label!=='110+'){
-    ageBase=Number(label.split('–')[0]);$('hint').textContent='Pop your exact age. Shuffle draws new ages from the full range.';shot=null;makeBalloons();renderSimple();$('shoot').disabled=false;$('announcement').textContent=`Age group ${label}. Now choose your exact age.`;return;
+    ageBase=Number(label.split('–')[0]);$('hint').textContent='Pop your exact age. Shuffle draws new ages from the full range.';shot=null;
+    applyDifficulty(rotatedMode(),false);
+    makeBalloons();renderSimple();$('shoot').disabled=false;
+    announceMode(`Age group ${label} locked in — now pop your exact age.`);
+    return;
   }
   pending=label;$('picked').textContent=current===0?`${label} years old`:label;$('next').textContent=answers.filter(v=>v!==null).length>=4?'Review answers →':'Keep answer →';$('result').hidden=false;$('shoot').disabled=true;renderSimple();$('announcement').textContent=`Selected ${label}. Keep this answer or try again.`;$('next').focus({preventScroll:true});$('result').scrollIntoView({block:'nearest',behavior:'smooth'});
 }
@@ -94,11 +122,19 @@ function pop(balloon){
   }
   select(balloon.label);
 }
-function fire(){if(shot||pending!==null||simple||$('review').open)return;const rad=(angle+baseAngle)*Math.PI/180;shot={x:origin.x,y:origin.y,vx:Math.sin(rad)*700,vy:-Math.cos(rad)*700,life:0};$('shoot').disabled=true;}
+function fire(){if(shot||pending!==null||simple||$('review').open)return;const rad=(angle+baseAngle)*Math.PI/180;shot={x:origin.x,y:origin.y,vx:Math.sin(rad)*700,vy:-Math.cos(rad)*700,life:0,trail:[]};$('shoot').disabled=true;}
 function setAngle(value){angle=Math.max(-72,Math.min(72,value));$('aim').value=angle;$('angle').textContent=`${Math.round(angle)}°`;}
 function aimAt(event){const rect=canvas.getBoundingClientRect();const x=(event.clientX-rect.left)*800/rect.width,y=(event.clientY-rect.top)*470/rect.height;const absolute=Math.atan2(x-origin.x,origin.y-y)*180/Math.PI;setAngle(((absolute-baseAngle+540)%360)-180);}
-canvas.addEventListener('pointermove',event=>{if(!shot&&pending===null)aimAt(event);});
-canvas.addEventListener('pointerdown',event=>{if(event.button!==0)return;aimAt(event);canvas.focus();fire();});
+let lastPointer=null;
+canvas.addEventListener('pointermove',event=>{
+  if(shot||pending!==null)return;
+  // Only re-aim on a deliberate mouse move. A resting cursor still fires pointermove
+  // (e.g. when the page scrolls beneath it), which would otherwise undo arrow aiming.
+  if(lastPointer&&Math.hypot(event.clientX-lastPointer.x,event.clientY-lastPointer.y)<5)return;
+  lastPointer={x:event.clientX,y:event.clientY};
+  aimAt(event);
+});
+canvas.addEventListener('pointerdown',event=>{if(event.button!==0)return;lastPointer={x:event.clientX,y:event.clientY};aimAt(event);canvas.focus();fire();});
 document.addEventListener('keydown',event=>{
   if($('review').open||event.target.closest('textarea,select,[contenteditable=true],input:not([type=range])'))return;
   if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();heldKeys.add(event.key);}
@@ -143,6 +179,19 @@ function draw(dt){
     ctx.beginPath();ctx.roundRect(48,48,704,374,15);ctx.stroke();
     ctx.beginPath();ctx.ellipse(400,235,215,98,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
   }
+  const gust=simple?0:difficulties[difficulty].wind??0;
+  if(gust){
+    ctx.save();
+    ctx.strokeStyle='#5f8a58';ctx.lineWidth=3;ctx.lineCap='round';ctx.globalAlpha=.55;
+    for(let i=0;i<10;i++){
+      const y=178+i*26,length=55+(i*37)%55,x=((elapsed*(330+i*46)+i*173)%1040)-120;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+length,y);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x+length-11,y-6);ctx.lineTo(x+length,y);ctx.lineTo(x+length-11,y+6);ctx.stroke();
+    }
+    ctx.globalAlpha=.85;ctx.fillStyle='#35603f';ctx.font="bold 13px 'Courier New',monospace";ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText('CROSSWIND  →→→',26,150);
+    ctx.restore();
+  }
   const obstacles=blockers();
   for(const block of obstacles){
     ctx.save();ctx.translate(block.x,block.y);ctx.rotate(block.angle);
@@ -169,14 +218,23 @@ function draw(dt){
   if(shot){
     // Short substeps prevent fast projectiles from passing through balloons.
     for(let i=0;i<5&&shot;i++){
-      shot.life+=dt/5;shot.x+=shot.vx*dt/5;shot.y+=shot.vy*dt/5;if(shot.x<19||shot.x>781){shot.x=Math.max(19,Math.min(781,shot.x));shot.vx*=-1;feedback('Bank shot!');}
+      shot.life+=dt/5;if(gust)shot.vx+=gust*dt/5;shot.x+=shot.vx*dt/5;shot.y+=shot.vy*dt/5;if(shot.x<19||shot.x>781){shot.x=Math.max(19,Math.min(781,shot.x));shot.vx*=-1;feedback('Bank shot!');}
       if(difficulty==='orbit'&&(shot.y<19||shot.y>451)){shot.y=Math.max(19,Math.min(451,shot.y));shot.vy*=-1;feedback('Bank shot!');}
       for(const paddle of obstacles)if(bounceOffPaddle(shot,paddle))feedback('Ricochet! Paddle bounce.');
+      shot.trail.push({x:shot.x,y:shot.y});if(shot.trail.length>26)shot.trail.shift();
       const hit=balloons.find(b=>Math.hypot(shot.x-b.x,shot.y-b.y)<b.r+10);
       if(hit){pop(hit);break;}
       if(shot.y<-15||shot.y>490||shot.life>8){shot=null;$('shoot').disabled=false;feedback('Missed! Adjust your aim and try again.');}
     }
-    if(shot){circle(shot.x,shot.y,11,'#fff5db');circle(shot.x-3,shot.y-3,3,'#fff',null);}
+    if(shot){
+      if(shot.trail.length>1){
+        ctx.save();ctx.globalAlpha=.4;ctx.strokeStyle='#d98b4a';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';
+        ctx.beginPath();ctx.moveTo(shot.trail[0].x,shot.trail[0].y);
+        for(const point of shot.trail.slice(1))ctx.lineTo(point.x,point.y);
+        ctx.stroke();ctx.restore();
+      }
+      circle(shot.x,shot.y,11,'#fff5db');circle(shot.x-3,shot.y-3,3,'#fff',null);
+    }
   }
   particles=particles.filter(p=>p.life>0);for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;p.life-=dt*1.7;ctx.globalAlpha=Math.max(0,p.life);circle(p.x,p.y,4,p.color,null);}ctx.globalAlpha=1;
 }
@@ -205,7 +263,7 @@ function frame(time){
       if(difficulty==='orbit'){
         const phase=elapsed*.42+i*Math.PI*2/balloons.length;
         b.x=400+Math.cos(phase)*215;b.y=235+Math.sin(phase)*98;
-      }else{b.x=b.baseX+(difficulty==='chaos'?Math.sin(elapsed*1.9)*32:0);b.y=88;}
+      }else{b.x=b.baseX+(difficulty==='chaos'?Math.sin(elapsed*1.9)*32:0);b.y=ROW_Y;}
     }
   }
   draw(dt);requestAnimationFrame(frame);
@@ -217,19 +275,33 @@ for(const name of Object.keys(forms)){const button=document.createElement('butto
 document.querySelector('.workspace').before(picker);
 const refresh=document.createElement('div');refresh.id='refresh';refresh.className='refresh';document.querySelector('.playfield').prepend(refresh);
 const difficultyPanel=document.createElement('section');difficultyPanel.className='difficulty-panel';difficultyPanel.setAttribute('aria-label','Difficulty settings');
-const difficultyLabel=document.createElement('span');difficultyLabel.className='eyebrow';difficultyLabel.textContent='DIFFICULTY';difficultyPanel.append(difficultyLabel);
+const difficultyLabel=document.createElement('span');difficultyLabel.className='eyebrow';difficultyLabel.textContent=`${modeKeys.length} GAME MODES`;difficultyPanel.append(difficultyLabel);
+const difficultyButtons=new Map();
 for(const [key,mode] of Object.entries(difficulties)){
   const button=document.createElement('button');button.textContent=mode.name;button.setAttribute('aria-pressed',key===difficulty);
   button.onclick=()=>{
-    difficulty=key;shot=null;heldKeys.clear();elapsed=0;origin.x=400;origin.y=410;baseAngle=0;travelDirection=1;
-    for(const item of difficultyPanel.querySelectorAll('button'))item.setAttribute('aria-pressed',item===button);
-    $('difficulty-description').textContent=mode.description;
-    $('movement-label').textContent=' aim / ';
-    $('move-left').setAttribute('aria-label','Aim left');
-    $('move-right').setAttribute('aria-label','Aim right');
-    $('shoot').disabled=simple||pending!==null;
-    makeBalloons();feedback(`${mode.name} selected.`);
-  };difficultyPanel.append(button);
+    // Clicking the pinned mode again hands control back to the per-round rotation.
+    if(pinnedDifficulty===key){
+      pinnedDifficulty=null;
+      const rotated=rotatedMode();
+      applyDifficulty(rotated);
+      announceMode('Rotation back on — a new mode every shot.');
+      return;
+    }
+    pinnedDifficulty=key;applyDifficulty(key);feedback(`${mode.name} pinned for every round.`);
+  };
+  difficultyButtons.set(key,button);difficultyPanel.append(button);
+}
+function applyDifficulty(key,rebuild=true){
+  difficulty=key;shot=null;heldKeys.clear();elapsed=0;origin.x=400;origin.y=410;baseAngle=0;travelDirection=1;
+  for(const [name,button] of difficultyButtons)button.setAttribute('aria-pressed',name===key);
+  difficultyLabel.textContent=pinnedDifficulty?'MODE PINNED':`${modeKeys.length} GAME MODES`;
+  $('difficulty-description').textContent=difficulties[key].description;
+  $('movement-label').textContent=' aim / ';
+  $('move-left').setAttribute('aria-label','Aim left');
+  $('move-right').setAttribute('aria-label','Aim right');
+  $('shoot').disabled=simple||pending!==null;
+  if(rebuild)makeBalloons();
 }
 const description=document.createElement('p');description.id='difficulty-description';description.textContent=difficulties.classic.description;difficultyPanel.append(description);
 const shotFeedback=document.createElement('p');shotFeedback.id='shot-feedback';shotFeedback.textContent='Pick your angle. Take your shot.';difficultyPanel.append(shotFeedback);
