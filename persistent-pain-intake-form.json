@@ -1,0 +1,290 @@
+{
+  "form": {
+    "id": "new-patient-intake-v3",
+    "title": "New Patient Intake Form",
+    "subtitle": "Please print clearly. Use black or blue ink. Please do not write 'see chart.'",
+    "clinic": "Garden Row Family Medicine",
+    "patient_slug": "persistent-pain",
+    "source": "github.com/tavinathanson/patient-intake-party — patients/persistent-pain/intake-form.json",
+    "disclaimer": "Fiction. LLM-generated parody of a front-desk paper form. Not a real patient, not a real form, not medical advice.",
+    "completed_on": "2026-08-27",
+    "completed_in": "the waiting room, on a clipboard with a pen chained to it",
+    "pen_worked": false,
+    "estimated_completion_time_minutes": 5,
+    "actual_completion_time_minutes": 22
+  },
+
+  "sections": [
+    {
+      "id": "who_is_writing_this",
+      "title": "Section 1 — Who Is Actually Holding The Pen",
+      "questions": [
+        {
+          "id": "filled_out_by",
+          "label": "Filled out by (if not the patient)",
+          "type": "text",
+          "answer": "Olive Turnip (wife). He says I'm better at forms. He is correct.",
+          "front_desk_note": "Patient present, alert, oriented, and pointing at his wife."
+        },
+        {
+          "id": "date",
+          "label": "Today's date",
+          "type": "date",
+          "answer": "2026-08-27",
+          "front_desk_note": "Correct on the first try. Rare."
+        },
+        {
+          "id": "name",
+          "label": "Patient name",
+          "type": "text",
+          "answer": "Fig Turnip",
+          "front_desk_note": "Spelled the same on all nine visits. A miracle."
+        },
+        {
+          "id": "date_of_birth",
+          "label": "Date of birth",
+          "type": "date",
+          "answer": "1965-03-14",
+          "front_desk_note": "He is 61 and would like that known in a specific tone of voice."
+        },
+        {
+          "id": "address",
+          "label": "Address",
+          "type": "text",
+          "answer": "12 Garden Row. The one with the fence dispute.",
+          "front_desk_note": "Unprompted fence mention #1."
+        },
+        {
+          "id": "phone",
+          "label": "Phone",
+          "type": "tel",
+          "answer": "555-0143",
+          "front_desk_note": "This is Olive's phone. Fig's phone is on the kitchen counter, on silent, at 4%."
+        },
+        {
+          "id": "insurance",
+          "label": "Insurance",
+          "type": "text",
+          "answer": "BlueCross, through my work",
+          "front_desk_note": "Says 'my work.' Wife is filling this out. Card is under HER employer. Billing will find out in eleven days."
+        },
+        {
+          "id": "member_id",
+          "label": "Member ID",
+          "type": "text",
+          "answer": "",
+          "left_blank": true,
+          "front_desk_note": "Card is in the other purse. The card is always in the other purse."
+        },
+        {
+          "id": "emergency_contact",
+          "label": "Emergency contact (name, relationship, phone)",
+          "type": "text",
+          "answer": "Olive Turnip, wife, 555-0143",
+          "front_desk_note": "Same number as the patient. In an emergency, we will be calling the person sitting next to him."
+        }
+      ]
+    },
+
+    {
+      "id": "why_are_you_here",
+      "title": "Section 2 — Reason For Visit",
+      "questions": [
+        {
+          "id": "reason_for_visit",
+          "label": "Reason for visit (please be specific)",
+          "type": "long_text",
+          "lines_provided": 6,
+          "answer": "pain",
+          "characters_used": 4,
+          "characters_available": 340,
+          "front_desk_note": "Eighteen months, nine visits, five doctors, one word."
+        },
+        {
+          "id": "how_long",
+          "label": "How long has this been going on?",
+          "type": "text",
+          "answer": "Since the knee. Or before the knee. Olive says before.",
+          "front_desk_note": "Olive is right. It was before the knee."
+        },
+        {
+          "id": "pain_scale",
+          "label": "Rate your pain from 0 to 10",
+          "type": "scale_0_10",
+          "answer": 8,
+          "verbatim": "8, but that's a normal 8. Not an 8 8.",
+          "front_desk_note": "Has been between 6 and 9 on every visit since March 2025. The number has stopped meaning anything to everyone involved."
+        },
+        {
+          "id": "what_makes_it_better",
+          "label": "What makes it better?",
+          "type": "text",
+          "answer": "Nothing. Sitting. Not sitting.",
+          "front_desk_note": "Mutually exclusive. Left as written."
+        },
+        {
+          "id": "what_makes_it_worse",
+          "label": "What makes it worse?",
+          "type": "text",
+          "answer": "The fence.",
+          "front_desk_note": "Unprompted fence mention #2. Possibly the only honest answer on this form."
+        }
+      ]
+    },
+
+    {
+      "id": "medications",
+      "title": "Section 3 — Current Medications (include over-the-counter, vitamins, eye drops, inhalers)",
+      "questions": [
+        {
+          "id": "current_medications",
+          "label": "List all medications, dose, and how often",
+          "type": "long_text",
+          "fields_requested": ["name", "dose", "frequency", "prescriber"],
+          "fields_provided": ["vibes"],
+          "answer": "metformin, the nerve pill, meloxicam, tylenol",
+          "front_desk_note": "Four items listed. Chart says five. One of the five he stopped months ago and did not mention. That one is the antidepressant."
+        },
+        {
+          "id": "how_do_you_store_them",
+          "label": "(Not a question on the form. Somebody should add it.)",
+          "type": "not_asked",
+          "answer": "All of them. One bottle. He shakes it and takes what comes out.",
+          "front_desk_note": "There is a photo. The photo is worse than the sentence."
+        },
+        {
+          "id": "do_you_take_them_as_prescribed",
+          "label": "Do you take your medications as prescribed?",
+          "type": "yes_no",
+          "answer": "Yes",
+          "actual_answer": "Skips the nerve pill when he has anything to do that day, because it makes him foggy. Takes the tylenol 'whenever.' Finished the muscle relaxer sometime in 2025 and nobody refilled it, which everyone is treating as a clinical decision.",
+          "front_desk_note": "The checkbox and the truth are not on speaking terms."
+        }
+      ]
+    },
+
+    {
+      "id": "allergies_and_history",
+      "title": "Section 4 — Allergies & History",
+      "questions": [
+        {
+          "id": "allergies",
+          "label": "Allergies",
+          "type": "text_with_none_checkbox",
+          "answer": "none",
+          "checkbox_none_ticked": false,
+          "front_desk_note": "Chart, in red, at the top, in a font designed to be unmissable: CODEINE — NAUSEA."
+        },
+        {
+          "id": "past_conditions",
+          "label": "Past conditions (check all that apply)",
+          "type": "checkbox_grid",
+          "options_offered": [
+            "Arthritis", "Asthma", "Cancer", "COPD / emphysema", "Depression / anxiety",
+            "Diabetes", "Glaucoma", "Heart disease", "High blood pressure", "High cholesterol",
+            "Kidney disease", "Seizures", "Stroke", "Thyroid disease", "Other"
+          ],
+          "answer": ["diabetes"],
+          "boxes_available": 15,
+          "boxes_ticked": 1,
+          "boxes_that_should_be_ticked": 2,
+          "front_desk_note": "'Depression / anxiety' is one row below 'Diabetes' and was not ticked. He is on a medication for it. Was on. Was."
+        },
+        {
+          "id": "past_surgeries",
+          "label": "Past surgeries (procedure and year)",
+          "type": "text",
+          "fields_requested": ["procedure", "year"],
+          "answer": "knee",
+          "front_desk_note": "Procedure: partially provided. Year: 2019, available in the chart, four feet away, on a screen."
+        },
+        {
+          "id": "family_history",
+          "label": "Family history (parents, siblings, children: cancer, diabetes, heart disease, stroke, glaucoma)",
+          "type": "long_text",
+          "answer": "father heart",
+          "words_requested": "as many as you need",
+          "words_provided": 2,
+          "front_desk_note": "Two words. A whole man, summarized."
+        }
+      ]
+    },
+
+    {
+      "id": "social",
+      "title": "Section 5 — Social History",
+      "questions": [
+        {
+          "id": "tobacco",
+          "label": "Tobacco",
+          "type": "radio",
+          "options": ["Never", "Former (quit ______)", "Current"],
+          "answer": "quit",
+          "blank_to_fill_in": "______",
+          "blank_filled_in": false,
+          "front_desk_note": "Quit when? The line is RIGHT THERE. It is a line specifically for that."
+        },
+        {
+          "id": "alcohol",
+          "label": "Alcohol",
+          "type": "radio",
+          "options": ["None", "Occasional", "Daily"],
+          "answer": "some",
+          "matched_an_option": false,
+          "front_desk_note": "Three options. Invented a fourth. 'Some' is doing a lot of work here."
+        },
+        {
+          "id": "drugs",
+          "label": "Recreational drugs",
+          "type": "radio",
+          "options": ["No", "Yes"],
+          "answer": "no",
+          "matched_an_option": true,
+          "front_desk_note": "The one question on this form that was answered exactly as designed. Framed it."
+        },
+        {
+          "id": "sleep",
+          "label": "(Not asked. Should be.)",
+          "type": "not_asked",
+          "answer": "Not sleeping. Hasn't been, for a long time. Nobody has asked, because there is no box.",
+          "front_desk_note": "The most clinically useful sentence in this document is in a section that does not exist."
+        }
+      ]
+    },
+
+    {
+      "id": "signature",
+      "title": "Section 6 — Signature",
+      "questions": [
+        {
+          "id": "signature",
+          "label": "Signature (if not the patient, relationship: ________)",
+          "type": "signature",
+          "answer": "O. Turnip (wife)",
+          "relationship_line_filled": true,
+          "front_desk_note": "Signed by the wife. Who wrote it. Who will do the talking. Who has, at some point in the last eighteen months, quietly become the patient's interface layer."
+        }
+      ]
+    }
+  ],
+
+  "scoring": {
+    "questions_the_form_actually_asks": 24,
+    "questions_answered": 23,
+    "questions_answered_completely_and_accurately": 14,
+    "questions_nobody_thought_to_print": 2,
+    "questions_answered_in_one_word": 6,
+    "answers_that_contradict_the_chart": 3,
+    "contradictions": [
+      "Allergies 'none' vs. documented codeine allergy",
+      "Insurance 'through my work' vs. spouse's employer plan",
+      "Medication list omits sertraline, which he stopped months ago without telling anyone"
+    ],
+    "unprompted_fence_mentions": 2,
+    "boxes_the_form_offered_that_nobody_ticked": 14,
+    "verdict": "Form complete. Patient not described.",
+    "recommended_next_step": "Stop reading the form. Ask him about the fence. He will tell you everything else on the way there."
+  },
+
+  "the_joke": "Every answer on this form is technically a valid response to the question printed above it. The form is working perfectly. That is the problem."
+}

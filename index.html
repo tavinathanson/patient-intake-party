@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PULL FOR PAIN — slot machine intake</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b23; --edge:#242c38; --ink:#f2f5f9; --dim:#8b97a8;
+    --gold:#ffc53d; --red:#ff5d5d; --amber:#ffa63d; --green:#3ddc91; --felt:#123028;
+    --r:16px; --shadow:0 18px 50px -12px rgba(0,0,0,.65);
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:radial-gradient(1100px 620px at 50% -12%,#1d2531 0%,var(--bg) 62%);
+    color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; align-items:center;
+    padding:22px 16px 40px; min-height:100%;
+  }
+  .wrap{width:100%; max-width:520px}
+
+  header{text-align:center; margin-bottom:18px}
+  h1{
+    margin:0; font-size:clamp(28px,7vw,40px); font-weight:900; letter-spacing:-.03em;
+    background:linear-gradient(180deg,#fff2c8,var(--gold)); -webkit-background-clip:text;
+    background-clip:text; color:transparent;
+  }
+  .tag{margin:6px 0 0; color:var(--dim); font-size:13.5px}
+  .who{margin:10px 0 0; font-size:12px; color:var(--dim)}
+  .who b{color:var(--ink); font-weight:600}
+
+  /* progress pips */
+  .pips{display:flex; gap:6px; justify-content:center; margin:16px 0 14px}
+  .pip{width:26px; height:4px; border-radius:99px; background:var(--edge); transition:background .3s}
+  .pip.done{background:var(--gold)}
+  .pip.now{background:var(--ink)}
+
+  .cab{
+    background:linear-gradient(180deg,var(--panel),#11151c);
+    border:1px solid var(--edge); border-radius:var(--r); box-shadow:var(--shadow);
+    padding:20px 18px 22px;
+  }
+
+  .qhead{display:flex; gap:10px; align-items:flex-start; margin-bottom:4px}
+  .qnum{
+    flex:none; width:22px; height:22px; border-radius:6px; background:var(--edge);
+    font-size:11px; font-weight:700; color:var(--dim);
+    display:grid; place-items:center; margin-top:3px;
+  }
+  .q{margin:0; font-size:19px; font-weight:650; line-height:1.3; letter-spacing:-.01em}
+  .printed{
+    margin:8px 0 0 32px; font-size:11px; color:var(--dim); text-transform:uppercase;
+    letter-spacing:.07em;
+  }
+  .printed.ghost{color:var(--gold); opacity:.85}
+
+  /* the reel */
+  .machine{display:flex; gap:14px; align-items:stretch; margin-top:16px}
+  .window{
+    flex:1; position:relative; height:132px; overflow:hidden; border-radius:12px;
+    background:linear-gradient(180deg,var(--felt),#0c1f1a);
+    border:1px solid #1f3a32; box-shadow:inset 0 0 40px rgba(0,0,0,.6);
+  }
+  .window::before,.window::after{
+    content:""; position:absolute; left:0; right:0; height:38px; z-index:3; pointer-events:none;
+  }
+  .window::before{top:0; background:linear-gradient(180deg,#0c1f1ae6,transparent)}
+  .window::after{bottom:0; background:linear-gradient(0deg,#0c1f1ae6,transparent)}
+  .payline{
+    position:absolute; top:50%; left:0; right:0; height:56px; transform:translateY(-50%);
+    border-top:1px solid #ffc53d40; border-bottom:1px solid #ffc53d40;
+    background:#ffc53d0d; z-index:2; pointer-events:none;
+  }
+  .strip{position:absolute; left:0; right:0; top:0; will-change:transform}
+  .slot{
+    height:56px; display:flex; align-items:center; gap:10px; padding:0 14px;
+    font-size:16px; font-weight:600; line-height:1.15;
+  }
+  .slot .em{font-size:23px; flex:none}
+  .slot .lb{min-width:0}
+  .slot .plain{display:block; font-size:11.5px; font-weight:400; color:#9fd8c4; margin-top:2px}
+  .slot.num{font-size:34px; font-weight:900; justify-content:center; font-variant-numeric:tabular-nums}
+
+  /* lever */
+  .lever{
+    flex:none; width:58px; display:flex; flex-direction:column; align-items:center;
+    justify-content:flex-end; background:none; border:0; padding:0; cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .lever:disabled{cursor:default; opacity:.4}
+  .rod{width:7px; flex:1; border-radius:99px; background:linear-gradient(90deg,#6b7687,#cfd8e6,#6b7687)}
+  .knob{
+    width:38px; height:38px; border-radius:50%; margin-top:-4px;
+    background:radial-gradient(circle at 34% 30%,#ff9a9a,var(--red) 55%,#9c2020);
+    box-shadow:0 5px 14px rgba(255,93,93,.35), inset 0 -3px 8px rgba(0,0,0,.35);
+    transition:transform .12s;
+  }
+  .lever[data-state="down"] .knob{transform:translateY(9px)}
+  .lever:not(:disabled):hover .knob{transform:translateY(3px)}
+  .levlabel{font-size:9.5px; color:var(--dim); margin-top:7px; letter-spacing:.1em; font-weight:700}
+
+  /* answer buttons */
+  .acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; min-height:44px}
+  button.act{
+    flex:1 1 calc(50% - 4px); min-height:44px; padding:11px 12px; border-radius:11px;
+    border:1px solid var(--edge); background:#1b212b; color:var(--ink);
+    font:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:.15s;
+  }
+  button.act:hover{border-color:#3a4457; background:#222a36; transform:translateY(-1px)}
+  button.act.go{background:linear-gradient(180deg,#ffd05c,var(--gold)); color:#20170a; border-color:transparent; flex-basis:100%}
+  button.act.no{flex:1 1 calc(50% - 4px)}
+  .hint{margin:12px 0 0; font-size:12px; color:var(--dim); text-align:center; min-height:16px}
+
+  /* handoff */
+  .done h2{margin:0 0 4px; font-size:22px; font-weight:800; letter-spacing:-.02em}
+  .done .sub{margin:0 0 16px; font-size:12.5px; color:var(--dim)}
+  .flag{
+    display:flex; gap:10px; padding:11px 12px; border-radius:11px; margin-bottom:8px;
+    background:#1b212b; border-left:3px solid var(--edge); font-size:13.5px; line-height:1.45;
+  }
+  .flag .sev{
+    flex:none; font-size:9px; font-weight:800; letter-spacing:.09em; padding:3px 6px;
+    border-radius:5px; height:fit-content; text-transform:uppercase;
+  }
+  .flag.high{border-left-color:var(--red)} .flag.high .sev{background:#ff5d5d22; color:var(--red)}
+  .flag.medium{border-left-color:var(--amber)} .flag.medium .sev{background:#ffa63d22; color:var(--amber)}
+  .flag.low{border-left-color:var(--dim)} .flag.low .sev{background:#8b97a822; color:var(--dim)}
+  .flag.info{border-left-color:var(--green)} .flag.info .sev{background:#3ddc9122; color:var(--green)}
+  .again{
+    width:100%; margin-top:14px; padding:12px; border-radius:11px; background:none;
+    border:1px solid var(--edge); color:var(--dim); font:inherit; font-size:13px; cursor:pointer;
+  }
+  .again:hover{color:var(--ink); border-color:#3a4457}
+
+  footer{margin-top:18px; text-align:center; font-size:10.5px; color:#5d6878; line-height:1.6}
+
+  .err{padding:16px; font-size:13.5px; line-height:1.6; color:var(--dim)}
+  .err code{color:var(--gold); font-size:12px}
+
+  @media (prefers-reduced-motion:reduce){ .strip{transition:none !important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="title">PULL FOR PAIN</h1>
+    <p class="tag" id="tagline">One lever. No typing. No checkbox grids.</p>
+    <p class="who" id="who"></p>
+  </header>
+
+  <div class="pips" id="pips"></div>
+  <main class="cab" id="stage"><div class="err">Loading…</div></main>
+
+  <footer>
+    Fiction. LLM-generated parody patient — not medical advice.<br>
+    Built for <b>patient-intake-party</b>. Constraint: the patient cannot type and will not read a list.
+  </footer>
+</div>
+
+<script>
+const SLOT_H = 56, LOOPS = 14;
+let DATA = null, qi = 0, answers = [], reelPos = 0;
+let gen = 0, spinTimer = null;   // gen invalidates in-flight spins when the question changes
+let absIdx = 0;                  // position on the repeated strip; every spin only ever moves forward
+const PASSES = 2;                // full trips through every option before it settles
+
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+boot();
+
+async function boot(){
+  try{
+    const r = await fetch('slot-intake.json');
+    if(!r.ok) throw new Error(r.status);
+    DATA = await r.json();
+  }catch(e){
+    stage.innerHTML = `<div class="err"><b>Could not load slot-intake.json.</b><br><br>
+      Open this over HTTP, not <code>file://</code> — the page fetches its questions.<br><br>
+      <code>python3 -m http.server 8080</code></div>`;
+    return;
+  }
+  $('#title').textContent = DATA.app.title;
+  $('#tagline').textContent = DATA.app.tagline;
+  document.title = DATA.app.title + ' — slot machine intake';
+  const p = DATA.patient_context;
+  $('#who').innerHTML = `<b>${p.name}</b>, ${p.age} · ${p.answering}`;
+  render();
+}
+
+function pips(){
+  const n = DATA.questions.length;
+  $('#pips').innerHTML = Array.from({length:n}, (_,i) =>
+    `<div class="pip ${i<qi?'done':i===qi?'now':''}"></div>`).join('');
+}
+
+function render(){
+  gen++;                            // any spin still in flight belongs to a dead screen
+  clearTimeout(spinTimer);
+  pips();
+  if(qi >= DATA.questions.length) return handoff();
+  const q = DATA.questions[qi];
+  reelPos = 0;
+
+  const items = q.mode === 'spin_scale'
+    ? Array.from({length: q.reel_range[1]-q.reel_range[0]+1}, (_,i) => ({value:i, num:true}))
+    : q.reel;
+
+  stage.innerHTML = `
+    <div class="qhead">
+      <div class="qnum">${qi+1}</div>
+      <h2 class="q">${q.prompt}</h2>
+    </div>
+    <p class="printed ${q.not_on_paper_form?'ghost':''}">
+      ${q.not_on_paper_form ? '★ not on the paper form' : 'paper form: ' + q.printed_as}
+    </p>
+    <div class="machine">
+      <div class="window"><div class="payline"></div><div class="strip" id="strip"></div></div>
+      <button class="lever" id="lever" aria-label="Pull the lever">
+        <div class="rod"></div><div class="knob"></div><div class="levlabel">PULL</div>
+      </button>
+    </div>
+    <div class="acts" id="acts"></div>
+    <p class="hint" id="hint">${q.mode==='spin_through_all'
+      ? 'Pull to spin the reel. Yes or no on whatever it lands on.'
+      : 'Pull the lever. Keep what it lands on, or pull again.'}</p>`;
+
+  // build a long looping strip so every pull has a full reel to travel through
+  const strip = $('#strip');
+  let html = '';
+  for(let r=0; r<LOOPS; r++) html += items.map(cell).join('');
+  strip.innerHTML = html;
+  absIdx = items.length * 2;          // start mid-strip so there is room in both directions
+  setStrip(absIdx, false);
+
+  $('#lever').onclick = () => pull(q, items);
+}
+
+function cell(it){
+  if(it.num) return `<div class="slot num">${it.value}</div>`;
+  return `<div class="slot"><span class="em">${it.emoji||'•'}</span><span class="lb">${it.label}
+    ${it.plain_language?`<span class="plain">${it.plain_language}</span>`:''}</span></div>`;
+}
+
+// centre slot i under the payline
+function setStrip(i, animate, ms=0){
+  const strip = $('#strip');
+  const y = -(i * SLOT_H) + (132/2 - SLOT_H/2);
+  strip.style.transition = animate && !reduced
+    ? `transform ${ms}ms cubic-bezier(.12,.72,.15,1)` : 'none';
+  strip.style.transform = `translateY(${y}px)`;
+}
+
+// Every pull is a real spin: PASSES full trips through all the options, then it
+// settles on `land`. Afterwards the strip snaps back to an identical-looking
+// position further up, so the reel can be pulled forever without running out.
+function spin(items, land, onLanded){
+  const len = items.length;
+  const offset = ((land - (absIdx % len)) + len) % len;
+  const target = absIdx + PASSES * len + offset;
+  const ms = reduced ? 0 : 1500 + Math.random() * 500;
+  const mine = gen;
+
+  setStrip(target, true, ms);
+  absIdx = target;
+
+  clearTimeout(spinTimer);
+  spinTimer = setTimeout(() => {
+    if(mine !== gen) return;          // question moved on; this spin is stale
+    absIdx = (target % len) + len * 2;
+    setStrip(absIdx, false);          // same slot under the payline, room to spin again
+    onLanded();
+  }, ms + 40);
+}
+
+function pull(q, items){
+  const lever = $('#lever');
+  lever.dataset.state = 'down';
+  setTimeout(()=> lever.dataset.state = '', 160);
+
+  if(lever.dataset.spinning === '1') return;
+  lever.dataset.spinning = '1';
+  $('#acts').innerHTML = '';
+  $('#hint').textContent = 'Spinning…';
+
+  if(q.mode === 'spin_through_all'){
+    // spins the whole reel, then settles on the option being asked about
+    if(reelPos >= items.length){ lever.dataset.spinning = '0'; return; }
+    spin(items, reelPos, () => {
+      lever.dataset.spinning = '0';
+      showYesNo(q, items[reelPos]);
+    });
+    return;
+  }
+
+  const land = Math.floor(Math.random() * items.length);
+  spin(items, land, () => {
+    lever.dataset.spinning = '0';
+    $('#hint').textContent = 'Landed. Keep it, or pull again.';
+    $('#acts').innerHTML = `<button class="act go" id="keep">Yes — that's me</button>
+                            <button class="act" id="respin">Pull again</button>`;
+    $('#keep').onclick = () => accept(q, items[land]);
+    $('#respin').onclick = () => { $('#acts').innerHTML=''; pull(q, items); };
+  });
+}
+
+function showYesNo(q, item){
+  $('#hint').textContent = item.plain_language || 'Yes or no. Then pull again.';
+  $('#acts').innerHTML = `<button class="act go" id="yes">Yes</button>
+                          <button class="act no" id="no">No</button>
+                          <button class="act no" id="dunno">Not sure</button>`;
+  const step = verdict => {
+    if(verdict !== 'no') answers.push({q, item, verdict});
+    reelPos++;
+    if(reelPos >= (q.reel||[]).length || item.terminal){ qi++; return render(); }
+    $('#acts').innerHTML = '';                    // no auto-advance — the lever drives it
+    $('#hint').textContent = 'Pull again for the next one.';
+  };
+  $('#yes').onclick = () => step('yes');
+  $('#no').onclick = () => step('no');
+  $('#dunno').onclick = () => step('unsure');
+}
+
+function accept(q, item){
+  answers.push({q, item, verdict:'picked'});
+  qi++;
+  render();
+}
+
+function handoff(){
+  $('#pips').innerHTML = '';
+  const h = DATA.handoff;
+  stage.innerHTML = `<div class="done">
+    <h2>${h.title}</h2>
+    <p class="sub">${h.rule}</p>
+    ${h.lines.map(l => `<div class="flag ${l.severity}">
+        <span class="sev">${l.severity}</span><span>${l.text}</span></div>`).join('')}
+    <button class="again" id="again">Run it again</button>
+  </div>`;
+  $('#again').onclick = () => { qi = 0; answers = []; render(); };
+}
+</script>
+</body>
+</html>

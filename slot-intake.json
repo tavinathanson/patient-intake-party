@@ -1,0 +1,165 @@
+{
+  "app": {
+    "id": "slot-intake",
+    "title": "PULL FOR PAIN",
+    "tagline": "One lever. No typing. No checkbox grids.",
+    "patient_slug": "persistent-pain",
+    "deploy": "static index.html at repo root, branch auto-deploys to <branch>-intake-oop.fly.dev",
+    "disclaimer": "Fiction. LLM-generated parody patient. Not medical advice.",
+    "constraint": "The patient cannot type and will not read a list. Every question is one reel, one lever, one answer at a time.",
+    "why_a_reel_beats_a_checkbox": "A 15-box grid is skimmed in two seconds and answered wrong. A reel shows one option, alone, in 48px type, and will not advance until it gets an answer."
+  },
+
+  "patient_context": {
+    "name": "Fig Turnip",
+    "age": 61,
+    "answering": "wife (Olive) usually does the talking",
+    "chart_source": "patients/persistent-pain/what-the-clinic-knows.md"
+  },
+
+  "reel_modes": {
+    "spin_to_pick": "Reel cycles all options. Lever stops it. Lands on one answer.",
+    "spin_through_all": "Reel walks every option one at a time. Yes / No on each. This is the checkbox-grid replacement.",
+    "spin_scale": "Reel is 0-10. Lands on a number."
+  },
+
+  "questions": [
+    {
+      "id": "reason_for_visit",
+      "order": 1,
+      "printed_as": "Reason for visit",
+      "prompt": "What brought you in today?",
+      "mode": "spin_to_pick",
+      "paper_answer": "pain",
+      "reel": [
+        { "value": "same_pain_nothing_working", "label": "Same pain. Nothing is working.", "emoji": "😣", "chart_match": true },
+        { "value": "new_pain", "label": "This is something new", "emoji": "⚡" },
+        { "value": "meds_question", "label": "Question about my pills", "emoji": "💊" },
+        { "value": "someone_made_me", "label": "Somebody made me come", "emoji": "👉" },
+        { "value": "cant_sleep", "label": "I can't sleep", "emoji": "🌙", "hidden_gold": true }
+      ],
+      "care_team_note": "On paper he wrote one word: 'pain'. The reel gets a sentence out of him because a sentence is the only thing on offer."
+    },
+
+    {
+      "id": "pain_now",
+      "order": 2,
+      "printed_as": "Rate your pain 0-10",
+      "prompt": "Where's the pain right now?",
+      "mode": "spin_scale",
+      "paper_answer": 8,
+      "reel_range": [0, 10],
+      "chart_says": 8,
+      "care_team_note": "He has said 6-9 on every visit for 18 months. The number stopped carrying information a year ago. Kept because the form wants it."
+    },
+
+    {
+      "id": "past_conditions",
+      "order": 3,
+      "printed_as": "Past conditions (check all that apply)",
+      "prompt": "Has a doctor ever told you that you have...",
+      "mode": "spin_through_all",
+      "paper_answer": ["diabetes"],
+      "is_the_whole_point": true,
+      "reel": [
+        { "value": "diabetes", "label": "Diabetes", "emoji": "🩸", "chart_match": true, "paper_caught_it": true },
+        { "value": "depression_anxiety", "label": "Depression or anxiety", "emoji": "🌧️", "chart_match": true, "paper_caught_it": false, "plain_language": "Ever been on something for your mood or nerves?", "flag": "He is prescribed sertraline. He did not tick this box. It is printed one row below the box he did tick." },
+        { "value": "arthritis", "label": "Arthritis", "emoji": "🦴" },
+        { "value": "heart_disease", "label": "Heart disease", "emoji": "❤️" },
+        { "value": "high_blood_pressure", "label": "High blood pressure", "emoji": "🩺" },
+        { "value": "kidney_disease", "label": "Kidney disease", "emoji": "🫘" },
+        { "value": "thyroid", "label": "Thyroid disease", "emoji": "🦋" },
+        { "value": "none_of_these", "label": "None of these", "emoji": "🚫", "terminal": true }
+      ],
+      "care_team_note": "Paper form: 15 boxes offered, 1 ticked, 2 true. The reel asks about each one out loud, in words he uses, and takes a yes or a no before it moves."
+    },
+
+    {
+      "id": "allergies",
+      "order": 4,
+      "printed_as": "Allergies",
+      "prompt": "Any medicine that's ever made you feel bad?",
+      "mode": "spin_to_pick",
+      "paper_answer": "none",
+      "chart_says": "codeine",
+      "reel": [
+        { "value": "codeine", "label": "Codeine — made me sick", "emoji": "🤢", "chart_match": true },
+        { "value": "penicillin", "label": "Penicillin", "emoji": "💊" },
+        { "value": "none", "label": "Nothing I know of", "emoji": "🚫" },
+        { "value": "dont_know", "label": "I don't remember", "emoji": "🤷" }
+      ],
+      "flag_if_mismatch": {
+        "when": "none",
+        "severity": "high",
+        "message": "Wrote 'none'. Chart has CODEINE — NAUSEA in red at the top. The word 'allergy' didn't land; 'made you feel bad' does."
+      },
+      "care_team_note": "He doesn't think nausea counts as an allergy. Most people don't. Asking in plain words recovers it."
+    },
+
+    {
+      "id": "medications_taken",
+      "order": 5,
+      "printed_as": "Current medications",
+      "prompt": "We know what you were prescribed. Which ones are you ACTUALLY taking?",
+      "mode": "spin_through_all",
+      "paper_answer": "metformin, the nerve pill, meloxicam, tylenol",
+      "reel_from_chart": true,
+      "reel": [
+        { "value": "metformin", "label": "Metformin", "plain_language": "the sugar one, twice a day", "emoji": "💊", "truth": "taking" },
+        { "value": "sertraline", "label": "Sertraline", "plain_language": "the mood one, small white pill", "emoji": "💊", "truth": "stopped_months_ago", "flag": "STOPPED. Nobody at the clinic knows. Not on his paper list — he listed four, the chart has five, this is the missing one." },
+        { "value": "gabapentin", "label": "Gabapentin", "plain_language": "the nerve one, three times a day", "emoji": "💊", "truth": "skips_some_days", "flag": "Skips it on days he has things to do. Says it makes him foggy. Reads as non-response to treatment." },
+        { "value": "meloxicam", "label": "Meloxicam", "plain_language": "the one for swelling", "emoji": "💊", "truth": "taking_daily" },
+        { "value": "cyclobenzaprine", "label": "Cyclobenzaprine", "plain_language": "the muscle one at night", "emoji": "💊", "truth": "ran_out_in_2025", "flag": "Finished it in 2025. Still listed Active on the med list." }
+      ],
+      "answer_options": ["Taking it", "Stopped it", "Skip it sometimes", "What is that?"],
+      "care_team_note": "The single highest-value screen here. He keeps every pill in one bottle and can't tell them apart, so the reel names them the way HE does, not the way the pharmacy does."
+    },
+
+    {
+      "id": "sleep",
+      "order": 6,
+      "printed_as": "NOT ON THE PAPER FORM",
+      "prompt": "How are you sleeping?",
+      "mode": "spin_to_pick",
+      "paper_answer": null,
+      "not_on_paper_form": true,
+      "reel": [
+        { "value": "badly", "label": "Badly. For a long time now.", "emoji": "🌙", "chart_match": true },
+        { "value": "ok", "label": "Fine", "emoji": "😴" },
+        { "value": "wake_in_pain", "label": "Pain wakes me up", "emoji": "😖" }
+      ],
+      "care_team_note": "He isn't sleeping and has never been asked, because the paper form has no box for it. One reel, eight seconds, and it's in the chart."
+    },
+
+    {
+      "id": "one_thing",
+      "order": 7,
+      "printed_as": "NOT ON THE PAPER FORM",
+      "prompt": "Last one. What do you actually want to talk about?",
+      "mode": "spin_to_pick",
+      "paper_answer": null,
+      "not_on_paper_form": true,
+      "reel": [
+        { "value": "sleep", "label": "Sleeping through the night", "emoji": "🌙" },
+        { "value": "fewer_pills", "label": "Taking fewer pills", "emoji": "💊" },
+        { "value": "walk", "label": "Walking to the shop again", "emoji": "🚶" },
+        { "value": "fence", "label": "My neighbour's fence", "emoji": "🪵", "chart_match": true }
+      ],
+      "care_team_note": "He will pick the fence. Let him. It is the only question on this form he has ever wanted to answer, and everything else comes out on the way there."
+    }
+  ],
+
+  "handoff": {
+    "title": "Three seconds before you walk in",
+    "rule": "Only mismatches print. Agreement is silent.",
+    "lines": [
+      { "severity": "high", "text": "CODEINE allergy — he just told the machine 'nothing I know of' on paper" },
+      { "severity": "high", "text": "SERTRALINE stopped months ago. Not on his list. Still Active in your chart." },
+      { "severity": "medium", "text": "GABAPENTIN skipped on active days (foggy) — not a treatment failure, a dosing problem" },
+      { "severity": "medium", "text": "Depression/anxiety never ticked on paper. Reel caught it." },
+      { "severity": "low", "text": "Cyclobenzaprine finished 2025, still listed Active" },
+      { "severity": "low", "text": "Not sleeping. Never asked before today." },
+      { "severity": "info", "text": "He wants to talk about the fence." }
+    ]
+  }
+}
