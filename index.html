@@ -462,6 +462,13 @@ const mysterySynth = new Tone.PolySynth(Tone.FMSynth, {
   envelope: { attack: 0.01, decay: 0.6, sustain: 0.1, release: 1.5 },
   volume: -2,
 }).toDestination();
+// Soft click on beat 1 of every measure, always — so pressing Play is
+// audibly confirmed even on a completely blank, uncomposed song.
+const clickSynth = new Tone.MetalSynth({
+  envelope: { attack: 0.001, decay: 0.05, release: 0.02 },
+  harmonicity: 3.1, modulationIndex: 16, resonance: 2000, octaves: 0.5,
+  volume: -22,
+}).toDestination();
 
 const PAIN_NOTES = [null, "C2", "E2"];
 const FEELING_NOTES = [null, "C4", "E4", "G4"];
@@ -490,6 +497,8 @@ function buildSequence() {
     const m = state.measures[measureIdx];
     const stepInMeasure = i % steps;
 
+    if (stepInMeasure === 0) clickSynth.triggerAttackRelease("32n", time);
+
     if (m.activity[stepInMeasure]) {
       if (m.drumType === "ghost") {
         ghostSynth.triggerAttackRelease("A3", "2n", time);
@@ -514,12 +523,21 @@ function buildSequence() {
   }, [...Array(total).keys()], "8n");
 }
 
+function isSongEmpty() {
+  return state.measures.every(m =>
+    m.activity.every(v => !v) && m.pain.every(v => !v) && m.feeling.every(v => !v)
+  );
+}
+
 async function play() {
   await Tone.start();
   buildSequence();
   Tone.Transport.bpm.value = ageToBpm(state.age);
   seq.start(0);
   Tone.Transport.start();
+  if (isSongEmpty() && !mysteryRevealed) {
+    footerNote.innerHTML = `🔈 Playing — but nothing's composed yet, so all you'll hear is a soft click marking each measure. Click an <b>Activity</b>, <b>Pain</b>, or <b>Feeling</b> cell to add a note, or hit <b>Load Example: Kiwi</b>.`;
+  }
 }
 function stop() {
   Tone.Transport.stop();
