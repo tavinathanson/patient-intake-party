@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f6f3ff">
-  <title>Amble — GLP-1 check-in</title>
+  <title>thinder — GLP-1 check-in</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
 
@@ -67,13 +67,10 @@
     .brand-mark {
       width: 31px;
       height: 31px;
-      border-radius: 11px 11px 11px 3px;
-      background: var(--yellow);
       display: grid;
       place-items: center;
-      color: var(--ink);
-      font-size: 18px;
     }
+    .brand-mark svg { width: 28px; height: 31px; display: block; transform: scaleX(.72); }
     .sidebar-title {
       margin: 0 8px 10px;
       font-size: 12px;
@@ -360,7 +357,20 @@
 <body>
   <div class="app">
     <aside class="sidebar">
-      <div class="brand"><span class="brand-mark">a</span> amble</div>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 30" role="img">
+            <defs>
+              <linearGradient id="tinder-flame" x1="2" y1="26" x2="22" y2="4" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#ff6036"/>
+                <stop offset="1" stop-color="#fd267a"/>
+              </linearGradient>
+            </defs>
+            <path fill="url(#tinder-flame)" d="M12.1 29.2C5.7 29.2.8 24.8.8 18.5c0-4.1 2.4-7.7 5.8-9.9-.2 2 .5 3.8 1.8 4.9.2-4.8 2.8-9.1 7-12.7.6 3.2 2.4 4.9 4.1 7 2.2 2.6 3.7 5.5 3.7 9.4 0 6.9-4.9 12-11.1 12Z"/>
+          </svg>
+        </span>
+        thinder
+      </div>
       <p class="sidebar-title">Your follow-ups</p>
       <div class="chat-list" id="chat-list"></div>
       <p class="privacy-note">Your answers are saved securely for your care team. This demo does not send or store data.</p>
@@ -383,13 +393,13 @@
 
   <script>
     const questions = [
-      { id: 'dose', emoji: '💉', avatar: 0, category: 'Your medication', title: 'Has your GLP-1 dose changed since your last visit?', detail: 'Swipe yes even if you changed it yourself or only changed it briefly.', kind: 'choice', prompt: 'Hey! 👋 Thanks for flagging that. What dose are you taking now?', options: ['0.25 mg', '0.5 mg', '1.0 mg', '1.7 mg', '2.4 mg', 'I’m not sure'], advisor: 'Nia' },
-      { id: 'side-effects', emoji: '🤢', avatar: 1, category: 'How you feel', title: 'Have you had any side effects lately?', detail: 'Think nausea, vomiting, constipation, stomach pain, or anything that felt unusual.', kind: 'multi', prompt: 'Let’s get the full picture 🧩 Which ones have you noticed?', options: ['Nausea', 'Vomiting', 'Constipation', 'Diarrhea', 'Stomach pain', 'Headache', 'Something else'], advisor: 'Theo' },
-      { id: 'missed', emoji: '📆', avatar: 2, category: 'Your medication', title: 'Have you missed or delayed any doses?', detail: 'Travel, supply problems, cost, or simply forgetting all count.', kind: 'multi', prompt: 'No judgment here 💜 What got in the way?', options: ['Pharmacy stock', 'Cost or coverage', 'Travel', 'Side effects', 'Forgot', 'Something else'], advisor: 'Leena' },
-      { id: 'medications', emoji: '🧴', avatar: 3, category: 'Medication list', title: 'Are you taking any other medicines or supplements?', detail: 'Include prescriptions, over-the-counter medicines, and vitamins.', kind: 'text', prompt: 'What else are you taking? Names and doses are helpful, but share whatever you know ✍️', advisor: 'Mateo' },
-      { id: 'pregnancy', emoji: '🌱', avatar: 0, category: 'Plans & safety', title: 'Are you pregnant, breastfeeding, or planning a pregnancy?', detail: 'This helps your clinician talk with you about safe timing and options.', kind: 'multi', prompt: 'Thanks for sharing this 💛 Which best describes you?', options: ['Pregnant', 'Breastfeeding', 'Trying now', 'Planning within a year', 'Not sure'], advisor: 'Nia' },
-      { id: 'pen-photo', emoji: '📸', avatar: 1, category: 'One quick photo', title: 'Would you like help confirming your current pen?', detail: 'A photo of the label can help your care team verify the medication and dose.', kind: 'photo', prompt: 'Okay, show me what you’ve got 📸 A quick photo of the label would make my day — keep your name and prescription number out of frame, and I’ll pass it along 💫', advisor: 'Theo' },
-      { id: 'anything-else', emoji: '💭', avatar: 2, category: 'Last one', title: 'Is there anything else you want your care team to know?', detail: 'A new goal, a concern, or a question you do not want to forget.', kind: 'text', prompt: 'I’m listening 👀 What should they know before the visit?', advisor: 'Leena' }
+      { id: 'dose', emoji: '💉', avatar: 0, category: 'Your medication', title: 'Has your GLP-1 dose changed since your last visit?', detail: 'Swipe yes even if you changed it yourself or only changed it briefly.', kind: 'choice', prompt: 'Well, look who matched with me 👀 Tell me your current dose and I’ll make sure it gets the attention it deserves.', confirmation: 'Perfect — you make being prepared look good 😉 I saved it.', options: ['0.25 mg', '0.5 mg', '1.0 mg', '1.7 mg', '2.4 mg', 'I’m not sure'], advisor: 'Nia' },
+      { id: 'side-effects', emoji: '🤢', avatar: 1, category: 'How you feel', title: 'Have you had any side effects lately?', detail: 'Think nausea, vomiting, constipation, stomach pain, or anything that felt unusual.', kind: 'multi', prompt: 'You had me at “yes” 💜 Now give me the full picture — which side effects have been bothering you?', confirmation: 'Got them. Thanks for trusting me with the not-so-glamorous details ✨', options: ['Nausea', 'Vomiting', 'Constipation', 'Diarrhea', 'Stomach pain', 'Headache', 'Something else'], advisor: 'Theo' },
+      { id: 'missed', emoji: '📆', avatar: 2, category: 'Your medication', title: 'Have you missed or delayed any doses?', detail: 'Travel, supply problems, cost, or simply forgetting all count.', kind: 'multi', prompt: 'Playing hard to get with your dose? 😏 No judgment — tell me what got in the way.', confirmation: 'Mystery solved 🕵️ I saved that for the team.', options: ['Pharmacy stock', 'Cost or coverage', 'Travel', 'Side effects', 'Forgot', 'Something else'], advisor: 'Leena' },
+      { id: 'medications', emoji: '🧴', avatar: 3, category: 'Medication list', title: 'Are you taking any other medicines or supplements?', detail: 'Include prescriptions, over-the-counter medicines, and vitamins.', kind: 'text', prompt: 'I like someone with layers 😌 What other medicines or supplements are in the mix?', confirmation: 'A complete list? You really know how to impress me 📋✨', advisor: 'Mateo' },
+      { id: 'pregnancy', emoji: '🌱', avatar: 0, category: 'Plans & safety', title: 'Are you pregnant, breastfeeding, or planning a pregnancy?', detail: 'This helps your clinician talk with you about safe timing and options.', kind: 'multi', prompt: 'Thanks for sharing something important with me 💛 Which option fits your plans right now?', confirmation: 'Thank you — I saved that carefully so the team can support your plans 🌱', options: ['Pregnant', 'Breastfeeding', 'Trying now', 'Planning within a year', 'Not sure'], advisor: 'Nia' },
+      { id: 'pen-photo', emoji: '📸', avatar: 1, category: 'One quick photo', title: 'Would you like help confirming your current pen?', detail: 'A photo of the label can help your care team verify the medication and dose.', kind: 'photo', prompt: 'Okay, don’t be shy 📸 Send me a quick label pic and make my day. Keep your name and prescription number out of frame — a little mystery is a good thing 😉', confirmation: 'Great angle 😌 The label is saved for the team.', advisor: 'Theo' },
+      { id: 'anything-else', emoji: '💭', avatar: 2, category: 'Last one', title: 'Is there anything else you want your care team to know?', detail: 'A new goal, a concern, or a question you do not want to forget.', kind: 'text', prompt: 'You’ve got my full attention 👀 What else is on your mind before the visit?', confirmation: 'Consider me intrigued ✨ I saved it for the team.', advisor: 'Leena' }
     ];
 
     const state = { index: 0, chats: [], activeChat: null, view: 'swipe' };
@@ -606,7 +616,7 @@
       chat.answer = answer;
       chat.complete = true;
       chat.messages.push({ from: 'patient', text: answer });
-      chat.messages.push({ from: 'clinician', text: 'Got it — I’ve added that to your check-in ✅' });
+      chat.messages.push({ from: 'clinician', text: chat.confirmation });
       renderLists();
       openChat(chat.id);
     }
