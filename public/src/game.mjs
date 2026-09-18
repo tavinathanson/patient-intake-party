@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+const randomUUID = () => globalThis.crypto.randomUUID();
 
 export const CATEGORIES = [
   {key:'name',label:'First name',fields:{firstName:'First name'}},
@@ -40,7 +40,7 @@ async function nextTurn(game,generateTurn) {
     try { value=normalizeValue(game.categoryIndex,raw.guess); }
     catch(error) { throw new GameError(`The detective returned an incomplete guess: ${error.message}`,502); }
   }
-  return {...game,phase:'question',turn:{id:randomUUID(),kind:raw.kind,question:raw.question.trim(),aside:raw.aside.trim(),guess:value}};
+  return {...game,phase:'question',turn:{id:randomUUID(),kind:raw.kind,question:raw.question.trim(),aside:raw.aside.trim(),guess:value,clueId:raw.clueId||null,candidateId:raw.candidateId||null}};
 }
 
 function resolve(game,value,method) {
@@ -55,7 +55,7 @@ export async function createGame(generateTurn) {
 export async function answerGame(game,turnId,answer,generateTurn) {
   if(game.phase!=='question' || !game.turn || game.turn.id!==turnId) throw new GameError('This question was already answered or is stale. Refresh the case file.',409);
   if(!['yes','no','maybe'].includes(answer)) throw new GameError('Choose a valid answer: Yes, No, or Maybe.');
-  const next={...game,history:[...game.history,{category:CATEGORIES[game.categoryIndex].key,number:game.asked,question:game.turn.question,answer,aside:game.turn.aside}]};
+  const next={...game,history:[...game.history,{category:CATEGORIES[game.categoryIndex].key,number:game.asked,question:game.turn.question,answer,aside:game.turn.aside,clueId:game.turn.clueId,candidateId:game.turn.candidateId}]};
   if(game.turn.kind==='guess' && answer==='yes') return resolve(next,game.turn.guess,'deduced');
   if(game.asked>=LIMIT) return {...next,phase:'fallback',turn:null};
   return nextTurn({...next,asked:game.asked+1,turn:null},generateTurn);

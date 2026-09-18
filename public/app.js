@@ -1,7 +1,8 @@
-'use strict';
+import { createGame, answerGame, submitFallback, continueGame } from './src/game.mjs';
+import { generateTurn } from './src/local-detective.mjs';
 
 (() => {
-  const STORAGE_KEY = 'intake-investigations-game';
+  const STORAGE_KEY = 'intake-investigations-game-v1';
   const categories = [
     { key: 'name', label: 'First name', heading: 'A person of interest', subject: 'your first name', fields: [['firstName', 'First name']] },
     { key: 'reason', label: 'Reason for visit', heading: 'What brings you in?', subject: 'your reason for visiting', fields: [['reason', 'Reason for visit']] },
@@ -14,14 +15,12 @@
   const transcriptToggle = document.querySelector('#transcript-toggle');
   let game = null;
   let busy = false;
-  let restoring = false;
   let busyMessage = '';
   let notice = '';
   let error = null;
   let retryAction = null;
   let draft = {};
   let copyMessage = '';
-  let busyTimer = null;
 
   const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
   const currentCategory = () => categories[Math.min(game?.categoryIndex ?? 0, 3)];
@@ -30,15 +29,31 @@
   const padded = value => String(value).padStart(2, '0');
   const shortId = () => game ? escape(game.id.slice(0, 8).toUpperCase()) : '';
 
-  function savedId() {
-    try { return localStorage.getItem(STORAGE_KEY); } catch { return null; }
+  function savedGame() {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (!stored) return null;
+      const saved = JSON.parse(stored);
+      if (!saved || typeof saved.id !== 'string' || !Number.isInteger(saved.categoryIndex) || saved.categoryIndex < 0 || saved.categoryIndex > 3 || !['question', 'fallback', 'between', 'complete'].includes(saved.phase) || !Number.isInteger(saved.asked) || saved.asked < 1 || saved.asked > 20 || !Array.isArray(saved.history) || !saved.results || typeof saved.results !== 'object') throw new Error('Invalid case file.');
+      if (saved.phase === 'question' && (!saved.turn || typeof saved.turn.id !== 'string' || !['question', 'guess'].includes(saved.turn.kind) || typeof saved.turn.question !== 'string' || (saved.turn.kind === 'guess' && !saved.turn.guess))) throw new Error('Invalid question.');
+      if ((saved.phase === 'between' && saved.categoryIndex === 3) || (saved.phase === 'complete' && saved.categoryIndex !== 3)) throw new Error('Invalid case progress.');
+      const completed = saved.categoryIndex + (['between', 'complete'].includes(saved.phase) ? 1 : 0);
+      for (const category of categories.slice(0, completed)) {
+        if (!category.fields.every(([key]) => typeof saved.results[category.key]?.value?.[key] === 'string')) throw new Error('Incomplete case file.');
+      }
+      return saved;
+    } catch {
+      persistGame(null);
+      notice = 'The saved case file could not be reopened. Begin a new investigation below.';
+      return null;
+    }
   }
 
-  function persistId(id) {
+  function persistGame(value) {
     try {
-      if (id) localStorage.setItem(STORAGE_KEY, id);
-      else localStorage.removeItem(STORAGE_KEY);
-    } catch { /* A private browser can still play without reload persistence. */ }
+      if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      else sessionStorage.removeItem(STORAGE_KEY);
+    } catch { /* The game still works when browser storage is unavailable. */ }
   }
 
   function formatDate(value) {
@@ -57,7 +72,7 @@
   }
 
   function notices() {
-    return `${notice ? `<div class="notice" role="status">${escape(notice)}</div>` : ''}${error ? `<div class="notice error-notice" role="alert"><span>${escape(error)}</span>${retryAction ? `<button type="button" class="text-button" data-action="retry" ${disabled()}>Retry request ↗</button>` : ''}</div>` : ''}`;
+    return `${notice ? `<div class="notice" role="status">${escape(notice)}</div>` : ''}${error ? `<div class="notice error-notice" role="alert"><span>${escape(error)}</span>${retryAction ? `<button type="button" class="text-button" data-action="retry" ${disabled()}>Try again ↗</button>` : ''}</div>` : ''}`;
   }
 
   function loadingStatus() {
@@ -87,6 +102,7 @@
         <div class="rule"><span class="rule-number">02 /</span><div><h2>Three possible answers.</h2><p>Yes. No. Maybe. That last one still counts as a question. Nice try.</p></div></div>
         <div class="rule"><span class="rule-number">03 /</span><div><h2>One way or another.</h2><p>Twenty questions per mystery. If he’s stumped, you get to fill in the blanks.</p></div></div>
       </div>
+      <p class="pool-note"><strong>The bureau’s files:</strong> 100 preset suspects per mystery, with instant local deductions. Outside the file? After 20 questions, you can write it in. The pharmacy file has one NYC CVS demo anchor and 99 fictional U.S. examples.</p>
     </section>`;
   }
 
@@ -158,29 +174,14 @@
   function render(moveFocus = false) {
     document.querySelector('#transcript-count').textContent = game?.history?.length || '0';
     main.setAttribute('aria-busy', String(busy));
-    if (restoring) {
-      main.innerHTML = `<section class="load-state"><div class="loading-mark" aria-hidden="true">№ 20</div><h1>Reopening the case file.</h1><p>The detective is looking for the folder. It’s almost certainly under his hat.</p>${busy ? '<div class="loading-bar"><span class="spinner" aria-hidden="true"></span><span class="eyebrow">RETRIEVING YOUR INVESTIGATION</span></div>' : ''}${notices()}</section>`;
-    } else main.innerHTML = game ? investigationView() : landing();
+    main.innerHTML = game ? investigationView() : landing();
     if (moveFocus) {
       const focusTarget = main.querySelector('#question-title, #phase-title, #landing-title');
       focusTarget?.focus({ preventScroll: true });
     }
   }
 
-  async function api(path, body) {
-    const response = await fetch(path, body === undefined ? { headers: { Accept: 'application/json' } } : { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) });
-    let data;
-    try { data = await response.json(); } catch { throw new Error('The case office returned an unreadable response. Please retry.'); }
-    if (!response.ok) {
-      const failure = new Error(typeof data.error === 'string' ? data.error : data.error?.message || 'The detective hit a snag. Please retry.');
-      failure.status = response.status;
-      throw failure;
-    }
-    if (!data.game?.id) throw new Error('The case file was incomplete. Please retry.');
-    return data.game;
-  }
-
-  async function runRequest(operation, message, options = {}) {
+  async function runOperation(operation, message, options = {}) {
     if (busy) return;
     busy = true;
     error = null;
@@ -189,55 +190,18 @@
     busyMessage = message;
     announce(message);
     render();
-    busyTimer = setTimeout(() => {
-      const slowMessage = 'Still following a lead. Some deductions take a moment…';
-      const target = document.querySelector('#busy-message');
-      if (target) target.textContent = slowMessage;
-      announce(slowMessage);
-    }, 12000);
     let succeeded = false;
     try {
       game = await operation();
-      persistId(game.id);
+      persistGame(game);
       draft = {};
-      restoring = false;
       succeeded = true;
       announce(game.phase === 'question' ? `Question ${game.asked} of 20. ${game.turn.question}` : game.phase === 'fallback' ? 'Twenty questions reached. You can now type your details.' : game.phase === 'complete' ? 'Case closed. Your intake is complete.' : 'This round is complete. Continue when you are ready.');
     } catch (failure) {
-      if (failure.status === 404) {
-        game = null;
-        restoring = false;
-        persistId(null);
-        draft = {};
-        notice = 'This case file has expired, possibly after a server restart. Begin a new investigation below.';
-        announce(notice);
-      } else if (failure.status === 409 && game) {
-        try {
-          game = await api(`/api/games/${encodeURIComponent(game.id)}`);
-          notice = 'The case moved ahead in another request. The current file is shown below.';
-          announce(notice);
-          succeeded = true;
-        } catch (refreshFailure) {
-          if (refreshFailure.status === 404) {
-            game = null;
-            restoring = false;
-            persistId(null);
-            draft = {};
-            notice = 'This case file has expired, possibly after a server restart. Begin a new investigation below.';
-            announce(notice);
-          } else {
-            error = 'The case changed, but we couldn’t reopen it. Retry to load the latest file.';
-            retryAction = () => runRequest(() => api(`/api/games/${encodeURIComponent(game.id)}`), 'Reopening the current case…');
-            announce(error);
-          }
-        }
-      } else {
-        error = failure instanceof TypeError ? 'We couldn’t reach the case office. Check that the local server is running, then retry.' : failure.message;
-        retryAction = failure.status === 400 ? null : () => runRequest(operation, message, options);
-        announce(error);
-      }
+      error = failure.message || 'The detective lost his place. Please try again.';
+      retryAction = failure.status === 400 || failure.status === 409 ? null : () => runOperation(operation, message, options);
+      announce(error);
     } finally {
-      clearTimeout(busyTimer);
       busy = false;
       render(succeeded);
       if (options.scroll && succeeded) window.scrollTo({ top: 0, behavior: 'instant' });
@@ -245,14 +209,13 @@
   }
 
   function startGame() {
-    runRequest(() => api('/api/games', {}), 'The detective is reviewing his first lead…', { scroll: true });
+    runOperation(() => createGame(generateTurn), 'The detective is reviewing his first lead…', { scroll: true });
   }
 
   function answer(value) {
     if (busy || game?.phase !== 'question' || dialog.open) return;
-    const id = game.id;
     const turnId = game.turn.id;
-    runRequest(() => api(`/api/games/${encodeURIComponent(id)}/answer`, { turnId, answer: value }), 'The detective is connecting the dots…');
+    runOperation(() => answerGame(game, turnId, value, generateTurn), 'The detective is connecting the dots…');
   }
 
   function showTranscript() {
@@ -289,8 +252,7 @@
       copyMessage = '';
       startGame();
     } else if (action === 'continue') {
-      const id = game.id;
-      runRequest(() => api(`/api/games/${encodeURIComponent(id)}/continue`, {}), 'Opening the next chapter of the case…', { scroll: true });
+      runOperation(() => continueGame(game, generateTurn), 'Opening the next chapter of the case…', { scroll: true });
     } else if (action === 'retry') retryAction?.();
     else if (action === 'copy') copyIntake();
   });
@@ -305,8 +267,7 @@
     if (busy || game?.phase !== 'fallback') return;
     const value = Object.fromEntries(new FormData(event.target));
     draft = { ...value };
-    const id = game.id;
-    runRequest(() => api(`/api/games/${encodeURIComponent(id)}/fallback`, { value }), 'Adding your testimony to the case file…');
+    runOperation(() => submitFallback(game, value), 'Adding your testimony to the case file…');
   });
 
   document.addEventListener('keydown', event => {
@@ -324,9 +285,6 @@
     if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
   });
   document.querySelector('#year').textContent = new Date().getFullYear();
-  const id = savedId();
-  if (id) {
-    restoring = true;
-    runRequest(() => api(`/api/games/${encodeURIComponent(id)}`), 'Reopening your case file…');
-  } else render();
+  game = savedGame();
+  render();
 })();

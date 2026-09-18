@@ -4,38 +4,44 @@
 
 Four ordinary intake fields. One wildly overqualified detective. Up to eighty unnecessary questions.
 
-A local browser game powered by your installed Codex CLI. Detective Maybe tries to discover your first name, reason for visit, date of birth, and specific pharmacy. You may answer only **Yes**, **No**, or **Maybe / I don't know**. Each category gets 20 questions. A confirmed complete guess solves it early; otherwise, the detective reluctantly produces a normal input field.
+A browser-only game powered by prewritten questions and instant decision trees. Detective Maybe tries to discover your first name, reason for visit, date of birth, and specific pharmacy from **exactly 100 preset candidates in each category**. All questions, answers, and game decisions stay in your browser. No login, API key, model service, or game API is needed.
 
-The first-name round follows namesakes, nicknames, songs, stories, and questionable hunches. Alphabet ranges and letter-by-letter searches are off the table. The detective is here to entertain; getting your name right is a bonus.
+Team 22's deployment URL is **[https://team-22-intake-oop.fly.dev](https://team-22-intake-oop.fly.dev)**. Normal pushes to `team-22` run the repository's deployment workflow.
+
+You may answer only **Yes**, **No**, or **Maybe / I don't know**. Each category gets 20 questions, including guesses. A Yes to a complete guess solves it early; ordinary clue answers only narrow the pool. Maybe spends a question without ruling candidates out. If your answer is outside the preset pool, or the detective remains stumped after question 20, ordinary input fields let you record the actual details.
+
+The first-name round follows namesakes, nicknames, songs, stories, and questionable hunches. Alphabet ranges and letter-by-letter searches are off the table. The detective is here to entertain; getting your name right is a bonus. The pharmacy pool contains the NYC CVS demo anchor below and **99 realistic but fictional U.S. pharmacy examples**, rather than a pharmacy directory.
 
 ## Run locally
 
-Requires Node.js 22+ and [Codex CLI](https://learn.chatgpt.com/docs/cli) installed and signed in.
+Requires Node.js 22+.
 
 ```bash
-codex login status
-# If needed:
-codex login
-
 npm start
 ```
 
-Open **http://localhost:4317**. There are no production dependencies to install and no build step. The server binds only to `127.0.0.1`; this version is for a local demo. The model runs through OpenAI, so an internet connection and available Codex usage are required.
+Open **[http://localhost:4317](http://localhost:4317)**. There are no production dependencies to install and no build step. `npm start` is a convenience static-file host; it does not run the game or receive intake answers. Questions, candidate data, artwork, and system fonts are bundled in `public/`.
 
-Optional settings:
+The only optional setting is the port:
 
 ```bash
 PORT=4318 npm start
-CODEX_MODEL=gpt-5.6-sol npm start
-# For a CLI executable not on PATH:
-CODEX_BIN=/absolute/path/to/codex npm start
 ```
 
-`CODEX_TIMEOUT_MS` controls the per-turn deadline (default 90000). Unless `CODEX_MODEL` is supplied, Codex chooses its default model. The game ignores personal Codex configuration, disables unrelated tools, uses a read-only sandbox, and sends the explicit game transcript on each ephemeral model call. It uses existing Codex authentication; it never reads or copies credentials itself.
+The whole case is stored in the tab's `sessionStorage`, so refreshing the page restores your progress. Closing the tab ends that saved session. No intake details leave the browser. The final intake summary can be copied from the app.
 
-Games live in server memory. Reloading the page restores the current case by its opaque ID; restarting the server expires cases. Normal field values are collected only after a failed round. The final intake summary can be copied from the app. The original breakout materials below are preserved; its Fly deployment flow is separate from this local Codex setup.
+To use another static host, publish the contents of `public/` as the site's root. On Fly, the convenience file host listens on `0.0.0.0` and uses `PORT=8080`; there is no backend game service to configure.
 
-Team 22's initial source push skips CI because this implementation runs locally. The shared Fly workflow cannot use your computer's Codex login; use the local URL above for the demo.
+## Demo anchors
+
+These four values are included in the preset pools:
+
+| Category | Candidate |
+|---|---|
+| First name | Andrew |
+| Reason for visit | GLP-1 / weight loss |
+| Date of birth | 1995-05-26 |
+| Pharmacy | CVS, 258 8th Ave, New York, NY 10011 |
 
 ## Verify
 
@@ -43,7 +49,9 @@ Team 22's initial source push skips CI because this implementation runs locally.
 npm test
 ```
 
-Tests exercise the real game transitions and HTTP endpoints with deterministic model responses. Live model output is checked separately because answers are nondeterministic. The game rules, rather than model confidence, determine when a category is solved and when fallback becomes available.
+The development checks cover candidate paths and game transitions, including Maybe answers, rejected guesses, and the 20-question fallback. Browser-side game rules determine when a category is solved.
+
+Push `team-22` normally to deploy or redeploy. The original breakout materials and shared Fly deployment instructions below are preserved for reference.
 
 ---
 

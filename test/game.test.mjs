@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGame, answerGame, submitFallback, continueGame } from '../src/game.mjs';
+import { createGame, answerGame, submitFallback, continueGame } from '../public/src/game.mjs';
 
 const question = async () => ({ kind: 'question', question: 'Does your name contain an E?', aside: 'A vowel. A motive.', guess: null });
 const guess = (value) => async () => ({ kind: 'guess', question: 'Is this your answer?', aside: 'The evidence is overwhelming.', guess: value });
