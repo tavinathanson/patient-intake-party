@@ -1,0 +1,351 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="GENERATOR" content="Microsoft Visual Studio .NET 7.1">
+<title>PatientIntakeSystem :: Social Media Assessment Module</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="titlebar">
+    <span>PatientIntakeSystem.aspx - Microsoft Internet Explorer</span>
+    <span class="btns"><span>_</span><span>&#9633;</span><span>X</span></span>
+  </div>
+
+  <div class="menubar">
+    <span><u>F</u>ile</span><span><u>E</u>dit</span><span><u>V</u>iew</span>
+    <span>F<u>a</u>vorites</span><span><u>T</u>ools</span><span><u>H</u>elp</span>
+  </div>
+
+  <div class="crumbs">
+    <a href="/">Home</a> &gt; Clinical Modules &gt; Patient Intake &gt;
+    <b>Social Media Assessment (SMA-4)</b>
+  </div>
+
+  <div class="banner">
+    PATIENT INTAKE SYSTEM &mdash; SOCIAL MEDIA ASSESSMENT MODULE
+    <small>Enterprise Edition v3.1.0.117 | Server: PATIENT-SQL01 | Licensed to: DEMO INSTALLATION (NOT FOR CLINICAL USE)</small>
+  </div>
+
+  <div class="body">
+
+  <!-- ============ STEP 1 ============ -->
+  <div class="stage on" id="s-link">
+    <h1 class="pg">Step 1 of 3 &mdash; Patient Identification</h1>
+    <p>Enter the patient's social media account. The system will assess the account
+       and determine the patient's presenting condition automatically.</p>
+
+    <div class="notice">
+      <b>Notice:</b> This module determines medical conditions from photographs. That is not
+      a thing anyone can do. A photograph is not a window into your hair color, your habits or
+      your health &mdash; and these are photos the patient chose, lit, cropped and captioned.
+      The module is therefore <b>not permitted to make the final determination.</b> See Step 3.
+    </div>
+
+    <form id="linkform" autocomplete="off">
+    <fieldset>
+      <legend>Patient Social Media Account</legend>
+
+      <label class="fld" for="link"><span class="req">*</span> Instagram URL or Handle:</label>
+      <input type="text" id="link" value="" maxlength="120">
+      <div class="hint" style="margin-left:190px">Example: instagram.com/handle, @handle, or handle</div>
+
+      <div style="margin-top:12px">
+        <label class="fld">&nbsp;</label>
+        <button type="submit" id="go">Begin Assessment &gt;&gt;</button>
+        <button type="button" class="link" id="demofill" style="margin-left:10px">[use demo patient]</button>
+      </div>
+    </fieldset>
+    </form>
+
+    <div id="valsum"></div>
+
+    <p class="hint">
+      <span class="req">*</span> Indicates a required field. Fields marked with an asterisk must be
+      completed before proceeding to Step 2 of 3.
+    </p>
+
+    <h2 class="pg">About This Module</h2>
+    <p class="hint">
+      No data is transmitted to Instagram or any third party. There is no network call, no
+      scraping and no model. The handle is hashed and used to select 4 of 10 pre-authored
+      findings. The photographs are demonstration images stored on this server. This is a joke
+      about photo-based diagnosis, built at a hackathon.
+    </p>
+
+    <div class="viewstate">
+      __VIEWSTATE: /wEPDwUKMTU5NDAyNzI3MGRkZFYvbm90aGluZyBoZXJlIGlzIHJlYWwsIHRoYXQncyB0aGUgcG9pbnQ=
+    </div>
+  </div>
+
+  <!-- ============ STEP 2 ============ -->
+  <div class="stage" id="s-scan">
+    <h1 class="pg">Step 2 of 3 &mdash; Automated Photographic Assessment</h1>
+    <p>Assessment in progress for account <b id="scan-handle">@</b>. Please do not close this
+       window or press the Back button.</p>
+
+    <fieldset>
+      <legend>Image Review (SMA-4 Batch Process)</legend>
+      <div class="reelwrap">
+        <div>
+          <table class="reeltbl"><tr><td>
+            <img class="photo" id="reelimg" src="" alt="Patient submitted photograph">
+          </td></tr></table>
+          <div class="reelcap" id="reelcap">Image 1 of 1</div>
+        </div>
+        <div class="console" id="console"></div>
+      </div>
+
+      <div class="progress"><i id="pbar"></i></div>
+      <div class="pctlab" id="pctlab">Processing... 0% complete. Estimated time remaining: calculating...</div>
+    </fieldset>
+
+    <p class="hint">
+      This process is entirely fabricated. Nothing is being measured. No photograph has ever
+      revealed a medical condition to this or any other piece of software.
+    </p>
+  </div>
+
+  <!-- ============ STEP 3 ============ -->
+  <div class="stage" id="s-result">
+    <h1 class="pg">Step 3 of 3 &mdash; Findings and Committee Determination</h1>
+    <p>Assessment complete for account <b id="res-handle">@</b>.
+       Record created <span id="stamp"></span>.</p>
+
+    <div class="roastbox">
+      <div class="hdr">*** AUTOMATED CLINICAL IMPRESSION (UNVERIFIED) ***</div>
+      <div id="roast"></div>
+      <div style="margin-top:6px;font-size:10px;color:#A06000" id="tagline"></div>
+    </div>
+
+    <h2 class="pg">Differential Findings (4 records returned)</h2>
+    <table class="grid" id="options"><tbody></tbody></table>
+
+    <div class="notice">
+      <b>System is not authorized to select a finding.</b> Determination requires a quorum of
+      human reviewers. The module's own vote is weighted at 0.00. Distribute the ballot below.
+    </div>
+
+    <h2 class="pg">Committee Ballot</h2>
+    <div class="qrbox">
+      <table class="qrtbl"><tr>
+        <td><div class="qr"><img id="qrimg" alt="Ballot QR code"></div></td>
+        <td>
+          <b>Scan to cast a vote</b>
+          <p class="hint" style="margin-top:4px">
+            Every person in the room scans this code and selects the finding they believe.
+            The finding with the most votes becomes the determination of record.
+          </p>
+          <div class="urlbox" id="voteurl">&nbsp;</div>
+          <p style="margin-top:8px">Ballots received: <span class="bigcount" id="total">0</span></p>
+          <div style="margin-top:8px">
+            <button id="close">Close Ballot &amp; Certify</button>
+            <button id="reopen">Reopen</button>
+            <button id="restart">New Patient</button>
+          </div>
+        </td>
+      </tr></table>
+    </div>
+
+    <div id="verdict"></div>
+
+    <p class="hint">
+      <b>For the record:</b> none of this is a diagnosis, and no photograph ever was one. Real
+      intake starts with asking the person a question and listening to the answer.
+    </p>
+  </div>
+
+  </div><!-- /body -->
+
+  <div class="statusbar">
+    <div id="sbleft">Done</div>
+    <div>Local intranet</div>
+  </div>
+</div>
+
+<p class="footnote">
+  PatientIntakeSystem&trade; v3.1.0.117 &nbsp;|&nbsp; &copy; 2004 Intake Solutions Group, Inc.
+  All Rights Reserved. &nbsp;|&nbsp; Best viewed in Internet Explorer 6.0 at 1024x768
+</p>
+
+<script>
+const $ = s => document.querySelector(s);
+const REEL = {{ reel|tojson }};
+let SID = null, CARDS = [], poll = null, reelTimer = null;
+
+const SCAN_LINES = [
+  ["Connecting to PATIENT-SQL01", "connection established (0.004s)"],
+  ["Enumerating images", "1,204 posts returned, 3 distinct facial expressions"],
+  ["Colorimetric analysis", "ring light detected at 6500K, sun not consulted"],
+  ["Caption length regression", "declining 4 chars/week since October"],
+  ["Palette entropy", "3rd percentile; nine shades of oat, one rogue olive"],
+  ["Social graph", "same four people, eleven different walls"],
+  ["Clinical inference engine", "no valid basis for any of this whatsoever"],
+  ["Writing to tbl_Findings", "4 rows affected"],
+];
+
+function showStage(id) {
+  document.querySelectorAll('.stage').forEach(s => s.classList.remove('on'));
+  $(id).classList.add('on');
+  window.scrollTo(0, 0);
+}
+
+$('#demofill').onclick = () => { $('#link').value = 'instagram.com/weston'; };
+
+$('#link').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); $('#linkform').requestSubmit(); }
+});
+
+$('#linkform').addEventListener('submit', async e => {
+  e.preventDefault();
+  const link = $('#link').value.trim();
+  if (!link) {
+    $('#valsum').innerHTML =
+      '<div class="valsum"><b>The following errors were found:</b>' +
+      '&bull; Instagram URL or Handle is a required field.</div>';
+    return;
+  }
+  $('#valsum').innerHTML = '';
+  $('#go').disabled = true;
+  $('#sbleft').textContent = 'Waiting for PATIENT-SQL01...';
+
+  const res = await fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ link })
+  });
+  const data = await res.json();
+
+  $('#scan-handle').textContent = '@' + data.handle;
+  showStage('#s-scan');
+  await playReel();
+  render(data);
+  $('#go').disabled = false;
+  $('#sbleft').textContent = 'Done';
+});
+
+function playReel() {
+  return new Promise(resolve => {
+    const box = $('#console');
+    box.innerHTML = '';
+
+    // cycle the demo photographs
+    let p = 0;
+    if (REEL.length) {
+      $('#reelimg').src = REEL[0];
+      $('#reelcap').textContent = 'Image 1 of ' + REEL.length + ' — reviewing...';
+      reelTimer = setInterval(() => {
+        p = (p + 1) % REEL.length;
+        $('#reelimg').src = REEL[p];
+        $('#reelcap').textContent = 'Image ' + (p + 1) + ' of ' + REEL.length + ' — reviewing...';
+      }, 1100);
+    } else {
+      $('#reelcap').textContent = 'No images found in /static/reel/';
+    }
+
+    let i = 0;
+    const tick = setInterval(() => {
+      const [label, value] = SCAN_LINES[i];
+      const div = document.createElement('div');
+      div.innerHTML = '&gt; ' + label + '... <b>' + value + '</b>';
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+
+      const pct = Math.round((i + 1) / SCAN_LINES.length * 100);
+      $('#pbar').style.width = pct + '%';
+      $('#pctlab').textContent = 'Processing... ' + pct +
+        '% complete. Estimated time remaining: ' + (SCAN_LINES.length - i - 1) + ' second(s)...';
+
+      if (++i >= SCAN_LINES.length) {
+        clearInterval(tick);
+        setTimeout(() => { clearInterval(reelTimer); resolve(); }, 900);
+      }
+    }, 800);
+  });
+}
+
+function render(data) {
+  SID = data.sid;
+  CARDS = data.cards;
+  $('#res-handle').textContent = '@' + data.handle;
+  $('#roast').textContent = data.roast;
+  $('#tagline').textContent = data.tagline;
+  $('#voteurl').textContent = data.vote_url;
+  $('#qrimg').src = data.qr ? data.qr + '?t=' + Date.now() : '';
+  $('#stamp').textContent = new Date().toLocaleString();
+  $('#verdict').innerHTML = '';
+
+  $('#options').innerHTML =
+    '<tr><th style="width:26px">#</th><th>Finding</th><th>Photographic Evidence</th>' +
+    '<th class="num">Conf.</th><th class="num">Votes</th></tr>' +
+    CARDS.map((c, i) => `
+      <tr id="opt-${c.id}" class="${i % 2 ? 'alt' : ''}">
+        <td>${c.rank}</td>
+        <td><span class="dx">${c.name}</span>
+            <div class="says">Pt. reports: ${c.complaint}</div>
+            <div class="plan">Plan: ${c.plan}</div></td>
+        <td class="ev">${c.evidence}</td>
+        <td class="num">${c.confidence}%</td>
+        <td class="num"><span id="n-${c.id}">0</span>
+            <div class="meter"><i id="bar-${c.id}"></i></div>
+            <div class="plan" id="p-${c.id}">0%</div></td>
+      </tr>`).join('');
+
+  showStage('#s-result');
+  clearInterval(poll);
+  poll = setInterval(refresh, 1500);
+  refresh();
+}
+
+async function refresh() {
+  if (!SID) return;
+  const r = await fetch('/api/results/' + SID);
+  if (!r.ok) { clearInterval(poll); return; }
+  const s = await r.json();
+  $('#total').textContent = s.total;
+
+  CARDS.forEach(c => {
+    const n = s.counts[c.id] || 0;
+    const pct = s.total ? Math.round(n / s.total * 100) : 0;
+    $('#bar-' + c.id).style.width = pct + '%';
+    $('#n-' + c.id).textContent = n;
+    $('#p-' + c.id).textContent = pct + '%';
+    $('#opt-' + c.id).classList.toggle('win', s.winners.includes(c.id));
+  });
+
+  if (s.closed && s.winners.length) {
+    const won = CARDS.filter(c => s.winners.includes(c.id));
+    const tie = won.length > 1;
+    $('#verdict').innerHTML =
+      '<div class="verdict"><div class="hdr">*** DETERMINATION OF RECORD &mdash; CERTIFIED BY COMMITTEE ***</div>' +
+      '<div class="dxbig">' + won.map(c => c.name).join(' / ') + '</div>' +
+      '<div class="hint" style="color:#333">' +
+      (tie
+        ? 'Quorum split evenly. A tie is, honestly, the most accurate output this system has ever produced.'
+        : 'Certified by ' + s.total + ' human reviewer(s), which is ' + s.total +
+          ' more than the software deserved. Record written to tbl_Determination.') +
+      '</div></div>';
+  } else if (s.closed) {
+    $('#verdict').innerHTML =
+      '<div class="verdict"><div class="hdr">*** NO BALLOTS RECEIVED ***</div>' +
+      '<div class="dxbig">No determination</div>' +
+      '<div class="hint" style="color:#333">The most medically responsible outcome so far.</div></div>';
+  } else {
+    $('#verdict').innerHTML = '';
+  }
+}
+
+$('#close').onclick = async () => { await fetch('/api/close/' + SID, { method: 'POST' }); refresh(); };
+$('#reopen').onclick = async () => { await fetch('/api/reopen/' + SID, { method: 'POST' }); refresh(); };
+$('#restart').onclick = () => {
+  clearInterval(poll); clearInterval(reelTimer); SID = null;
+  $('#link').value = ''; $('#pbar').style.width = '0'; $('#valsum').innerHTML = '';
+  showStage('#s-link');
+};
+</script>
+</body>
+</html>

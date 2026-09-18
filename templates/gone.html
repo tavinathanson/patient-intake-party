@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server Error in '/' Application.</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="shell">
+  <div class="body asperr">
+    <h1>Server Error in '/' Application.</h1>
+    <hr>
+    <h2>Ballot Session Not Found</h2>
+    <p><b>Description:</b> The requested ballot is no longer present in Session state.
+       Ballots are held in memory and are lost when the application pool recycles.</p>
+    <p><b>Detail:</b> {{ msg }}</p>
+    <div class="code">
+SessionStateException: Ballot identifier not found in tbl_Session.<br>
+&nbsp;&nbsp; at IntakeSolutions.SMA4.BallotModule.Load() in Ballot.aspx.cs:line 117<br>
+&nbsp;&nbsp; at System.Web.UI.Page.ProcessRequest()
+    </div>
+    <p><b>Resolution:</b> Ask whoever is running the demo to start a new assessment, then
+       scan the new code.</p>
+    <hr>
+    <p class="hint">Version Information: PatientIntakeSystem v3.1.0.117; .NET Framework 1.1.4322.573</p>
+    <p><a href="/">Return to Patient Intake</a></p>
+  </div>
+  <div class="statusbar"><div>Error on page.</div><div>Local intranet</div></div>
+</div>
+</body>
+</html>

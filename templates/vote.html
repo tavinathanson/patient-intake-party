@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ballot.aspx :: PatientIntakeSystem</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="shell narrow">
+
+  <div class="titlebar">
+    <span>Ballot.aspx</span>
+    <span class="btns"><span>X</span></span>
+  </div>
+
+  <div class="banner">
+    COMMITTEE BALLOT &mdash; FORM SMA-4B
+    <small>Human reviewer determination | Ballot ID: {{ sid }}</small>
+  </div>
+
+  <div class="body">
+    <h1 class="pg">Patient: @{{ handle }}</h1>
+    <p>An automated module reviewed this patient's photographs and produced the findings below.
+       The module is not authorized to choose among them. You are.</p>
+
+    <fieldset>
+      <legend>Select one (1) finding</legend>
+      {% for c in cards %}
+      <button class="vopt" data-id="{{ c.id }}">
+        <b>{{ c.rank }}. {{ c.name }}</b>
+        <span>Pt. reports: {{ c.complaint }}</span>
+      </button>
+      {% endfor %}
+      <div class="status" id="status"></div>
+      <p class="hint">You may change your selection until the ballot is closed.</p>
+    </fieldset>
+
+    <div class="notice">
+      <b>Reminder:</b> you are voting on a joke. Nobody can read a medical condition off a
+      photograph &mdash; that is the entire point of this exercise.
+    </div>
+  </div>
+
+  <div class="statusbar"><div id="sb">Done</div><div>Local intranet</div></div>
+</div>
+
+<p class="footnote">PatientIntakeSystem&trade; v3.1.0.117 &nbsp;|&nbsp; &copy; 2004 Intake Solutions Group, Inc.</p>
+
+<script>
+const SID = "{{ sid }}";
+const KEY = 'vdvoter';
+let voter = localStorage.getItem(KEY);
+if (!voter) {
+  voter = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  localStorage.setItem(KEY, voter);
+}
+const status = document.getElementById('status');
+
+document.querySelectorAll('.vopt').forEach(btn => {
+  btn.onclick = async () => {
+    document.getElementById('sb').textContent = 'Submitting...';
+    const res = await fetch('/api/vote/' + SID, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voter, choice: btn.dataset.id })
+    });
+    const data = await res.json();
+    document.getElementById('sb').textContent = 'Done';
+    if (!data.ok) {
+      status.className = 'status err';
+      status.textContent = 'ERROR: ' + (data.error || 'Submission failed.');
+      return;
+    }
+    document.querySelectorAll('.vopt').forEach(b => b.classList.remove('sel'));
+    btn.classList.add('sel');
+    status.className = 'status';
+    status.textContent = '✓ Ballot recorded. ' + data.total + ' ballot(s) received.';
+  };
+});
+</script>
+</body>
+</html>
