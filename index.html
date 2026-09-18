@@ -70,7 +70,34 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; }
+  /* Moving ocean: two ranks of SVG waves drifting at different speeds (parallax) */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    inset: -40px 0 -40px 0;
+    z-index: -1;
+    pointer-events: none;
+    background-repeat: repeat;
+    will-change: background-position, transform;
+  }
+  body::before {
+    /* far swell — slow, faint, wide */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='240' viewBox='0 0 1400 240'%3E%3Cpath fill='%23ffffff' fill-opacity='0.045' d='M0 120 C 175 70 350 70 525 120 S 875 170 1050 120 S 1400 70 1400 120 V240 H0 Z'/%3E%3C/svg%3E");
+    background-size: 1400px 240px;
+    animation: wave-drift-a 26s linear infinite, wave-bob-a 9s ease-in-out infinite;
+  }
+  body::after {
+    /* near crests — faster, brighter, tighter */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='170' viewBox='0 0 900 170'%3E%3Cpath fill='%23bfe6ea' fill-opacity='0.07' d='M0 90 C 112 55 225 55 337 90 S 562 125 675 90 S 900 55 900 90 V170 H0 Z'/%3E%3C/svg%3E");
+    background-size: 900px 170px;
+    animation: wave-drift-b 15s linear infinite reverse, wave-bob-b 6.5s ease-in-out infinite;
+  }
+  @keyframes wave-drift-a { from { background-position: 0 0; } to { background-position: 1400px 0; } }
+  @keyframes wave-drift-b { from { background-position: 0 0; } to { background-position: 900px 0; } }
+  @keyframes wave-bob-a { 0%,100% { transform: translateY(0); } 50% { transform: translateY(10px); } }
+  @keyframes wave-bob-b { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  main { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; position: relative; z-index: 0; }
 
   header.top { text-align: center; position: relative; }
   h1 {
@@ -234,9 +261,83 @@
     100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), calc(-50% + 26px)) rotate(var(--spin, 0deg)) scale(.6); }
   }
 
+  /* ---- Treasure chest that fills up ---- */
+  .treasure {
+    display: flex; align-items: center; gap: 12px;
+    margin: 6px 0 2px;
+  }
+  .chest-wrap { width: 76px; height: 64px; flex: none; }
+  .chest-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+  .chest-wrap.pop .chest-svg { animation: chest-pop .5s ease; }
+  @keyframes chest-pop {
+    0% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-6px) scale(1.07); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  .loot-label { font-size: .9rem; color: var(--rope); letter-spacing: .01em; }
+
+  /* ---- Gold-coin confetti (finish screen) ---- */
+  .coin-drop {
+    position: fixed; top: -40px; z-index: 9998;
+    pointer-events: none; will-change: transform, opacity;
+    animation-name: coin-fall; animation-timing-function: ease-in; animation-fill-mode: forwards;
+  }
+  @keyframes coin-fall {
+    0% { transform: translateY(-40px) translateX(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(104vh) translateX(var(--sway, 0px)) rotate(540deg); opacity: .9; }
+  }
+
+  /* ---- Finish screen: loot + treasure map ---- */
+  .loot { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 6px 0 14px; }
+  .loot .chest-wrap { width: 132px; height: 112px; }
+  .loot-count { text-align: left; line-height: 1.15; color: var(--ink-soft); font-size: .95rem; }
+  .loot-count .coin-num {
+    display: block; font-family: "Pirata One", cursive; font-size: 2.6rem;
+    color: var(--brass); text-shadow: 0 2px 0 var(--brass-deep);
+  }
+  .treasure-map {
+    position: relative; margin: 12px auto; max-width: 460px; padding: 18px 20px;
+    background: var(--paper); color: var(--ink);
+    border: 2px dashed var(--brass-deep); border-radius: 10px;
+    box-shadow: inset 0 0 40px var(--paper-edge), 0 4px 14px var(--shadow);
+  }
+  .treasure-map .map-x {
+    position: absolute; top: -14px; right: 14px; font-size: 2rem; color: var(--danger);
+    transform: rotate(12deg); text-shadow: 0 1px 2px var(--shadow);
+  }
+  .treasure-map .map-note { margin: 0; font-size: .95rem; }
+
+  /* ---- Anchor-drop transition between questions ---- */
+  .anchor-drop {
+    position: fixed; inset: 0; z-index: 9997; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(4, 22, 26, .28);
+    animation: ad-scrim .85s ease forwards;
+  }
+  @keyframes ad-scrim { 0% { opacity: 0; } 18% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+  .anchor-drop .rope {
+    position: absolute; top: 0; left: 50%; width: 3px; transform: translateX(-50%);
+    background: repeating-linear-gradient(var(--rope), var(--rope) 6px, transparent 6px, transparent 12px);
+    animation: ad-rope .85s ease forwards; opacity: 0;
+  }
+  @keyframes ad-rope { 0% { opacity: 0; height: 0; } 45% { opacity: .85; height: 52vh; } 100% { opacity: 0; height: 56vh; } }
+  .anchor-drop .anchor {
+    font-size: 4.5rem; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45));
+    animation: ad-fall .85s cubic-bezier(.55, 0, .35, 1) forwards;
+  }
+  @keyframes ad-fall {
+    0% { transform: translateY(-72vh) rotate(-12deg); opacity: 0; }
+    16% { opacity: 1; }
+    58% { transform: translateY(7vh) rotate(5deg); }
+    72% { transform: translateY(-2vh) rotate(-3deg); }
+    100% { transform: translateY(2vh) rotate(0deg); opacity: .95; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     #wheelSpin, .chip { transition: none !important; }
     .trail-booty { display: none !important; }
+    body::before, body::after { animation: none !important; }
+    .chest-wrap.pop .chest-svg { animation: none !important; }
   }
 </style>
 </head>
@@ -253,6 +354,11 @@
       <div class="legband">
         <span id="legLabel">Leg 1 of 5</span>
         <span class="pips" id="pips" aria-hidden="true"></span>
+      </div>
+
+      <div class="treasure" aria-label="Doubloons stowed" title="Yer haul grows with every answer">
+        <div class="chest-wrap" id="chestWrap"></div>
+        <span class="loot-label" id="lootLabel"></span>
       </div>
 
       <div id="stage"><!-- question or summary rendered here --></div>
@@ -364,6 +470,8 @@
   const logBody = document.getElementById("logBody");
   const flagsEl = document.getElementById("flags");
   const themeBtn = document.getElementById("themeBtn");
+  const chestWrap = document.getElementById("chestWrap");
+  const lootLabel = document.getElementById("lootLabel");
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduceMotion) document.documentElement.setAttribute("data-reduce", "");
@@ -589,7 +697,101 @@
     renderLog();
   }
 
-  function advance() { state.current++; renderAll(); }
+  function advance() {
+    playAnchorDrop(() => { state.current++; renderAll(); });
+  }
+
+  // ---- Treasure chest that fills with each answered leg ----
+  function answeredCount() {
+    return QUESTIONS.reduce((n, q) => {
+      const a = state.answers[q.id];
+      const done = q.type === "multi" ? a.length > 0 : !!a;
+      return n + (done ? 1 : 0);
+    }, 0);
+  }
+
+  function chestSVG(frac) {
+    const f = Math.max(0, Math.min(1, frac));
+    const inX = 20, inY = 48, inW = 80, inH = 38;         // interior opening
+    const goldH = inH * f;
+    const goldY = inY + inH - goldH;
+    const full = f >= 1;
+    const gold = f > 0 ? `
+      <g clip-path="url(#chestInner)">
+        <rect x="${inX}" y="${goldY.toFixed(1)}" width="${inW}" height="${(goldH + 4).toFixed(1)}" fill="url(#goldGrad)"/>
+        <ellipse cx="40" cy="${(goldY + 4).toFixed(1)}" rx="9" ry="4" fill="#ffe58a" stroke="#b9902c"/>
+        <ellipse cx="64" cy="${(goldY + 2).toFixed(1)}" rx="9" ry="4" fill="#ffe58a" stroke="#b9902c"/>
+        <ellipse cx="83" cy="${(goldY + 5).toFixed(1)}" rx="7" ry="3.4" fill="#ffe58a" stroke="#b9902c"/>
+      </g>` : "";
+    const sparkle = full ? `
+      <g fill="#fff8dc">
+        <path d="M30 40 l1.6 3.2 3.2 1.6 -3.2 1.6 -1.6 3.2 -1.6 -3.2 -3.2 -1.6 3.2 -1.6z"/>
+        <path d="M92 44 l1.2 2.4 2.4 1.2 -2.4 1.2 -1.2 2.4 -1.2 -2.4 -2.4 -1.2 2.4 -1.2z"/>
+      </g>` : "";
+    return `
+      <svg class="chest-svg" viewBox="0 0 120 100" aria-hidden="true">
+        <defs>
+          <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffe58a"/><stop offset="1" stop-color="#c69a2e"/>
+          </linearGradient>
+          <clipPath id="chestInner"><rect x="${inX}" y="${inY}" width="${inW}" height="${inH}" rx="4"/></clipPath>
+        </defs>
+        <g transform="rotate(-15 22 46)">
+          <rect x="16" y="20" width="88" height="24" rx="9" fill="var(--plank)" stroke="var(--plank-dark)" stroke-width="2"/>
+          <rect x="16" y="20" width="88" height="7" rx="3.5" fill="var(--brass-deep)"/>
+        </g>
+        <rect x="14" y="44" width="92" height="48" rx="8" fill="var(--plank)" stroke="var(--plank-dark)" stroke-width="2"/>
+        ${gold}
+        <rect x="14" y="44" width="6" height="48" fill="var(--brass)" opacity=".9"/>
+        <rect x="100" y="44" width="6" height="48" fill="var(--brass)" opacity=".9"/>
+        <rect x="14" y="86" width="92" height="6" fill="var(--brass)" opacity=".9"/>
+        <rect x="54" y="82" width="12" height="12" rx="2" fill="var(--brass-deep)"/>
+        <circle cx="60" cy="86" r="2" fill="var(--plank-dark)"/>
+        ${sparkle}
+      </svg>`;
+  }
+
+  let lastLoot = 0;
+  function updateTreasure() {
+    const n = answeredCount();
+    chestWrap.innerHTML = chestSVG(n / N);
+    lootLabel.textContent = `🪙 ${n} of ${N} doubloons stowed`;
+    if (n > lastLoot && !reduceMotion) {
+      chestWrap.classList.remove("pop");
+      void chestWrap.offsetWidth; // restart animation
+      chestWrap.classList.add("pop");
+    }
+    lastLoot = n;
+  }
+
+  // ---- Gold-coin confetti for the finish ----
+  function coinRain(count) {
+    if (reduceMotion) return;
+    const coins = ["🪙", "💰", "🪙", "✨"];
+    for (let i = 0; i < count; i++) {
+      const c = document.createElement("span");
+      c.className = "coin-drop";
+      c.textContent = coins[(Math.random() * coins.length) | 0];
+      c.style.left = (Math.random() * 100) + "vw";
+      c.style.fontSize = (0.9 + Math.random() * 1.2) + "rem";
+      c.style.animationDelay = (Math.random() * 0.9) + "s";
+      c.style.animationDuration = (1.6 + Math.random() * 1.7) + "s";
+      c.style.setProperty("--sway", (Math.random() * 80 - 40).toFixed(0) + "px");
+      c.addEventListener("animationend", () => c.remove());
+      document.body.appendChild(c);
+    }
+  }
+
+  // ---- Anchor-drop transition between questions ----
+  function playAnchorDrop(done) {
+    if (reduceMotion) { done(); return; }
+    const ov = document.createElement("div");
+    ov.className = "anchor-drop";
+    ov.innerHTML = `<div class="rope"></div><span class="anchor">⚓</span>`;
+    document.body.appendChild(ov);
+    setTimeout(done, 380);            // swap content mid-drop for a smooth handoff
+    setTimeout(() => ov.remove(), 900);
+  }
 
   // ---- Surgeon's log ----
   function clinicalFor(q) {
@@ -608,6 +810,7 @@
       return `<dt>${q.field}</dt>${dd}`;
     }).join("");
     renderFlags();
+    updateTreasure();
   }
 
   function renderFlags() {
@@ -638,11 +841,19 @@
 
   // ---- Voyage end ----
   function renderDone() {
+    const n = answeredCount();
     stage.innerHTML = `
       <div class="done-card">
-        <p class="big">⚓ Safe in Harbor</p>
-        <p>Yer log is filled and waitin' for the ship's surgeon on yer starboard side.</p>
-        <p>Hand it over, ye brave scallywag. Fair winds!</p>
+        <p class="big">🏴‍☠️ Ye survived the intake!</p>
+        <div class="loot">
+          <div class="chest-wrap">${chestSVG(1)}</div>
+          <div class="loot-count"><span class="coin-num">${n}</span>doubloons<br>plundered</div>
+        </div>
+        <div class="treasure-map">
+          <span class="map-x">✖</span>
+          <p class="map-note">Yer log be complete and stowed for the ship's surgeon on yer starboard side. <b>X marks yer care</b> — hand it over and set sail!</p>
+        </div>
+        <p>Fair winds, ye brave scallywag!</p>
         <div class="controls">
           <button class="act ghost" id="backBtn" type="button">◀ Come About</button>
           <button class="act" id="resetBtn" type="button">New Voyage</button>
@@ -654,6 +865,7 @@
       state.current = 0; renderAll();
     };
     helm = null; spinEl = null;
+    coinRain(42);
   }
 
   function renderAll() { renderStage(); renderLog(); }
