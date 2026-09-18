@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walk the Plank &mdash; Patient Intake</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2306131f'/%3E%3Ccircle cx='16' cy='14' r='9' fill='%23efdfbb'/%3E%3Ccircle cx='12.5' cy='13' r='2.4' fill='%2306131f'/%3E%3Ccircle cx='19.5' cy='13' r='2.4' fill='%2306131f'/%3E%3Cpath d='M11 22h10v2H11z' fill='%23efdfbb'/%3E%3Cpath d='M14 19h4v3h-4z' fill='%23efdfbb'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=IM+Fell+English:ital@0;1&family=Cutive+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brine:#06131f;
+    --deep:#0a2436;
+    --sea:#12506b;
+    --foam:#a8dbe0;
+    --parchment:#efdfbb;
+    --parchment-dim:#c9b58c;
+    --oak:#5a3520;
+    --oak-dark:#2e1a0f;
+    --gold:#e8b13c;
+    --rust:#c4482b;
+    --moon:#f6efd8;
+    --ink:#1b120a;
+    --display:'Pirata One', 'Papyrus', fantasy;
+    --body:'IM Fell English', Georgia, serif;
+    --mono:'Cutive Mono', monospace;
+  }
+
+  *{box-sizing:border-box}
+
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--brine);
+    color:var(--parchment);
+    font-family:var(--body);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- grain + vignette over everything ---------- */
+  body::after{
+    content:'';
+    position:fixed; inset:0; z-index:90; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.42'/%3E%3C/svg%3E");
+    mix-blend-mode:overlay; opacity:.32;
+  }
+  body::before{
+    content:'';
+    position:fixed; inset:0; z-index:89; pointer-events:none;
+    background:radial-gradient(ellipse 120% 90% at 50% 45%, transparent 35%, rgba(3,9,15,.85) 100%);
+  }
+
+  /* ================= STAGE ================= */
+  #stage{position:fixed; inset:0; overflow:hidden}
+
+  .sky{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(circle at 78% 16%, rgba(246,239,216,.28) 0%, transparent 26%),
+      linear-gradient(#020a12 0%, #07233a 32%, #124a63 58%, #1d6a7a 72%, #0b2b3c 100%);
+  }
+  .moon{
+    position:absolute; top:9%; right:18%;
+    width:min(11vw,120px); aspect-ratio:1; border-radius:50%;
+    background:radial-gradient(circle at 36% 32%, #fffdf2, var(--moon) 55%, #cdbf9a 100%);
+    box-shadow:0 0 70px 24px rgba(246,239,216,.24), inset -10px -6px 0 rgba(120,108,84,.22);
+  }
+  .stars{position:absolute; inset:0 0 45% 0; opacity:.8}
+  .star{position:absolute; width:2px; height:2px; background:var(--moon); border-radius:50%; animation:twinkle 4s infinite ease-in-out}
+  @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:1;transform:scale(1.25)}}
+
+  .cloud{
+    position:absolute; height:2px; border-radius:2px;
+    background:linear-gradient(90deg,transparent,rgba(246,239,216,.34),transparent);
+    animation:drift linear infinite;
+  }
+  @keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(130vw)}}
+
+  /* ---------- sea ---------- */
+  .sea{
+    position:absolute; left:0; right:0; bottom:0; height:34%;
+    background:linear-gradient(#17607c 0%, var(--sea) 30%, var(--deep) 78%, #05121d 100%);
+    box-shadow:inset 0 22px 44px rgba(3,10,17,.6);
+  }
+  .sea::after{ /* moonlight glitter path */
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(90deg, transparent 0 7px, rgba(246,239,216,.09) 7px 9px);
+    mask-image:radial-gradient(ellipse 30% 100% at 76% 0%, #000 0%, transparent 75%);
+    -webkit-mask-image:radial-gradient(ellipse 30% 100% at 76% 0%, #000 0%, transparent 75%);
+  }
+  .waves{position:absolute; left:0; bottom:0; width:100%; height:34%; pointer-events:none}
+  .waves svg{position:absolute; bottom:0; left:0; width:220%; height:100%}
+  .w1{animation:roll 11s linear infinite; opacity:.55}
+  .w2{animation:roll 17s linear infinite reverse; opacity:.35}
+  .w3{animation:roll 7s linear infinite; opacity:.22}
+  @keyframes roll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ---------- ship ---------- */
+  .ship{
+    position:absolute; left:-4%; bottom:23%;
+    width:46%; height:52%;
+    animation:sway 6.5s ease-in-out infinite;
+    transform-origin:60% 100%;
+  }
+  @keyframes sway{0%,100%{transform:rotate(-1.1deg) translateY(0)}50%{transform:rotate(1.1deg) translateY(-8px)}}
+
+  /* ---------- the plank & the walkers ---------- */
+  .plankRig{
+    position:absolute; left:26%; bottom:36%;
+    width:62%; height:20%;
+    animation:sway 6.5s ease-in-out infinite;
+    transform-origin:0% 60%;
+  }
+  .plank{
+    position:absolute; left:0; bottom:38%;
+    width:100%; height:16px;
+    background:
+      linear-gradient(180deg,#7a4a2c 0%, var(--oak) 38%, #3e2414 100%);
+    border-top:2px solid #96603c;
+    border-bottom:3px solid #1d1008;
+    box-shadow:0 10px 24px rgba(3,10,17,.6);
+  }
+  .plank::after{ /* wood grain */
+    content:''; position:absolute; inset:0;
+    background:repeating-linear-gradient(90deg, transparent 0 22px, rgba(28,15,8,.4) 22px 24px, transparent 24px 46px);
+    opacity:.7;
+  }
+  .notches{position:absolute; left:0; bottom:38%; width:100%; height:16px; display:flex}
+  .notch{flex:1; border-right:1px dashed rgba(240,223,187,.16)}
+  .notch.done{background:rgba(196,72,43,.3)}
+  .notch:last-child{border-right:none}
+
+  .walker, .pirate{
+    position:absolute; bottom:calc(38% + 14px);
+    transform-origin:50% 100%;
+  }
+  .pirate{left:-2%; width:min(13vw,132px); z-index:4}
+  .walker{
+    left:6%; width:min(8.4vw,86px); z-index:3;
+    transition:left .62s cubic-bezier(.34,1.42,.5,1), transform .34s ease;
+  }
+  .walker.wobble{animation:wobble 1.7s ease-in-out infinite}
+  @keyframes wobble{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+
+  .pirate.lunge{animation:lunge .46s cubic-bezier(.3,1.5,.4,1)}
+  @keyframes lunge{0%{transform:translateX(0) rotate(0)}38%{transform:translateX(26px) rotate(7deg) scale(1.06)}100%{transform:translateX(0) rotate(0)}}
+
+  .walker.shoved{animation:shoved .5s ease-out}
+  @keyframes shoved{0%{transform:rotate(0)}30%{transform:rotate(15deg) translateY(-12px)}70%{transform:rotate(-7deg)}100%{transform:rotate(0)}}
+
+  .walker.plunge{
+    animation:plunge 1.5s cubic-bezier(.4,0,.8,1) forwards;
+    transition:none;
+  }
+  @keyframes plunge{
+    0%{transform:rotate(0) translateY(0); opacity:1}
+    22%{transform:rotate(38deg) translateY(-26px)}
+    100%{transform:rotate(190deg) translateY(46vh); opacity:.1}
+  }
+
+  .splash{
+    position:absolute; bottom:30%; width:min(16vw,170px); aspect-ratio:1;
+    opacity:0; pointer-events:none; z-index:5;
+  }
+  .splash.go{animation:splash 1.5s ease-out .95s both}
+  @keyframes splash{0%{opacity:0;transform:scale(.2) translateY(20px)}35%{opacity:1;transform:scale(1) translateY(-16px)}100%{opacity:0;transform:scale(1.7) translateY(6px)}}
+
+  /* ---------- scream ---------- */
+  .scream{
+    position:absolute; z-index:8; left:12%; bottom:62%;
+    font-family:var(--display); font-size:clamp(2.2rem,6.5vw,5.4rem);
+    color:var(--rust); letter-spacing:.04em; white-space:nowrap;
+    text-shadow:0 0 28px rgba(196,72,43,.75), 4px 5px 0 var(--ink);
+    opacity:0; pointer-events:none;
+  }
+  .scream.go{animation:scream .95s cubic-bezier(.2,1.6,.3,1) both}
+  @keyframes scream{
+    0%{opacity:0; transform:scale(.4) rotate(-9deg)}
+    22%{opacity:1; transform:scale(1.22) rotate(4deg)}
+    45%{transform:scale(1) rotate(-2deg)}
+    100%{opacity:0; transform:scale(1.5) translateY(-46px) rotate(6deg)}
+  }
+  #stage.shake{animation:shake .42s ease-in-out}
+  @keyframes shake{
+    0%,100%{transform:translate(0,0)}
+    15%{transform:translate(-9px,5px)}
+    35%{transform:translate(8px,-6px)}
+    55%{transform:translate(-6px,-3px)}
+    78%{transform:translate(5px,4px)}
+  }
+
+  /* ================= PANELS ================= */
+  .panel{
+    position:absolute; z-index:20;
+    background:
+      linear-gradient(160deg, rgba(239,223,187,.97), rgba(214,193,152,.97));
+    color:var(--ink);
+    border:2px solid #7d5a33;
+    border-radius:3px;
+    box-shadow:0 22px 60px rgba(2,8,14,.72), inset 0 0 0 6px rgba(125,90,51,.14);
+  }
+  .panel::before{ /* torn parchment fiber */
+    content:''; position:absolute; inset:0; pointer-events:none; border-radius:2px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23f)' opacity='.5'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply; opacity:.14;
+  }
+
+  /* ---- question scroll ---- */
+  #ask{
+    left:50%; transform:translateX(-50%);
+    top:4.5vh; width:min(660px,90vw); padding:22px 26px 20px;
+  }
+  .step{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.22em;
+    text-transform:uppercase; color:#6d5232;
+    display:flex; justify-content:space-between; align-items:baseline;
+  }
+  .step b{color:var(--rust); font-weight:400}
+  .q{
+    font-family:var(--display); font-size:clamp(1.55rem,3.6vw,2.5rem);
+    line-height:1.08; margin:.32em 0 .1em; color:#2a1a0c;
+  }
+  .hint{font-style:italic; font-size:.95rem; color:#6d5232; margin-bottom:.7em}
+
+  .heard{
+    min-height:2.9em; padding:.6em .75em;
+    background:rgba(27,18,10,.07);
+    border-left:4px solid var(--rust);
+    font-family:var(--mono); font-size:1rem; line-height:1.45;
+    word-break:break-word;
+  }
+  .heard.interim{opacity:.55; font-style:italic}
+  .heard:empty::before{content:'…'; opacity:.4}
+
+  .mic{
+    display:flex; align-items:center; gap:.6em; margin-top:.85em; flex-wrap:wrap;
+  }
+  .dot{
+    width:13px; height:13px; border-radius:50%;
+    background:#8d7a58; flex:none;
+  }
+  .dot.live{background:var(--rust); box-shadow:0 0 0 0 rgba(196,72,43,.7); animation:pulse 1.15s infinite}
+  @keyframes pulse{to{box-shadow:0 0 0 16px rgba(196,72,43,0)}}
+  .micLabel{font-family:var(--mono); font-size:.76rem; letter-spacing:.14em; text-transform:uppercase; color:#6d5232}
+
+  button{
+    font-family:var(--display); font-size:1.12rem; letter-spacing:.03em;
+    padding:.42em 1.1em; cursor:pointer; color:var(--parchment);
+    background:linear-gradient(#7c2d1a,#4d1c10);
+    border:2px solid #2a0f07; border-radius:2px;
+    box-shadow:0 4px 0 #2a0f07, 0 10px 20px rgba(2,8,14,.4);
+    transition:transform .1s ease, box-shadow .1s ease, filter .15s ease;
+  }
+  button:hover{filter:brightness(1.18)}
+  button:active{transform:translateY(4px); box-shadow:0 0 0 #2a0f07}
+  button.ghost{
+    background:transparent; color:#5c4126; border-color:#8a6738;
+    box-shadow:0 3px 0 #8a6738; font-size:.95rem;
+  }
+  button[disabled]{opacity:.4; cursor:not-allowed}
+
+  input[type=text]{
+    font-family:var(--mono); font-size:1rem; width:100%;
+    padding:.6em .7em; color:var(--ink);
+    background:rgba(255,255,255,.4);
+    border:1px solid #8a6738; border-radius:2px;
+  }
+  input[type=text]:focus{outline:2px solid var(--rust); outline-offset:1px}
+
+  .yesno{display:flex; gap:.7em; margin-top:.9em}
+  .yesno button{flex:1; font-size:1.3rem}
+
+  /* ---- title / gate ---- */
+  .curtain{
+    position:fixed; inset:0; z-index:40;
+    display:grid; place-items:center; padding:5vh 4vw;
+    background:radial-gradient(ellipse at 50% 40%, rgba(8,26,40,.72), rgba(2,7,12,.94));
+    backdrop-filter:blur(3px);
+  }
+  .card{
+    position:relative; width:min(560px,92vw); padding:34px 34px 30px; text-align:center;
+    background:linear-gradient(160deg, rgba(239,223,187,.98), rgba(206,183,140,.98));
+    color:var(--ink); border:2px solid #7d5a33;
+    box-shadow:0 30px 80px rgba(2,8,14,.8), inset 0 0 0 7px rgba(125,90,51,.13);
+  }
+  .card h1{
+    font-family:var(--display); font-weight:400; margin:.1em 0 .05em;
+    font-size:clamp(2.6rem,7.5vw,4.4rem); line-height:.92; color:#2a1a0c;
+    text-shadow:2px 2px 0 rgba(196,72,43,.28);
+  }
+  .kicker{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.34em;
+    text-transform:uppercase; color:#7a5c38;
+  }
+  .card p{font-size:1.02rem; line-height:1.5; color:#40301c; margin:.9em 0}
+  .rules{text-align:left; font-size:.95rem; line-height:1.65; margin:1.1em 0; color:#40301c; padding-left:1.1em}
+  .rules li::marker{color:var(--rust)}
+  .nameRow{display:flex; gap:.6em; margin-top:1.1em}
+  .warn{font-size:.82rem; font-style:italic; color:#7a3a22; margin-top:.9em; min-height:1.2em}
+
+  /* ---- leaderboard ---- */
+  #board{
+    right:2.5vw; top:4.5vh; width:min(310px,84vw); padding:16px 18px 14px; z-index:25;
+  }
+  #board h2{
+    font-family:var(--display); font-weight:400; font-size:1.5rem;
+    margin:0 0 .1em; color:#2a1a0c;
+  }
+  #board .sub{font-family:var(--mono); font-size:.64rem; letter-spacing:.2em; text-transform:uppercase; color:#7a5c38; margin-bottom:.8em}
+  ol.lb{list-style:none; margin:0; padding:0; font-family:var(--mono); font-size:.84rem}
+  ol.lb li{
+    display:grid; grid-template-columns:1.7em 1fr auto; gap:.5em;
+    padding:.34em 0; border-bottom:1px dotted rgba(27,18,10,.22);
+  }
+  ol.lb li:last-child{border-bottom:none}
+  ol.lb .r{color:var(--rust)}
+  ol.lb .n{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  ol.lb .t{font-variant-numeric:tabular-nums}
+  ol.lb li.me{background:rgba(196,72,43,.16); font-weight:700; margin:0 -6px; padding:.34em 6px}
+  .empty{font-style:italic; font-size:.88rem; color:#6d5232}
+
+  /* ---- clock ---- */
+  #clock{
+    position:absolute; left:2.5vw; top:4.5vh; z-index:25;
+    font-family:var(--mono); font-size:2rem; color:var(--gold);
+    text-shadow:0 0 22px rgba(232,177,60,.5), 2px 2px 0 rgba(3,9,15,.8);
+    font-variant-numeric:tabular-nums; letter-spacing:.02em;
+  }
+  #clock small{display:block; font-size:.56rem; letter-spacing:.28em; color:var(--parchment-dim); text-shadow:none}
+
+  /* ---- ship's log (finish) ---- */
+  #log{
+    left:50%; transform:translateX(-50%); top:4vh;
+    width:min(680px,92vw); max-height:92vh; padding:26px 28px 22px;
+    overflow:auto; z-index:45;
+  }
+  #log h2{font-family:var(--display); font-weight:400; font-size:clamp(1.9rem,5vw,2.8rem); margin:.1em 0; color:#2a1a0c}
+  #log .time{font-family:var(--mono); color:var(--rust); font-size:1.5rem; margin:.1em 0 .6em}
+  pre{
+    font-family:var(--mono); font-size:.78rem; line-height:1.55;
+    background:rgba(27,18,10,.075); border-left:4px solid #8a6738;
+    padding:.9em 1em; overflow:auto; max-height:40vh; margin:.6em 0 1em;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  .btnRow{display:flex; gap:.7em; flex-wrap:wrap}
+
+  .hidden{display:none !important}
+
+  @media (max-width:900px){
+    #board{right:2.5vw; top:auto; bottom:2vh; width:min(260px,52vw); padding:12px 14px}
+    /* clock drops out of the question panel's way and sits over the sea */
+    #clock{font-size:1.4rem; top:auto; bottom:2vh; left:3vw}
+    #clock small{font-size:.5rem; letter-spacing:.2em}
+    #ask{top:1.5vh; padding:15px 17px 13px}
+    .q{font-size:clamp(1.3rem,5.6vw,1.9rem)}
+    .plankRig{left:20%; width:74%}
+    .mic{gap:.45em}
+    button{font-size:1rem; padding:.4em .85em}
+    button.ghost{font-size:.88rem}
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div class="sky"></div>
+  <div class="moon"></div>
+  <div class="stars" id="stars"></div>
+
+  <!-- ===== ship ===== -->
+  <svg class="ship" viewBox="0 0 400 420" aria-hidden="true">
+    <!-- mast + rigging -->
+    <g stroke="#3a2415" stroke-width="3" fill="none" opacity=".9">
+      <line x1="236" y1="300" x2="236" y2="24"/>
+      <line x1="236" y1="70" x2="120" y2="290"/>
+      <line x1="236" y1="70" x2="348" y2="286"/>
+      <line x1="236" y1="150" x2="150" y2="292"/>
+    </g>
+    <!-- sail, tattered -->
+    <path d="M232 46 C300 96 316 176 292 246 L232 236 Z" fill="#d8c69b" opacity=".92"/>
+    <path d="M232 46 C300 96 316 176 292 246 L268 242 L286 200 L258 176 L272 130 L240 104 Z" fill="#bfa87c" opacity=".55"/>
+    <path d="M292 246 l-14 18 l-10 -16 l-12 20 l-10 -18 l-14 14 Z" fill="#d8c69b" opacity=".92"/>
+    <!-- flag -->
+    <path d="M236 24 L300 40 L236 56 Z" fill="#1b120a"/>
+    <circle cx="256" cy="40" r="4.4" fill="#efdfbb"/>
+    <path d="M250 46 l12 0 M252 48 l3 4 M260 48 l-3 4" stroke="#efdfbb" stroke-width="1.6" fill="none"/>
+    <!-- hull -->
+    <path d="M18 296 L392 296 L340 392 Q200 418 62 386 Z" fill="#4a2c19"/>
+    <path d="M18 296 L392 296 L386 322 L22 322 Z" fill="#6b4126"/>
+    <path d="M40 340 L360 340 L352 360 L48 360 Z" fill="#33200f" opacity=".55"/>
+    <g fill="#1b120a" opacity=".7">
+      <circle cx="96" cy="350" r="9"/><circle cx="160" cy="352" r="9"/><circle cx="224" cy="352" r="9"/><circle cx="288" cy="350" r="9"/>
+    </g>
+    <g fill="#e8b13c" opacity=".55">
+      <circle cx="96" cy="350" r="4.5"/><circle cx="160" cy="352" r="4.5"/><circle cx="224" cy="352" r="4.5"/><circle cx="288" cy="350" r="4.5"/>
+    </g>
+    <!-- rail -->
+    <path d="M18 288 L392 288 L392 296 L18 296 Z" fill="#7a4a2c"/>
+  </svg>
+
+  <!-- ===== plank + actors ===== -->
+  <div class="plankRig">
+    <div class="plank"></div>
+    <div class="notches" id="notches"></div>
+
+    <!-- pirate -->
+    <svg class="pirate" id="pirate" viewBox="0 0 150 200" aria-hidden="true">
+      <!-- peg leg -->
+      <path d="M78 150 L86 196" stroke="#4a2c19" stroke-width="9" stroke-linecap="round"/>
+      <path d="M62 150 L56 184" stroke="#241610" stroke-width="13" stroke-linecap="round"/>
+      <path d="M50 184 L74 184 L72 194 L48 194 Z" fill="#1b120a"/>
+      <!-- coat -->
+      <path d="M46 78 Q74 66 100 80 L110 156 Q74 168 40 154 Z" fill="#7c2d1a"/>
+      <path d="M72 72 L78 160" stroke="#3d130a" stroke-width="3"/>
+      <path d="M46 78 Q40 112 34 150 L48 154 Q52 112 58 80 Z" fill="#5f2113"/>
+      <!-- sash -->
+      <path d="M40 120 Q74 132 110 122 L110 134 Q74 144 40 132 Z" fill="#e8b13c"/>
+      <!-- arm, pointing / shoving -->
+      <path d="M100 88 L140 104" stroke="#7c2d1a" stroke-width="15" stroke-linecap="round"/>
+      <circle cx="142" cy="106" r="9" fill="#e0b48c"/>
+      <!-- other arm on hip -->
+      <path d="M48 90 Q28 108 40 126" stroke="#7c2d1a" stroke-width="14" fill="none" stroke-linecap="round"/>
+      <!-- head -->
+      <circle cx="72" cy="52" r="24" fill="#e0b48c"/>
+      <path d="M48 46 Q72 22 96 46 Q96 30 72 26 Q48 30 48 46 Z" fill="#1b120a"/>
+      <!-- bandana -->
+      <path d="M46 44 Q72 30 98 44 L98 34 Q72 20 46 34 Z" fill="#c4482b"/>
+      <path d="M46 40 Q30 44 26 58 L40 50 Z" fill="#c4482b"/>
+      <!-- eyepatch -->
+      <path d="M58 50 L50 42 M58 50 L98 40" stroke="#1b120a" stroke-width="2.5"/>
+      <circle cx="62" cy="52" r="7" fill="#1b120a"/>
+      <!-- open eye + brow -->
+      <circle cx="86" cy="52" r="3.6" fill="#1b120a"/>
+      <path d="M80 44 L92 47" stroke="#1b120a" stroke-width="2.6"/>
+      <!-- roaring mouth -->
+      <ellipse id="maw" cx="79" cy="66" rx="8" ry="5" fill="#3d130a"/>
+      <!-- beard -->
+      <path d="M56 62 Q72 84 92 64 Q86 78 72 82 Q60 78 56 62 Z" fill="#241610"/>
+      <!-- cutlass -->
+      <path d="M22 132 Q6 112 14 86" stroke="#c8ccd2" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <path d="M18 134 L30 128" stroke="#e8b13c" stroke-width="5" stroke-linecap="round"/>
+    </svg>
+
+    <!-- stick figure -->
+    <svg class="walker wobble" id="walker" viewBox="0 0 100 190" aria-hidden="true">
+      <g stroke="#f6efd8" stroke-width="7" stroke-linecap="round" fill="none">
+        <circle cx="50" cy="30" r="21" fill="rgba(246,239,216,.08)"/>
+        <line x1="50" y1="51" x2="50" y2="118"/>
+        <line x1="50" y1="70" x2="16" y2="52" id="armL"/>
+        <line x1="50" y1="70" x2="84" y2="52" id="armR"/>
+        <line x1="50" y1="118" x2="26" y2="182"/>
+        <line x1="50" y1="118" x2="74" y2="182"/>
+      </g>
+      <!-- worried face -->
+      <g fill="#f6efd8">
+        <circle cx="42" cy="26" r="2.8"/><circle cx="58" cy="26" r="2.8"/>
+      </g>
+      <path d="M40 40 Q50 32 60 40" stroke="#f6efd8" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+      <!-- sweat drop -->
+      <path d="M72 18 q4 7 0 10 q-4 -3 0 -10" fill="#a8dbe0" opacity=".85"/>
+    </svg>
+
+    <!-- splash -->
+    <svg class="splash" id="splash" viewBox="0 0 120 120" aria-hidden="true">
+      <g stroke="#a8dbe0" stroke-width="5" fill="none" stroke-linecap="round">
+        <path d="M60 96 Q40 54 20 34"/><path d="M60 96 Q60 46 60 18"/><path d="M60 96 Q80 54 100 34"/>
+        <path d="M60 96 Q34 72 8 62"/><path d="M60 96 Q86 72 112 62"/>
+      </g>
+      <g fill="#a8dbe0" opacity=".85">
+        <circle cx="20" cy="30" r="5"/><circle cx="60" cy="14" r="6"/><circle cx="100" cy="30" r="5"/>
+        <circle cx="8" cy="58" r="4"/><circle cx="112" cy="58" r="4"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ===== sea (drawn over the plank base so the fall reads) ===== -->
+  <div class="sea"></div>
+  <div class="waves">
+    <svg class="w1" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 60 Q150 20 300 60 T600 60 T900 60 T1200 60 V120 H0 Z" fill="#1a6a85"/></svg>
+    <svg class="w2" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 70 Q150 34 300 70 T600 70 T900 70 T1200 70 V120 H0 Z" fill="#0e4258"/></svg>
+    <svg class="w3" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0 52 Q100 30 200 52 T400 52 T600 52 T800 52 T1000 52 T1200 52 V120 H0 Z" fill="#a8dbe0"/></svg>
+  </div>
+
+  <div class="scream" id="scream">AAARRRGH!</div>
+
+  <div id="clock"><small>Time adrift</small><span id="clockVal">0.0s</span></div>
+
+  <!-- ===== question scroll ===== -->
+  <div class="panel hidden" id="ask">
+    <div class="step"><span id="stepNum">Question 1 of 18</span><b id="stepKey">name</b></div>
+    <div class="q" id="qText">&nbsp;</div>
+    <div class="hint" id="qHint">&nbsp;</div>
+    <div class="heard" id="heard"></div>
+
+    <div class="yesno hidden" id="yesnoRow"></div>
+
+    <div class="mic" id="micRow">
+      <span class="dot" id="dot"></span>
+      <span class="micLabel" id="micLabel">Press speak</span>
+      <button id="btnSpeak">Speak</button>
+      <button class="ghost" id="btnAgain">Say again</button>
+      <button class="ghost" id="btnType">Type it</button>
+      <button class="ghost" id="btnSkip">Skip</button>
+    </div>
+
+    <div class="mic hidden" id="typeRow">
+      <input type="text" id="typeIn" placeholder="Write it in the log…" autocomplete="off">
+      <button id="btnTypeOk">Log it</button>
+    </div>
+  </div>
+
+  <!-- ===== leaderboard ===== -->
+  <div class="panel" id="board">
+    <h2>Fastest Souls</h2>
+    <div class="sub">Plank record &middot; best run</div>
+    <ol class="lb" id="lbList"></ol>
+    <div class="empty hidden" id="lbEmpty">No survivors yet.</div>
+  </div>
+</div>
+
+<!-- ===== title curtain ===== -->
+<div class="curtain" id="curtain">
+  <div class="card">
+    <div class="kicker">Patient Intake &middot; Synthetic Data</div>
+    <h1>Walk the Plank</h1>
+    <p><em>A pirate has yer chart. He'll not read it &mdash; ye must <strong>tell</strong> him. Every answer ye give, he roars and shoves ye a step closer to the brine.</em></p>
+    <ul class="rules">
+      <li><strong>Speak</strong> yer answers aloud. The parrot writes them down.</li>
+      <li>Checkbox questions? Just say <strong>aye</strong> or <strong>nay</strong>.</li>
+      <li>Answer all 18 and ye go overboard regardless. That's the deal.</li>
+      <li>Fastest to the water tops the leaderboard.</li>
+    </ul>
+    <div class="nameRow">
+      <input type="text" id="userIn" placeholder="Yer name, sailor…" maxlength="24" autocomplete="off">
+      <button id="btnStart">Set sail</button>
+    </div>
+    <div class="warn" id="gateWarn"></div>
+  </div>
+</div>
+
+<!-- ===== ship's log ===== -->
+<div class="curtain hidden" id="logCurtain">
+  <div class="panel" id="log">
+    <div class="kicker">The ship's log</div>
+    <h2 id="logTitle">Ye went in the drink.</h2>
+    <div class="time" id="logTime">0.0s</div>
+    <p id="logRank">Filed with the quartermaster…</p>
+    <pre id="logJson">{}</pre>
+    <div class="btnRow">
+      <button id="btnAgainAll">Walk it again</button>
+      <button class="ghost" id="btnCopy">Copy the log</button>
+      <button class="ghost" id="btnClose">See the board</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ================= the form, as questions ================= */
+  const QUESTIONS = [
+    {key:'name',               type:'text',   q:"What be yer name?",                        hint:"Full name, as it sits on the chart."},
+    {key:'date_of_birth',      type:'text',   q:"When were ye born?",                       hint:"Month, day, year. Say it however ye like."},
+    {key:'address',            type:'text',   q:"Where do ye drop anchor?",                 hint:"Street and town is plenty."},
+    {key:'phone',              type:'text',   q:"What number reaches ye?",                  hint:"Say the digits slowly."},
+    {key:'insurance',          type:'text',   q:"Who pays yer bills?",                      hint:"Insurance carrier."},
+    {key:'member_id',          type:'text',   q:"And yer member number?",                   hint:"Say “none” if ye haven't got it on ye."},
+    {key:'emergency_contact',  type:'text',   q:"Who do we holler for in a storm?",         hint:"Name, how they know ye, and a number."},
+    {key:'reason_for_visit',   type:'text',   q:"What ails ye today?",                      hint:"Plain words. What's wrong and how long."},
+    {key:'current_medications',type:'text',   q:"What potions are ye takin'?",              hint:"Everything — pills, creams, drops, inhalers, vitamins."},
+    {key:'allergies',          type:'text',   q:"Anything that turns ye green?",            hint:"Allergies. Say “none” if none."},
+    {key:'cond_asthma',        type:'yesno',  q:"Asthma? Aye or nay!",                      hint:"Past or present."},
+    {key:'cond_diabetes',      type:'yesno',  q:"Diabetes? Aye or nay!",                    hint:""},
+    {key:'cond_heart',         type:'yesno',  q:"Trouble with yer heart?",                  hint:"Heart disease of any kind."},
+    {key:'cond_bp',            type:'yesno',  q:"High blood pressure?",                     hint:""},
+    {key:'past_surgeries',     type:'text',   q:"Ever been cut open?",                      hint:"What they did and roughly when."},
+    {key:'family_history',     type:'text',   q:"What runs in yer blood?",                  hint:"Parents, siblings, children — anything that repeats."},
+    // Choices are tested in order, most specific first — "quit" must beat "never" in
+    // "never smoked since I quit". Patterns are suffix-tolerant: socially, weekends, stopped.
+    {key:'tobacco',            type:'choice', q:"Do ye smoke?",                             hint:"Never, quit, or still at it.",
+      choices:[
+        ['former',/\b(former|ex|quit|stopp|gave up|used to|gav)/i],
+        ['current',/\b(current|still|daily|nightly|every ?day|pack|yes|yeah|yep|aye|i do|i smoke)/i],
+        ['never',/\b(never|none|no|nay|nope|nah|don'?t|do not|non ?smok)/i]]},
+    {key:'alcohol',            type:'choice', q:"And the rum?",                              hint:"None, now and then, or daily.",
+      choices:[
+        ['occasional',/\b(occasion|sometime|social|now and then|weekend|rare|once in|a bit|a little|light|month|few)/i],
+        ['daily',/\b(daily|nightly|every ?day|every ?night|lot|heav|yes|yeah|yep|aye|i do|i drink)/i],
+        ['none',/\b(none|no|nay|never|nope|nah|don'?t|do not|dry|sober|teetotal)/i]]}
+  ];
+
+  const ROARS = ['AAARRRGH!','YARRR!','AVAST!','BLAST YE!','ARR ARR ARR!','SHIVER ME TIMBERS!','WALK ON!','HEAVE!','BLIMEY!','SCURVY DOG!','ONWARD, YE BILGE RAT!','GRRRAAAH!'];
+  const YES = /\b(yes|yeah|yep|yup|aye|sure|correct|true|affirmative|i do|i have|definitely)\b/i;
+  const NO  = /\b(no|nope|nah|nay|negative|never|none|don't|dont|do not|haven't|havent)\b/i;
+
+  /* ================= elements ================= */
+  const $ = id => document.getElementById(id);
+  const stage=$('stage'), ask=$('ask'), walker=$('walker'), pirate=$('pirate'),
+        scream=$('scream'), splash=$('splash'), notches=$('notches'),
+        heard=$('heard'), dot=$('dot'), micLabel=$('micLabel'),
+        yesnoRow=$('yesnoRow'), micRow=$('micRow'), typeRow=$('typeRow'), typeIn=$('typeIn'),
+        clockVal=$('clockVal'), curtain=$('curtain'), logCurtain=$('logCurtain'),
+        lbList=$('lbList'), lbEmpty=$('lbEmpty');
+
+  const START_PCT = 6, END_PCT = 82;
+
+  /* ================= state ================= */
+  let username='', idx=0, answers={}, t0=0, clockTimer=null, finished=false, misses=0;
+  let rec=null, listening=false, recFinal='', busy=false, speechOK=false;
+
+  /* ================= stars ================= */
+  (function stars(){
+    const frag=document.createDocumentFragment();
+    for(let i=0;i<70;i++){
+      const s=document.createElement('div');
+      s.className='star';
+      s.style.left=(Math.random()*100).toFixed(2)+'%';
+      s.style.top=(Math.random()*100).toFixed(2)+'%';
+      s.style.animationDelay=(Math.random()*4).toFixed(2)+'s';
+      s.style.opacity=(0.25+Math.random()*0.75).toFixed(2);
+      frag.appendChild(s);
+    }
+    $('stars').appendChild(frag);
+    for(let i=0;i<5;i++){
+      const c=document.createElement('div');
+      c.className='cloud';
+      c.style.top=(6+Math.random()*26).toFixed(1)+'%';
+      c.style.width=(120+Math.random()*220).toFixed(0)+'px';
+      c.style.animationDuration=(40+Math.random()*50).toFixed(0)+'s';
+      c.style.animationDelay=(-Math.random()*60).toFixed(0)+'s';
+      $('stars').appendChild(c);
+    }
+  })();
+
+  /* plank notches, one per question */
+  QUESTIONS.forEach(()=>{ const n=document.createElement('div'); n.className='notch'; notches.appendChild(n); });
+
+  /* ================= audio: the roar ================= */
+  let actx=null;
+  function audio(){
+    if(!actx){
+      const C = window.AudioContext || window.webkitAudioContext;
+      if(C) actx = new C();
+    }
+    if(actx && actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+
+  function roar(){
+    const a=audio(); if(!a) return;
+    const now=a.currentTime, out=a.createGain();
+    out.gain.value=.0001; out.connect(a.destination);
+    out.gain.setValueAtTime(.0001,now);
+    out.gain.exponentialRampToValueAtTime(.55,now+.05);
+    out.gain.exponentialRampToValueAtTime(.0001,now+.85);
+
+    // growl: two detuned saws sliding down
+    [70,104].forEach((f,i)=>{
+      const o=a.createOscillator(), g=a.createGain();
+      o.type='sawtooth';
+      o.frequency.setValueAtTime(f*3.4,now);
+      o.frequency.exponentialRampToValueAtTime(f*.85,now+.6);
+      g.gain.value=i?.28:.5;
+      o.connect(g); g.connect(out);
+      o.start(now); o.stop(now+.9);
+    });
+
+    // rasp: filtered noise
+    const len=Math.floor(a.sampleRate*.9);
+    const buf=a.createBuffer(1,len,a.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*(1-i/len);
+    const src=a.createBufferSource(); src.buffer=buf;
+    const bp=a.createBiquadFilter(); bp.type='bandpass';
+    bp.frequency.setValueAtTime(1500,now);
+    bp.frequency.exponentialRampToValueAtTime(320,now+.7);
+    bp.Q.value=1.4;
+    const ng=a.createGain(); ng.gain.value=.5;
+    src.connect(bp); bp.connect(ng); ng.connect(out);
+    src.start(now); src.stop(now+.9);
+
+    // and the pirate actually yells a word
+    try{
+      if(window.speechSynthesis){
+        const u=new SpeechSynthesisUtterance(scream.textContent.replace(/!+$/,''));
+        u.rate=.78; u.pitch=.25; u.volume=1;
+        speechSynthesis.speak(u);
+      }
+    }catch(e){/* no voice, no matter */}
+  }
+
+  /* ================= clock ================= */
+  const fmt = ms => (ms/1000).toFixed(1)+'s';
+  function tick(){ clockVal.textContent = fmt(Date.now()-t0); }
+
+  /* ================= the walk ================= */
+  function placeWalker(){
+    const done = idx;                                  // steps already shoved
+    const span = END_PCT - START_PCT;
+    walker.style.left = (START_PCT + span*(done/QUESTIONS.length)).toFixed(2)+'%';
+  }
+
+  function shove(){
+    // roar text, then the push
+    scream.textContent = ROARS[Math.floor(Math.random()*ROARS.length)];
+    scream.classList.remove('go'); void scream.offsetWidth; scream.classList.add('go');
+    pirate.classList.remove('lunge'); void pirate.offsetWidth; pirate.classList.add('lunge');
+    stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+    const maw=$('maw');
+    if(maw){ maw.setAttribute('ry','11'); setTimeout(()=>maw.setAttribute('ry','5'),420); }
+    roar();
+
+    // the pirate follows his victim down the plank
+    const span = END_PCT - START_PCT;
+    pirate.style.left = (-2 + span*(idx/QUESTIONS.length)*0.92).toFixed(2)+'%';
+
+    walker.classList.remove('shoved'); void walker.offsetWidth; walker.classList.add('shoved');
+    placeWalker();
+    if(notches.children[idx-1]) notches.children[idx-1].classList.add('done');
+  }
+
+  /* ================= speech ================= */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  speechOK = !!SR;
+
+  function buildRec(){
+    if(!SR) return null;
+    const r = new SR();
+    r.lang='en-US'; r.continuous=false; r.interimResults=true; r.maxAlternatives=1;
+
+    r.onstart = ()=>{ listening=true; dot.classList.add('live'); micLabel.textContent='Listening…'; };
+    r.onresult = e=>{
+      let interim='', final='';
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const t=e.results[i][0].transcript;
+        if(e.results[i].isFinal) final+=t; else interim+=t;
+      }
+      if(final){ recFinal=(recFinal+' '+final).trim(); }
+      heard.textContent = recFinal || interim;
+      heard.classList.toggle('interim', !recFinal && !!interim);
+    };
+    r.onerror = e=>{
+      listening=false; dot.classList.remove('live');
+      if(e.error==='not-allowed' || e.error==='service-not-allowed'){
+        micLabel.textContent='Mic refused — type it';
+        showType(true);
+      } else if(e.error==='no-speech'){
+        micLabel.textContent='Heard nothin’ — again?';
+      } else {
+        micLabel.textContent='Mic trouble — type it';
+      }
+    };
+    r.onend = ()=>{
+      listening=false; dot.classList.remove('live');
+      if(recFinal.trim()){ accept(recFinal.trim()); return; }
+      if(micLabel.textContent==='Listening…'){
+        // silence. reopen once or twice, then hand over the keyboard
+        misses++;
+        if(misses >= 3){
+          micLabel.textContent='Type it or skip, sailor.';
+          showType(true);
+        } else {
+          micLabel.textContent='Nothin’ heard — listenin’ again…';
+          setTimeout(()=>{ if(!finished && !busy && !listening) listen(); }, 700);
+        }
+      }
+    };
+    return r;
+  }
+
+  function listen(){
+    if(busy || finished) return;
+    if(!speechOK){ showType(true); typeIn.focus(); return; }
+    if(listening){ try{rec.stop()}catch(e){} return; }
+    recFinal=''; heard.textContent=''; heard.classList.remove('interim');
+    rec = buildRec();
+    try{ rec.start(); }
+    catch(e){ micLabel.textContent='Mic busy — type it'; showType(true); }
+  }
+
+  function showType(on){
+    // additive, not a swap — a refused mic must never strand the player without Skip
+    typeRow.classList.toggle('hidden', !on);
+    if(on) setTimeout(()=>typeIn.focus(),30);
+  }
+
+  /* ================= answering ================= */
+  function current(){ return QUESTIONS[idx]; }
+
+  function parse(raw){
+    const Q=current(), t=raw.trim();
+    if(Q.type==='yesno'){
+      if(YES.test(t)) return 'yes';
+      if(NO.test(t))  return 'no';
+      return null;                                     // didn't hear aye or nay
+    }
+    if(Q.type==='choice'){
+      for(const [val,re] of Q.choices) if(re.test(t)) return val;
+      return null;
+    }
+    return t || null;
+  }
+
+  function accept(raw){
+    if(busy || finished) return;
+    const val = parse(raw);
+    if(val===null){
+      // Couldn't map it to an answer. Never leave the player idle on a running clock:
+      // say what went wrong, then reopen the mic so they can just answer again.
+      misses++;
+      heard.textContent = raw;
+      micLabel.textContent = current().type==='text'
+        ? 'Didn’t catch that — again?'
+        : 'Aye or nay, sailor!';
+      if(misses >= 3){
+        // three strikes: stop fighting the mic and offer the keyboard
+        showType(true);
+        micLabel.textContent = 'Type it or skip, sailor.';
+      } else {
+        setTimeout(()=>{ if(!finished && !busy) listen(); }, 900);
+      }
+      return;
+    }
+    misses = 0;
+    answers[current().key] = val;
+    heard.textContent = val;
+    heard.classList.remove('interim');
+    busy = true;
+    idx++;
+    shove();
+    setTimeout(()=>{ busy=false; idx>=QUESTIONS.length ? finish() : render(); }, 780);
+  }
+
+  function skip(){
+    if(busy || finished) return;
+    answers[current().key] = '';
+    busy = true; idx++;
+    shove();
+    setTimeout(()=>{ busy=false; idx>=QUESTIONS.length ? finish() : render(); }, 780);
+  }
+
+  /* ================= render a question ================= */
+  function render(){
+    const Q=current();
+    $('stepNum').textContent = 'Question '+(idx+1)+' of '+QUESTIONS.length;
+    $('stepKey').textContent = Q.key;
+    $('qText').textContent = Q.q;
+    $('qHint').textContent = Q.hint || ' ';
+    heard.textContent=''; heard.classList.remove('interim');
+    typeIn.value='';
+    misses=0;
+    showType(false);
+    micLabel.textContent = speechOK ? 'Press speak' : 'No mic in this browser — type it';
+
+    // aye / nay buttons for the checkbox-ish questions
+    yesnoRow.innerHTML='';
+    if(Q.type==='yesno'){
+      yesnoRow.classList.remove('hidden');
+      [['Aye','yes'],['Nay','no']].forEach(([label,val])=>{
+        const b=document.createElement('button');
+        b.textContent=label;
+        b.onclick=()=>accept(val==='yes'?'yes':'no');
+        yesnoRow.appendChild(b);
+      });
+    } else if(Q.type==='choice'){
+      yesnoRow.classList.remove('hidden');
+      Q.choices.forEach(([val])=>{
+        const b=document.createElement('button');
+        b.textContent=val.charAt(0).toUpperCase()+val.slice(1);
+        b.onclick=()=>accept(val);
+        yesnoRow.appendChild(b);
+      });
+    } else {
+      yesnoRow.classList.add('hidden');
+    }
+
+    // the pirate asks out loud, then the mic opens
+    speak(Q.q, ()=>{ if(!finished) listen(); });
+  }
+
+  function speak(text, then){
+    let fired=false;
+    const go=()=>{ if(!fired){ fired=true; then && then(); } };
+    try{
+      if(!window.speechSynthesis) return setTimeout(go,260);
+      speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text);
+      u.rate=.95; u.pitch=.55;
+      u.onend=()=>setTimeout(go,180);
+      u.onerror=()=>setTimeout(go,180);
+      speechSynthesis.speak(u);
+      setTimeout(go, 3600);                            // safety: some browsers never fire onend
+    }catch(e){ setTimeout(go,260); }
+  }
+
+  /* ================= the plunge + the log ================= */
+  function buildForm(){
+    const conds=[];
+    if(answers.cond_asthma==='yes')   conds.push('Asthma');
+    if(answers.cond_diabetes==='yes') conds.push('Diabetes');
+    if(answers.cond_heart==='yes')    conds.push('Heart disease');
+    if(answers.cond_bp==='yes')       conds.push('High blood pressure');
+    return {
+      filled_out_by: username + ' (via Walk the Plank, voice)',
+      date: new Date().toISOString().slice(0,10),
+      name: answers.name || '',
+      date_of_birth: answers.date_of_birth || '',
+      address: answers.address || '',
+      phone: answers.phone || '',
+      insurance: answers.insurance || '',
+      member_id: answers.member_id || '',
+      emergency_contact: answers.emergency_contact || '',
+      reason_for_visit: answers.reason_for_visit || '',
+      current_medications: answers.current_medications || '',
+      allergies: answers.allergies || '',
+      past_conditions: conds,
+      past_surgeries: answers.past_surgeries || '',
+      family_history: answers.family_history || '',
+      tobacco: answers.tobacco || '',
+      alcohol: answers.alcohol || '',
+      drugs: '',
+      signature: username + ' (spoken, not signed — he was pushed)'
+    };
+  }
+
+  function finish(){
+    finished = true;
+    const elapsed = Date.now() - t0;
+    clearInterval(clockTimer); clockTimer=null;
+    clockVal.textContent = fmt(elapsed);
+    try{ if(listening) rec.stop(); }catch(e){}
+    ask.classList.add('hidden');
+
+    // overboard
+    walker.classList.remove('wobble','shoved');
+    walker.style.left = (END_PCT+4)+'%';
+    void walker.offsetWidth;
+    walker.classList.add('plunge');
+    splash.style.left = (END_PCT-1)+'%';
+    splash.classList.add('go');
+    scream.textContent='OVERBOARD!';
+    scream.classList.remove('go'); void scream.offsetWidth; scream.classList.add('go');
+    roar();
+    stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake');
+
+    const form = buildForm();
+    $('logTime').textContent = fmt(elapsed);
+    $('logJson').textContent = JSON.stringify(form, null, 2);
+    const answered = Object.values(form).filter(v => Array.isArray(v) ? v.length : String(v).trim()).length;
+    $('logTitle').textContent = 'Ye went in the drink, '+username+'.';
+
+    setTimeout(()=>logCurtain.classList.remove('hidden'), 2100);
+
+    fetch('/api/intake',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username, elapsed_ms: elapsed, answered, form})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.leaderboard) paint(d.leaderboard);
+      $('logRank').textContent = d.rank
+        ? (d.rank===1 ? 'Ye be the fastest soul on the board. Rank 1.' : 'Filed. Ye sit at rank '+d.rank+' on the board.')
+        : 'Filed with the quartermaster.';
+    })
+    .catch(()=>{ $('logRank').textContent='The quartermaster is ashore — log kept aboard only.'; });
+  }
+
+  /* ================= leaderboard ================= */
+  function paint(rows){
+    lbList.innerHTML='';
+    if(!rows || !rows.length){ lbEmpty.classList.remove('hidden'); return; }
+    lbEmpty.classList.add('hidden');
+    rows.forEach(r=>{
+      const li=document.createElement('li');
+      if(username && r.username.toLowerCase()===username.toLowerCase()) li.className='me';
+      const a=document.createElement('span'); a.className='r'; a.textContent=r.rank;
+      const b=document.createElement('span'); b.className='n'; b.textContent=r.username;
+      const c=document.createElement('span'); c.className='t'; c.textContent=fmt(r.elapsed_ms);
+      li.append(a,b,c);
+      lbList.appendChild(li);
+    });
+  }
+
+  function loadBoard(){
+    fetch('/api/leaderboard').then(r=>r.json()).then(d=>paint(d.leaderboard)).catch(()=>{
+      lbEmpty.textContent='Board unreachable.'; lbEmpty.classList.remove('hidden');
+    });
+  }
+
+  /* ================= start / restart ================= */
+  function start(){
+    const v = $('userIn').value.trim();
+    if(v.length < 2){ $('gateWarn').textContent='A sailor needs a name. Two letters at least.'; return; }
+    username = v.slice(0,24);
+    audio();                                           // unlock sound on this gesture
+    curtain.classList.add('hidden');
+    ask.classList.remove('hidden');
+    idx=0; answers={}; finished=false;
+    walker.classList.remove('plunge'); walker.classList.add('wobble');
+    splash.classList.remove('go');
+    pirate.style.left='-2%';
+    [...notches.children].forEach(n=>n.classList.remove('done'));
+    placeWalker();
+    t0 = Date.now();
+    clockVal.textContent='0.0s';
+    clockTimer = setInterval(tick, 100);
+    if(!speechOK) $('micLabel').textContent='No mic in this browser — type it';
+    render();
+  }
+
+  $('btnStart').onclick = start;
+  $('userIn').addEventListener('keydown', e=>{ if(e.key==='Enter') start(); });
+
+  $('btnSpeak').onclick = listen;
+  $('btnAgain').onclick = ()=>{ heard.textContent=''; listen(); };
+  $('btnType').onclick  = ()=>showType(true);
+  $('btnSkip').onclick  = skip;
+  $('btnTypeOk').onclick= ()=>{ const v=typeIn.value.trim(); if(v) accept(v); };
+  typeIn.addEventListener('keydown', e=>{ if(e.key==='Enter'){ const v=typeIn.value.trim(); if(v) accept(v); } });
+
+  $('btnAgainAll').onclick = ()=>{
+    logCurtain.classList.add('hidden');
+    curtain.classList.remove('hidden');
+    $('gateWarn').textContent='';
+    $('userIn').value=username;
+    $('userIn').focus();
+  };
+  $('btnCopy').onclick = ()=>{
+    const txt=$('logJson').textContent;
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+      .then(()=>{ $('btnCopy').textContent='Copied!'; setTimeout(()=>$('btnCopy').textContent='Copy the log',1400); })
+      .catch(()=>{ $('btnCopy').textContent='Select it yerself'; });
+  };
+  $('btnClose').onclick = ()=>logCurtain.classList.add('hidden');
+
+  // space bar opens the mic, because reaching for a button costs time
+  document.addEventListener('keydown', e=>{
+    if(e.code==='Space' && !ask.classList.contains('hidden') && document.activeElement.tagName!=='INPUT'){
+      e.preventDefault(); listen();
+    }
+  });
+
+  placeWalker();
+  loadBoard();
+  $('userIn').focus();
+})();
+</script>
+</body>
+</html>
