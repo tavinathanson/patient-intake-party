@@ -4,12 +4,19 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Inkblot Intake</title>
+<link rel="preconnect" href="https://rsms.me/" />
+<link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
 <style>
   :root {
-    --ink: #1c1b22;
-    --paper: #faf7f0;
-    --accent: #7c5cff;
-    --muted: #6b6875;
+    --bg: #08090a;
+    --surface: #101113;
+    --surface-2: #16171a;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.16);
+    --text: #f7f8f8;
+    --muted: #8a8f98;
+    --accent: #5e6ad2;
+    --accent-hover: #6d78de;
     --pen: #1a3a8f;
   }
   * { box-sizing: border-box; }
@@ -19,53 +26,72 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    background: var(--paper);
-    color: var(--ink);
-    font-family: Georgia, 'Times New Roman', serif;
-    padding: 24px;
+    background: var(--bg);
+    background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(94, 106, 210, 0.15), transparent);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 48px 24px;
   }
   .card {
     width: 100%;
     max-width: 640px;
-    background: #fff;
-    border: 2px solid var(--ink);
-    border-radius: 16px;
-    padding: 32px;
-    box-shadow: 8px 8px 0 var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
   }
-  h1 { margin: 0 0 4px; font-size: 1.5rem; }
-  .subtitle { margin: 0 0 20px; color: var(--muted); font-style: italic; }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    background: linear-gradient(to bottom, #fff, #b4bcd0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle { margin: 0 0 24px; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
   .progress {
-    font-family: monospace;
-    font-size: 0.85rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--muted);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
-  .question { font-size: 1.25rem; font-weight: bold; margin: 0 0 4px; }
-  .instruction { margin: 0 0 20px; color: var(--muted); font-style: italic; }
+  .question {
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+  }
+  .instruction { margin: 0 0 20px; color: var(--muted); font-size: 0.88rem; }
   .blot-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
+    gap: 12px;
   }
   .blot-option {
-    background: var(--paper);
-    border: 2px solid #ddd6c8;
-    border-radius: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
     padding: 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.1s, border-color 0.1s, box-shadow 0.1s;
+    transition: border-color 0.15s, background 0.15s, transform 0.15s;
   }
   .blot-option:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    background: #1b1c20;
+    transform: translateY(-1px);
   }
   .blot-option.selected {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 0 24px rgba(94, 106, 210, 0.25);
   }
   .blot-option img {
     width: 100%;
@@ -75,29 +101,38 @@
     background: #fff;
     border-radius: 6px;
   }
-  .continue-row { margin-top: 20px; text-align: right; }
+  .continue-row { margin-top: 24px; text-align: right; display: flex; gap: 8px; justify-content: flex-end; }
   button {
     font: inherit;
-    font-weight: bold;
-    padding: 10px 20px;
-    border: 2px solid var(--ink);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 8px 16px;
+    border: 1px solid transparent;
     border-radius: 8px;
     background: var(--accent);
     color: #fff;
     cursor: pointer;
+    transition: background 0.15s;
   }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
-  button:not(:disabled):hover { filter: brightness(1.1); }
-  button:not(:disabled):active { transform: translate(1px, 1px); }
+  button:not(:disabled):hover { background: var(--accent-hover); }
+  #restart {
+    background: transparent;
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  #restart:not(:disabled):hover { background: var(--surface-2); }
   .hidden { display: none; }
 
-  /* ---- paper form (success screen) ---- */
+  /* ---- paper form (confirmation screen) — deliberately stays paper ---- */
   .sheet {
     background: #fff;
-    border: 1px solid #bbb;
+    color: #1c1b22;
+    border: 1px solid var(--border);
+    border-radius: 4px;
     padding: 28px 32px;
-    margin: 16px 0 20px;
-    box-shadow: 2px 3px 8px rgba(0,0,0,0.15);
+    margin: 16px 0 8px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
     font-family: 'Courier New', monospace;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -130,20 +165,7 @@
   }
   .sheet ul { margin: 4px 0 0 4px; padding-left: 18px; }
   .sheet li { margin-bottom: 2px; }
-  .stamp {
-    display: inline-block;
-    margin-top: 18px;
-    padding: 4px 12px;
-    border: 3px double #a02020;
-    color: #a02020;
-    font-family: Georgia, serif;
-    font-weight: bold;
-    letter-spacing: 2px;
-    transform: rotate(-4deg);
-    text-transform: uppercase;
-    font-size: 0.85rem;
-  }
-  .fine-print { color: var(--muted); font-size: 0.8rem; font-style: italic; }
+  .fine-print { color: var(--muted); font-size: 0.78rem; margin-top: 20px; }
   .answer-line {
     display: flex;
     align-items: flex-end;
@@ -151,22 +173,24 @@
     gap: 12px;
   }
   .edit-btn {
-    font-family: Georgia, serif;
-    font-size: 0.72rem;
-    font-weight: bold;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
     padding: 2px 10px;
-    border: 1.5px solid var(--ink);
+    border: 1px solid #ccc;
     border-radius: 6px;
     background: #fff;
-    color: var(--ink);
+    color: #1c1b22;
     cursor: pointer;
     flex-shrink: 0;
+    transition: all 0.15s;
   }
   .edit-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
 
   /* Printing outputs only the filled-in paper form. */
   @media print {
-    .card { border: none; box-shadow: none; padding: 0; }
+    body { background: #fff; }
+    .card { border: none; box-shadow: none; padding: 0; background: #fff; }
     .card > div { display: none !important; }
     body.printing #done { display: block !important; }
     body.printing #done h1,
