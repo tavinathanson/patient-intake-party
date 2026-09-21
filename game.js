@@ -45,7 +45,7 @@ const FIELDS = [
   { key: 'signature', section: 2, label: 'Signature',          type: 'text',  required: true, width: 380, hint: 'type your full name to sign', placeholder: 'Your name' },
 ];
 
-const DIFFICULTY = { easy: 55, normal: 80, hard: 115 }; // base px/sec
+const DIFFICULTY = { easy: 82, normal: 120, hard: 172 }; // base px/sec (1.5x the original 55/80/115)
 const RUN_MUL = 3;
 const BLOCK_SPEEDUP = 0.035; // each completed block adds 3.5% to the scroll speed (linear, up to about +60% at the end)
 const TOTAL_TICKS = 400;
